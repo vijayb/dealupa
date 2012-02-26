@@ -1,0 +1,53 @@
+# 1. Food & drink
+# 2. Activies & Events
+# 3. Spa & Beauty
+# 4. Kids & Parents
+# 5. Retail & Services
+# 6. Classes & Learning
+# 7. Fitness & Health
+# 8. Medical & Dental
+# 9. Hotels & Vacations
+#
+#
+uts  1	 2  \bdonut\b
+uts  1	 2  \bdonuts\b
+uts  1	 5  \bdinner\s+for\b
+uts  1	 5  \bfrozen\s+yogurt\b
+ts   1	 3  \bfare\b
+uts  1   5  \bfood\b
+uts  1   5  \bseafood\b
+uts  1	 5  \bcuisine\b
+uts  2	 2  ticket[s]?\s+to\s+see
+uts  2	 5  \bsporting\s+event\b
+uts  2	 5  \bcomedy\s+club\b
+uts  2	 2  \btickets\b
+uts  2	 5  \bpaintball\b
+uts  2	 5  \bcruise[s]?\b
+uts  2	 3  \btour[s]?\b
+uts  2	 5  \bgolf\b
+uts  3	 5  brazilian\s+wax
+uts  3	 5  bikini\s+wax
+uts  3	 5  \bskincare\b
+uts  3	 5  \bhair.removal\b
+uts  3	 5  \bmanicure.\b
+uts  3	 5  \bpedicure.\b
+uts  3	 5  \bmani.pedi\b
+uts  3	 5  \bsalon\b
+uts  3	 5  \bspa\b
+uts  3	 5  \bmassage\b
+uts  4	 5  \bkids\b
+uts  5	 3  \blandscaping\b
+uts  5	 3  \bgardening\b
+uts  5	 3  \bclothing\b
+uts  5	 5  \bauto\s+care\b
+uts  5	 2  \bservices\b
+uts  5	 2  \bphoto\b
+uts  5	 3  \bservices\b
+uts  7	 5  \bpilates\b
+uts  7	 5  \byoga\b
+uts  7	 5  \bfitness\b
+uts  7	 5  \bcrossfit\b
+uts  7	 5  \bboot\s+camp\b
+uts  8	 5  \bteeth\s+whitening\b
+uts  9	 5  \bnight\s+stay\b
+ut   9	 5  \bvacation[s]?\b
