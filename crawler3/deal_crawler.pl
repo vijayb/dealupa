@@ -3,9 +3,6 @@
 # Author: Vijay Boyapati (vijayb@gmail.com) September, 2011
 #
 
-# Hi ben
-#
-
 package main;
 
 use strict;
