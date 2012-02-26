@@ -18,8 +18,6 @@ use dealsdbutils;
 my $start_time = time();
 
 
-# Test change from desktop machine
-
 use constant {
     WORK_TYPE => 3,
     GEOCODER_WORK_TYPE => 4,
