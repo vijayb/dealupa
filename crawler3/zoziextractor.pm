@@ -108,12 +108,19 @@
 
 	if (@images) {
 	    my @image_src = $images[0]->look_down(
-		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src'))});
+		sub{$_[0]->tag() eq 'img' &&
+			(defined($_[0]->attr('src')) || 
+			 defined($_[0]->attr('data-src')))});
 
 	    foreach my $image_src (@image_src) {
 		my $clean_image = $image_src->attr('src');
+		if (defined($image_src->attr('data-src'))) {
+		    $clean_image = $image_src->attr('data-src');
+		}
 		$clean_image =~ s/\?[^\?]*$//;
-		$deal->image_urls($clean_image);
+		if ($clean_image !~ /blank/) {
+		    $deal->image_urls($clean_image);
+		}
 	    }
 	}
 
