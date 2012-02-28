@@ -22,10 +22,10 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `NumPurchased`
+-- Table structure for table `NumPurchased777`
 --
 
-CREATE TABLE IF NOT EXISTS `NumPurchased` (
+CREATE TABLE IF NOT EXISTS `NumPurchased777` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `deal_id` int(10) unsigned NOT NULL,
   `num_purchased` int(11) NOT NULL,
