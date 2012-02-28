@@ -303,7 +303,7 @@ sub insertDeal {
         $update_values = $update_values.", num_purchased=?";
         push(@update_params, $deal->num_purchased());
 
-	recordHistory($dbh, $deal_id, "NumPurchased", "num_purchased",
+	recordHistory($dbh, $deal_id, "NumPurchased777", "num_purchased",
 		      $deal->num_purchased());
     }
     if (defined($deal->fb_likes())) {
