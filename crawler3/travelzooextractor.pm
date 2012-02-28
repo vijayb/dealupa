@@ -238,10 +238,9 @@
 		$address =~ s/<[^>]+>/ /g;
 		$address =~ s/online redemption only//gi;
 		$address =~ s/^\s+//g;
-
+		
 		# US addresses:
-		if ($address =~ /,\s+(.*)\s+[0-9]{5}$/ &&
-		    genericextractor::isState($1)) {
+		if ($address =~ /\s[0-9]{5}$/) {
 		    $deal->addresses($address);
 		}
 
