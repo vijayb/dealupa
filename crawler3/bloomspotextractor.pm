@@ -94,10 +94,11 @@
 	
 	my @text = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "tabholder")});
+		    ($_[0]->attr('class') eq "panes")});
 	if (@text) {
 	    my $text = $text[0]->as_HTML();
 	    $text =~ s/<\/?div[^>]*>//g;
+	    $text =~ s/<table.*//;
 	    $deal->text($text);
 
 	    # Bloomspot puts the name of the business at the start of

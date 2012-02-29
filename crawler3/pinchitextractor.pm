@@ -56,14 +56,28 @@
 	my @pricevalue = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "products")});
-	if (@pricevalue &&
-	    $pricevalue[0]->as_text() =~ /\$([0-9,\.]+)[^\$]+\$([0-9,\.]+)/) {
-	    my $price = $1;
-	    my $value = $2;
-	    $price =~ s/,//g;
-	    $value =~ s/,//g;
-	    $deal->price($price);
-	    $deal->value($value);
+	if (@pricevalue) {
+	    if ($pricevalue[0]->as_text() =~ /\$([0-9,\.]+)[^\$]+\$([0-9,\.]+)/) {
+		my $price = $1;
+		my $value = $2;
+		$price =~ s/,//g;
+		$value =~ s/,//g;
+		$deal->price($price);
+		$deal->value($value);
+	    } elsif ($pricevalue[0]->as_text() =~ /\$([0-9,\.]+)/) {
+		my $price = $1;
+		$price =~ s/,//g;
+		$deal->price($price);
+	    }
+	}
+
+	my @bought = $tree->look_down(
+	    sub{defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "quantity-bought")});
+	if (@bought && $bought[0]->as_text() =~ /([0-9,]+)/) {
+	    my $bought = $1;
+	    $bought =~ s/,//g;
+	    $deal->num_purchased($bought);
 	}
 
 	my @text = $tree->look_down(
