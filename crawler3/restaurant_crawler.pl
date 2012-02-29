@@ -181,7 +181,7 @@ sub insertDeal {
     }
 
     my $set = "last_updated=UTC_TIMESTAMP(),".
-	"deadline=DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 DAY)";
+	"deadline=DATE_ADD(UTC_TIMESTAMP(), INTERVAL 3 DAY)";
     my @set_keys = ("company_id=?");
     my @set_values = (RESTAURANT_COMPANY_ID);
     
