@@ -149,7 +149,7 @@
 	# GetMyPerks put expiry information in the fine print
 	if (defined($deal->fine_print()) &&
 	    $deal->fine_print() =~
-	    /expires\s+([0-9]{1,2}).([0-9]{1,2}).([0-9]{2,4})/i) {
+	    /expires:?\s+([0-9]{1,2}).([0-9]{1,2}).([0-9]{2,4})/i) {
 	    my $month = $1;
 	    my $day = $2;
 	    my $year = $3;
@@ -168,7 +168,7 @@
 
 	if (@biz_info) {
 	    # Name:
-	    if ($biz_info[0]->as_HTML() =~ /<strong>([^<]+)/i) {
+	    if ($biz_info[0]->as_HTML() =~ /<strong[^>]*>([^<]+)/i) {
 		$deal->name($1);
 	    }
 	    
