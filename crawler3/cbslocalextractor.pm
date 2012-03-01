@@ -181,7 +181,6 @@
 		    $_[0]->attr('class') =~ /redemption-instructions/});
 	
 	if (@expires) {
-	    print $expires[0]->as_text()."\n";
 	    if ($expires[0]->as_text() =~ /([0-9]+)\s*months/i) {
 		my $offset = 3600*24*30*$1;
 		my ($year, $month, $day, $hour, $minute);
@@ -243,7 +242,8 @@
 		my $clean_address = $address->as_HTML();
 		$clean_address =~ s/<[^>]*>/ /g;
 		$clean_address =~ s/\s+/ /g;
-		if (length($clean_address) > 5 && $clean_address =~ /[0-9]/) {
+		if (length($clean_address) > 5 && 
+		    ($clean_address =~ /[0-9]/ || $clean_address =~ /,\s*[A-Z]{2}/)) {
 		    $deal->addresses($clean_address);
 		}
 	    }
