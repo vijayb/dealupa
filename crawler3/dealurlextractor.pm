@@ -49,6 +49,7 @@
     $company_to_extractor_map{37} = \&ThrillistURLExtractor;
     $company_to_extractor_map{38} = \&SavoredURLExtractor;
     $company_to_extractor_map{39} = \&MSNOffersURLExtractor;
+    $company_to_extractor_map{40} = \&CBSLocalURLExtractor;
 
     sub extractDealURLs {
         if ($#_ != 2) {
@@ -795,6 +796,9 @@
 			$_[0]->attr('href') =~ /^http/});
 	    if (@href) {
 		my $clean_url = $href[0]->attr('href');
+		# chop the end off the URL since it's not needed
+		# (it has the city name) and it causes more crawling
+		# than is necessary
 		$clean_url =~ s/[^\/]*$//;
 		addToDealUrls($_[0], $clean_url);
 	    }
@@ -836,6 +840,33 @@
             addToDealUrls($_[0], $url);
         }
     }
+
+
+    sub CBSLocalURLExtractor {
+        if (!$#_ == 2) { die "Incorrect usage of CBSLocalURLExtractor.\n"; }
+        my $hub_properties = $_[1];
+        my $tree_ref = $_[2];
+        
+        my @deal_urls = ${$tree_ref}->look_down(
+            sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "offer-link"});
+
+        foreach my $deal (@deal_urls) {
+	    my @href = $deal->look_down(
+		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+			$_[0]->attr('href') =~ /^\//});
+	    if (@href) {
+		my $clean_url = "http://offers.cbslocal.com".$href[0]->attr('href');
+		# chop the end off the URL since it's not needed
+		# (it has the city name) and it causes more crawling
+		# than is necessary
+		$clean_url =~ s/[^\/]*$//;
+		addToDealUrls($_[0], $clean_url);
+	    }
+
+        }
+    }
+
 
     1;
 }
