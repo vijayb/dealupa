@@ -50,6 +50,7 @@
     $company_to_extractor_map{38} = \&SavoredURLExtractor;
     $company_to_extractor_map{39} = \&MSNOffersURLExtractor;
     $company_to_extractor_map{40} = \&CBSLocalURLExtractor;
+    $company_to_extractor_map{41} = \&CrowdSavingsURLExtractor;
 
     sub extractDealURLs {
         if ($#_ != 2) {
@@ -865,6 +866,35 @@
 	    }
 
         }
+    }
+
+
+    sub CrowdSavingsURLExtractor {
+        if (!$#_ == 2) { die "Incorrect usage of CrowdSavingsURLExtractor.\n"; }
+        my $hub_properties = $_[1];
+        my $tree_ref = $_[2];
+        
+        my @deals_container = ${$tree_ref}->look_down(
+            sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') =~ /float-right/ &&
+		    $_[0]->as_text() =~ /more savings/i});
+	if (@deals_container) {
+	    my @deals = $deals_container[0]->look_down(
+		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+			$_[0]->attr('href') =~ /^http:\/\/www.crowdsavings/});
+	    foreach my $deal (@deals) {
+		my $clean_url = $deal->attr('href');
+		$clean_url =~ s/\s//g; # wtf they have spaces in their URLs!
+		addToDealUrls($_[0], $clean_url);
+	    }
+	}
+
+	if (${$tree_ref}->as_HTML() =~ /addthis:url=\"(http:\/\/www.crowd[^\"\?]+)/) {
+	    my $clean_url = $1;
+	    $clean_url =~ s/\s//g;
+	    addToDealUrls($_[0], $clean_url);
+	}
+
     }
 
 

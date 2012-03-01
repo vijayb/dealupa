@@ -45,6 +45,7 @@
     use savoredextractor;
     use msnoffersextractor;
     use cbslocalextractor;
+    use crowdsavingsextractor;
     
     my %company_to_extractor_map;
 
@@ -84,6 +85,7 @@
     $company_to_extractor_map{38} = \&savoredextractor::extract;
     $company_to_extractor_map{39} = \&msnoffersextractor::extract;
     $company_to_extractor_map{40} = \&cbslocalextractor::extract;
+    $company_to_extractor_map{41} = \&crowdsavingsextractor::extract;
 
 
     sub extractDeal {
