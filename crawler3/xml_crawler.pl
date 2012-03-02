@@ -83,13 +83,43 @@ sub doWork {
 	    foreach my $deal (@deals) {
 		print "\tInserting deal: [".$deal->url(),"]\n";
 
-		# Insert deal into the output database it was assigned to:
 		$deal->company_id($company_id);
+
+		# Get the deal id for the given deal URL:
+		my $deal_id = &dealsdbutils::getDealId($output_dbh, $deal->url());
+		if ($deal_id == 0) {
+		    $deal_id = &dealsdbutils::createDealId($output_dbh, $deal->url(),
+							   $deal->company_id());
+		}
+
+		# This should never happen, but just in case:
+		if ($deal_id == 0) { next; }
+
+
+		my @dup_company_ids;
+		my $dup_id = &dealsdbutils::isDup($deal, $deal_id,
+						  ${$work_ref}{"output_server"},
+						  \@dup_company_ids);
+		if ($dup_id == -1) {
+		    # if $dup_id==-1 this means we failed to connect
+		    # to the dup_server
+		    die "Fatal error: Couldn't connect to dup server [".
+			${$work_ref}{"output_server"}."]\n";
+		} elsif ($dup_id > 0) {
+		    markDup($output_dbh, $deal_id, $dup_id);
+		    print "Deal $deal_id is a dup of [$dup_id]\n";
+		    next;
+		}
+
+		# If we get to here, we're not a dup...
+
+
 		if (&dealextractor::hasExtractorForCompanyID($company_id)) {
 		    doExtraExtraction($deal);
 		}
 
-		insertDeal777($output_dbh, $deal) || next;
+		# Insert deal into the output database it was assigned to:
+		insertDeal777($output_dbh, $deal, $deal_id) || next;
 		
 		# If deal has any addresses, we need to add geocoding
 		# work to the WorkQueue
@@ -176,17 +206,7 @@ sub doExtraExtraction {
 sub insertDeal777 {
     my $dbh = shift;
     my $deal = shift;
-    my $company_id = shift;
-
-    my $deal_id = &dealsdbutils::getDealId($dbh, $deal->url());
-    if ($deal_id == 0) {
-	$deal_id = &dealsdbutils::createDealId($dbh, $deal->url(),
-					       $deal->company_id());
-    }
-
-    # This should never happen, but just in case:
-    if ($deal_id == 0) { return 0; }
-
+    my $deal_id = shift;
 
     if (!&dealsdbutils::inTable($dbh, $deal_id, "Addresses777")) {
 	insertAddresses777($dbh, $deal, $deal_id) || return 0;
@@ -295,6 +315,23 @@ sub insertDeal777 {
         return 0;
     }
     
+    return 1;
+}
+
+
+
+sub markDup {
+    my $dbh = shift;
+    my $deal_id = shift;
+    my $dup_id = shift;
+
+    my $sql = "update Deals777 set dup=true,dup_id=? where id=?";
+    my $sth = $dbh->prepare($sql);
+    $sth->bind_param(1, $dup_id);
+    $sth->bind_param(2, $deal_id);
+    if (!$sth->execute()) {
+	return 0;
+    }
     return 1;
 }
 

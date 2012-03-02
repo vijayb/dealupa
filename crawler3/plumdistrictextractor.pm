@@ -73,32 +73,37 @@
 	}
 
 	# Address:
-	my @address = $tree->look_down(
+	my @address_container = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
 		    $_[0]->attr('class') eq "location"});
-	if (@address) {
-	    my $address = $address[0]->as_HTML();
-	    $address =~ s/<span[^>]*>[^<]*<\/span>//g;
-	    $address =~ s/<[^>]*>/ /g;
-	    $address =~ s/&nbsp;/ /g;
-	    $address =~ s/\s+/ /g;
-	    $address =~ s/^\s*//;
-	    $address =~ s/\s*$//;
-	    if ($address =~ /(\(.*$)/) {
-		my $phone = $1;
-		my $tmpphone = $phone;
-		$tmpphone =~ s/[^0-9]//g;
-		if (length($tmpphone) > 8 &&
-		    length($tmpphone) < 20 &&
-		    length($phone) - length($tmpphone) <=4) {
-		    $phone =~ s/[^0-9]//g;
-		    $deal->phone($phone);
-		    $address =~ s/\(.*$//;
-		}
-	    }
 
-	    if (length($address) > 10) {
-		$deal->addresses($address);
+	if (@address_container) {
+	    my @addresses = $address_container[0]->look_down(
+		sub{$_[0]->tag() eq 'li'});
+	    foreach my $address (@addresses) {
+		$address = $address->as_HTML();
+		$address =~ s/<span[^>]*>[^<]*<\/span>//g;
+		$address =~ s/<[^>]*>/ /g;
+		$address =~ s/&nbsp;/ /g;
+		$address =~ s/\s+/ /g;
+		$address =~ s/^\s*//;
+		$address =~ s/\s*$//;
+		if ($address =~ /(\(.*$)/) {
+		    my $phone = $1;
+		    my $tmpphone = $phone;
+		    $tmpphone =~ s/[^0-9]//g;
+		    if (length($tmpphone) > 8 &&
+			length($tmpphone) < 20 &&
+			length($phone) - length($tmpphone) <=4) {
+			$phone =~ s/[^0-9]//g;
+			$deal->phone($phone);
+			$address =~ s/\(.*$//;
+		    }
+		}
+
+		if (length($address) > 7) {
+		    $deal->addresses($address);
+		}
 	    }
 	}
 	
