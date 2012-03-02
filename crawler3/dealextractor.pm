@@ -46,6 +46,7 @@
     use msnoffersextractor;
     use cbslocalextractor;
     use crowdsavingsextractor;
+    use plumdistrictextractor;
     
     my %company_to_extractor_map;
 
@@ -86,6 +87,7 @@
     $company_to_extractor_map{39} = \&msnoffersextractor::extract;
     $company_to_extractor_map{40} = \&cbslocalextractor::extract;
     $company_to_extractor_map{41} = \&crowdsavingsextractor::extract;
+    $company_to_extractor_map{42} = \&plumdistrictextractor::extract;
 
 
     sub extractDeal {
@@ -109,6 +111,13 @@
                   $deal->company_id(), "\n";
         }
     }
+
+
+    sub hasExtractorForCompanyID {
+	my $company_id = shift;
+	return defined($company_to_extractor_map{$company_id});
+    }
+
 
     1;
 }

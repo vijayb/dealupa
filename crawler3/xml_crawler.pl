@@ -14,6 +14,10 @@ use deal;
 use dealsdbutils;
 use xmlextractor;
 
+# Used for doing extra extraction for feeds which don't
+# provide all the information needed
+use dealextractor;
+
 
 use constant {
     WORK_TYPE => 6,
@@ -28,7 +32,7 @@ use constant {
 };
 
 
-workqueue::registerWorker(\&doWork, WORK_TYPE, 10, 15, 60) ||
+workqueue::registerWorker(\&doWork, WORK_TYPE, 10, 5, 60) ||
     die "Unable to register worker\n";
 workqueue::run();
 
@@ -74,12 +78,17 @@ sub doWork {
 	    # Obtain deals from XML:
             my @deals = xmlextractor::extractDeals(\$xml_content, $company_id);
 
+	    print "".($#deals + 1)." deals extracted. Inserting...\n";
 	    my $num_inserted = 0;
 	    foreach my $deal (@deals) {
 		print "\tInserting deal: [".$deal->url(),"]\n";
 
 		# Insert deal into the output database it was assigned to:
 		$deal->company_id($company_id);
+		if (&dealextractor::hasExtractorForCompanyID($company_id)) {
+		    doExtraExtraction($deal);
+		}
+
 		insertDeal777($output_dbh, $deal) || next;
 		
 		# If deal has any addresses, we need to add geocoding
@@ -142,6 +151,27 @@ sub doWork {
 }
 
 
+sub doExtraExtraction {
+    my $deal = shift;
+
+    my $response = downloader::getURL($deal->url());
+    
+    if ($response->is_success && defined($response->content()) &&
+	length($response->content()) > 0)
+    {
+	my $deal_content = $response->content();
+	print "Succeeded in downloading ".$deal->url()." content length: ".
+	    length($deal_content)." extracting...\n";
+	
+	dealextractor::extractDeal($deal, \$deal_content);
+    }
+    
+    # If we're crawling deals from the feed, we had better put a sleep in
+    # to be polite
+    sleep(2);
+}
+
+
 
 sub insertDeal777 {
     my $dbh = shift;
@@ -170,10 +200,15 @@ sub insertDeal777 {
 	insertCategories777($dbh, $deal, $deal_id) || return 0;
     }
 
+    &dealsdbutils::setFBInfo($deal);
     
     my $update_values = "last_updated=UTC_TIMESTAMP()";
     my @update_params;
 
+    if (defined($deal->affiliate_url())) {
+        $update_values = $update_values.", affiliate_url=?";
+        push(@update_params, $deal->affiliate_url());
+    }
     if (defined($deal->title())) {
         $update_values = $update_values.", title=?";
         push(@update_params, $deal->title());
@@ -193,6 +228,23 @@ sub insertDeal777 {
     if (defined($deal->num_purchased()) && $deal->num_purchased != -1) {
         $update_values = $update_values.", num_purchased=?";
         push(@update_params, $deal->num_purchased());
+
+	recordHistory($dbh, $deal_id, "NumPurchased777", "num_purchased",
+		      $deal->num_purchased());
+    }
+    if (defined($deal->fb_likes())) {
+	$update_values = $update_values.", fb_likes=?";
+        push(@update_params, $deal->fb_likes());
+
+	recordHistory($dbh, $deal_id, "FBLikes", "fb_likes",
+		      $deal->fb_likes());
+    }
+    if (defined($deal->fb_shares())) {
+	$update_values = $update_values.", fb_shares=?";
+        push(@update_params, $deal->fb_shares());
+
+	recordHistory($dbh, $deal_id, "FBShares", "fb_shares",
+		      $deal->fb_shares());
     }
     if (defined($deal->text())) {
 	$update_values = $update_values.", text=?";
@@ -308,6 +360,65 @@ sub insertCategories777 {
 	$sth->bind_param(1, $deal_id);
 	$sth->bind_param(2, $deal->category_id());
 	if (!$sth->execute()) {
+	    return 0;
+	}
+    }
+    
+    return 1;
+}
+
+
+
+# Insert the field_value into one of the tables which records history
+# of data (NumPurchased, FBClicks, FBShares) in the deals table.
+# We assume that the caller sends us a defined $field_value.
+sub recordHistory {
+    my $dbh = shift;
+    my $deal_id = shift;
+    my $table_name = shift;
+    my $field_name = shift;
+    my $field_value = shift;
+    my $status_ref = shift;
+    my $status_message_ref = shift;
+
+    # Don't record any fields that are undefined or zero.
+    if (!defined($field_value) || $field_value == 0) { return 1; }
+
+
+    my $curr_field_value =
+	&dealsdbutils::getField($dbh, $deal_id, $field_name);
+
+    # Only insert field_value if it's different to the current value
+    # in the database. It's a waste of data to keep reinserting the same value
+    # if it doesn't change
+    if (!defined($curr_field_value) ||
+	$curr_field_value != $field_value) {
+	insertField($dbh, $deal_id, $table_name, $field_name, $field_value,
+		    $status_ref, $status_message_ref) || return 0;
+    }
+
+    return 1;
+}
+
+sub insertField {
+    my $dbh = shift;
+    my $deal_id = shift;
+    my $table_name = shift;
+    my $field_name = shift;
+    my $field_value = shift;
+    my $status_ref = shift;
+    my $status_message_ref = shift;
+
+    if (defined($field_value)) {
+        my $sql = "insert into $table_name (deal_id, $field_name, time) ".
+               "values (?, ?, CURRENT_TIMESTAMP) on duplicate key update id=id";
+
+	my $sth = $dbh->prepare($sql);
+	$sth->bind_param(1, $deal_id);
+	$sth->bind_param(2, $field_value);
+	if (!$sth->execute()) {
+	    $$status_ref = 2;
+	    $$status_message_ref = "Failed database query: ".$dbh->errstr;
 	    return 0;
 	}
     }
