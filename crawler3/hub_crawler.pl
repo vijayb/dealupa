@@ -158,9 +158,9 @@ sub doWork {
 
 		my $dup_id = &dealsdbutils::findDupId($deal_id, $deal_output_server);
 
-		if ($dup_id != $deal_id) {
+		#if ($dup_id != $deal_id) {
 		    #print "Got ourselves a dup! [$deal_id:$dup_id]@hub_cities\n";
-		}
+		#}
 
 		# Unlike categories, we want to insert the Cities for the
 		# deal, even if the deal already existed, because a deal

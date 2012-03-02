@@ -230,8 +230,17 @@ sub insertDeal {
     # Shouldn't happen, but just in case:
     if ($deal_id == 0) { return 0; } 
 
+    my @dup_company_ids;
+    
+    # Right now we only check for dups across company_ids for MSN Offers (c_id: 39),
+    # because they share a lot of content with Tippr (c_id: 4), but unlike Tippr
+    # they don't share num_purchased information, so we'd rather mark
+    # MSN deals as dups than Tippr deals.
+    # TODO: This information shouldn't be in code, but somewhere in the database
+    # (e.g., in the Company table in the WorkQueue database)
+    if ($deal->company_id() == 39) { push(@dup_company_ids, 4); }
 
-    my $dup_id = &dealsdbutils::isDup($deal, $deal_id, $dup_server);
+    my $dup_id = &dealsdbutils::isDup($deal, $deal_id, $dup_server, \@dup_company_ids);
     if ($dup_id == -1) {
 	# if $dup_id==-1 this means we failed to connect to the dup_server
 	# Question: should we just die completely here? If we don't then

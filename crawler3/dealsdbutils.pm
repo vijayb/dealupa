@@ -110,11 +110,17 @@
     }
 
 
-    #my $dup_id = &dealsdbutils::isDup($deal, $deal_id, workqueue::server());
     sub isDup {
 	my $deal = shift;
 	my $deal_id = shift;
 	my $dup_server = shift;
+
+	# $company_ids_array_ref provides the list of companies
+	# for which we will search for dups from, in addition
+	# to the company_id of the deal itself. If the array is empty
+	# then we only look for dups within a single company's set
+	# of deals
+	my $company_ids_array_ref = shift;
 
 	#print "[$dup_server,$deal_id]\n";
 	my $memd = new Cache::Memcached {
@@ -169,6 +175,18 @@
 
 	    return -1;
 	}
+
+	# Check for dups in other companies:
+	foreach my $company_id (@{$company_ids_array_ref}) {
+	    my $my_dup_hash = sha1_hex($company_id.":$title");
+	    my $my_dup_id = $memd->get($my_dup_hash);
+	    
+	    if (defined($my_dup_id)) {
+		$dup_id = $my_dup_id;
+		last;
+	    }
+	}
+
 
 	# For convenience we will also create a mapping in memcache
 	# from the deal_id to its dup_id. This is useful for the
