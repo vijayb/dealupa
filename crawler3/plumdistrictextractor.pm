@@ -16,9 +16,6 @@
     use Encode;
     use URI::Escape;
 
-    # We use this for setFBInfo:
-    use dealsdbutils;
-
     sub extract {
 	my $tree = HTML::TreeBuilder->new;
 	my $deal = shift;

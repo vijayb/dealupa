@@ -11,6 +11,9 @@
 
     use constant {
         COOKIE_DURATION => 6000000,
+	CRAWL_CACHE_DIRECTORY => "./crawl_cache/",
+	CJ_USERNAME => "3500744",
+	CJ_PASSWORD => "jroHW5JS",
     };
 
     my $browser = LWP::UserAgent->new();
@@ -19,6 +22,7 @@
     my $cookie_jar = HTTP::Cookies->new();
     my $cookie_age = 0;
     my %domain_cookies = ();
+    createCacheDirectory();
 
 
     sub setTimeout {
@@ -91,6 +95,37 @@
 	return $response;
     }
 
+
+    sub getURLAsCJFeed {
+	unless (@_) {
+	    die "Incorrect usage of getURLAsCJFeed in downloader.\n"; 
+	}
+	my $feed_url = shift;
+	my $feed_file = CRAWL_CACHE_DIRECTORY."feed.xml";
+	
+	print "Downloading feed [$feed_url]\n";
+	my $ua = LWP::UserAgent->new;
+	my $req = HTTP::Request->new(GET => $feed_url);
+	$req->authorization_basic(CJ_USERNAME, CJ_PASSWORD);
+
+	print CJ_USERNAME, "]\n";
+	print CJ_PASSWORD, "]\n";
+
+	print "Decompressing feed file [$feed_file.gz]\n";
+	open(FILE, ">$feed_file.gz");
+	print FILE $ua->request($req)->content;
+	close(FILE);
+	system("gunzip -f $feed_file.gz");
+	
+	my $feed_xml;
+	local $/;
+	open(FILE, $feed_file) || return;
+	$feed_xml = <FILE>;
+	close(FILE);
+	return $feed_xml;
+    }
+
+
     sub getURLWithCookie {
         unless (@_)
         { die "Incorrect usage of getURLWithCookie in downloader.\n"; }
@@ -119,6 +154,14 @@
         }
 
         return $response;
+    }
+
+
+    sub createCacheDirectory {
+	unless (-d CRAWL_CACHE_DIRECTORY) {
+	    mkdir(CRAWL_CACHE_DIRECTORY, 0777) || die "Couldn't create" . 
+		CRAWL_CACHE_DIRECTORY . "\n";
+	}
     }
 
     1;

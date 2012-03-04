@@ -51,6 +51,7 @@
     $company_to_extractor_map{39} = \&MSNOffersURLExtractor;
     $company_to_extractor_map{40} = \&CBSLocalURLExtractor;
     $company_to_extractor_map{41} = \&CrowdSavingsURLExtractor;
+    $company_to_extractor_map{43} = \&MamapediaURLExtractor;
 
     sub extractDealURLs {
         if ($#_ != 2) {
@@ -895,6 +896,25 @@
 	    addToDealUrls($_[0], $clean_url);
 	}
 
+    }
+
+
+    sub MamapediaURLExtractor {
+        if (!$#_ == 2) { die "Incorrect usage of MamapediaURLExtractor.\n"; }
+        my $tree_ref = $_[2];
+        
+        my @deal_urls = ${$tree_ref}->look_down(
+            sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+                ($_[0]->attr('class') =~ /deal\s*clearfix/)});
+
+	foreach my $deal_url (@deal_urls) {
+	    my @a = $deal_url->look_down(
+		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+			($_[0]->attr('href') =~ /^\/deals/)});
+	    if (@a) {
+		addToDealUrls($_[0], "http://deals.mamapedia.com".$a[0]->attr('href'));
+	    }
+	}
     }
 
 

@@ -20,6 +20,8 @@
     $company_to_extractor_map{28} = \&crowdseatsxmlextractor::extract;
     $company_to_extractor_map{29} = \&landmarkxmlextractor::extract;
     $company_to_extractor_map{42} = \&plumdistrictxmlextractor::extract;
+    $company_to_extractor_map{43} = \&mamapediaxmlextractor::extract;
+
 
     sub extractDeals {
         if ($#_ != 1) { die "Incorrect usage of extractDeals, need 2 ".

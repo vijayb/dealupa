@@ -46,7 +46,8 @@ sub doWork {
     
     my $xml_url = ${$work_ref}{"work"};    
     
-    my $sql = "select Companies.use_cookie from WorkQueue, Companies where ".
+    my $sql = "select Companies.use_cookie, Companies.cj_feed from ".
+	"WorkQueue, Companies where ".
 	"WorkQueue.company_id=Companies.id and WorkQueue.work=?";
 
     my $sth = $workqueue_dbh->prepare($sql);
@@ -59,12 +60,15 @@ sub doWork {
     
     if (my @result = $sth->fetchrow_array()) {
         my $use_cookie = $result[0];
+	my $cj_feed = $result[1];
         my $company_id = ${$work_ref}{"company_id"};
 	
         my $response;
         if ($use_cookie) {
             $response = downloader::getURLWithCookie($xml_url);            
-        } else {
+        } elsif ($cj_feed) {
+	    $response = downloader::getURLAsCJFeed($xml_url);
+	} else {
             $response = downloader::getURL($xml_url);
         }
 	

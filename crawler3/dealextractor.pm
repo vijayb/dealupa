@@ -47,6 +47,7 @@
     use cbslocalextractor;
     use crowdsavingsextractor;
     use plumdistrictextractor;
+    use mamapediaextractor;
     
     my %company_to_extractor_map;
 
@@ -88,6 +89,7 @@
     $company_to_extractor_map{40} = \&cbslocalextractor::extract;
     $company_to_extractor_map{41} = \&crowdsavingsextractor::extract;
     $company_to_extractor_map{42} = \&plumdistrictextractor::extract;
+    $company_to_extractor_map{43} = \&mamapediaextractor::extract;
 
 
     sub extractDeal {
