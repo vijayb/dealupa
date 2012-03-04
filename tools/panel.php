@@ -33,7 +33,7 @@
 
 <ul>
 <li><a href="http://50.57.43.108/tools/classifier_tool.php" target=_panel>Classifier tool</a>
-<li><a href="http://50.57.43.108/tools/nation_tool.php" target=_panel>Nation setting tool</a>
+<li><a href="http://50.57.43.108/tools/edition_tool.php" target=_panel>Edition setting tool</a>
 <li><a href="http://50.57.43.108/tools/classifier_fixer.php" target=_panel>Classification fixer</a>
 <li><a href="http://50.57.43.108/tools/address_fixer.php" target=_panel>Address fixer</a>
 <li><a href="http://50.57.43.108/tools/image_fixer.php" target=_panel>Image fixer</a>

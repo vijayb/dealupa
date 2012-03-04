@@ -3,17 +3,15 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
 <link rel="stylesheet" href="blueprint/screen.css" type="text/css" media="screen, projection">
 
-<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
-<script language="javascript" type="text/javascript" src="/tools/flot/jquery.flot.js"></script>
+<script type="text/javascript">
 
 
+</script>
 
 
 </head>
 <body>
 <h2 align=center>Deal Information</h2>
-
-
 
 <form action='/tools/deal_info.php' method=get align=center>
 
@@ -60,15 +58,7 @@ $companies["30"] = "DealFind";
 $companies["31"] = "Restaurant.com";
 $companies["32"] = "Pinchit";
 $companies["33"] = "GoldStar";
-$companies["34"] = "OnSale";
-$companies["35"] = "LivingSocial Adventures";
-$companies["36"] = "Entertainment.com";
-$companies["37"] = "Thrillist";
-$companies["38"] = "Savored";
-$companies["39"] = "MSN Offers";
-$companies["40"] = "CBS Local Offers";
-$companies["41"] = "CrowdSavings";
-$companies["42"] = "PlumDistrict";
+
 
 
 $yesno["0"] = "No";
@@ -106,8 +96,9 @@ if (isset($_GET["deal_url"])) {
   }
 
 
-  $sql = "SELECT id, url, affiliate_url, discovered, last_updated, UNIX_TIMESTAMP(discovered) as discovered_seconds, UNIX_TIMESTAMP(last_updated) as last_updated_seconds, num_updates, dup, dup_id, company_id, title, subtitle, price, value, num_purchased, yelp_url, yelp_rating, yelp_review_count, fb_likes, fb_shares, text, fine_print, expired, upcoming, deadline, expires, UNIX_TIMESTAMP(deadline) as deadline_epoch, name, website, phone FROM Deals777 where $criteria";
+  $sql = "SELECT id, url, affiliate_url, discovered, last_updated, dup, dup_id, company_id, title, subtitle, price, value, num_purchased, text, fine_print, expired, upcoming, deadline, expires, name, website, phone FROM Deals777 where $criteria"; //strcmp(url, '".mysql_real_escape_string($_GET["deal_url"])."')=0";
 
+  //echo "$sql<BR>\n";
   $result = mysql_query($sql);
   if (!$result) {
     die('Error 3: ' .mysql_error());
@@ -126,9 +117,6 @@ if (isset($result) && mysql_num_rows($result) == 1) {
   $affiliate_url = mysql_result($result, 0, "affiliate_url");
   $discovered = mysql_result($result, 0, "discovered");
   $last_updated = mysql_result($result, 0, "last_updated");
-  $discovered_seconds = number_format(time() - mysql_result($result, 0, "discovered_seconds"));
-  $last_updated_seconds = number_format(time() - mysql_result($result, 0, "last_updated_seconds"));
-  $num_updates = mysql_result($result, 0, "num_updates");
   $dup = mysql_result($result, 0, "dup");
   $dup_id = mysql_result($result, 0, "dup_id");
   $company_id = mysql_result($result, 0, "company_id");
@@ -137,30 +125,18 @@ if (isset($result) && mysql_num_rows($result) == 1) {
   $price = mysql_result($result, 0, "price");
   $value = mysql_result($result, 0, "value");
   $num_purchased = mysql_result($result, 0, "num_purchased");
-  $yelp_url = mysql_result($result, 0, "yelp_url");
-  $yelp_rating = mysql_result($result, 0, "yelp_rating");
-  $yelp_review_count = mysql_result($result, 0, "yelp_review_count");
-  $fb_likes = mysql_result($result, 0, "fb_likes");
-  $fb_shares = mysql_result($result, 0, "fb_shares");
   $text = mysql_result($result, 0, "text");
   $fine_print = mysql_result($result, 0, "fine_print");
   $expired = mysql_result($result, 0, "expired");
   $upcoming = mysql_result($result, 0, "upcoming");
   $deadline = mysql_result($result, 0, "deadline");
-  $deadline_epoch = mysql_result($result, 0, "deadline_epoch");
   $expires = mysql_result($result, 0, "expires");
   $name = mysql_result($result, 0, "name");
   $website = mysql_result($result, 0, "website");
   $phone = mysql_result($result, 0, "phone");
 
-  $submitparam = "";
-  if (isset($_GET['submitid'])) {
-    $submitparam= $_GET['submitid'];
-  } else {
-    $submitparam= $_GET['submiturl'];
-  }
   $deal_info_url="/tools/deal_info.php?deal_url=".$_GET['deal_url'].
-    "&submitid=".$submitparam;
+    "&submitid=".$_GET['submitid'];
   echo "<form action='$deal_info_url' method=post align=center>\n";
   echo "<table>\n";
   echo "  <tr><td><b>ID:</b></td><td>$deal_id</td></tr>\n";
@@ -171,9 +147,8 @@ if (isset($result) && mysql_num_rows($result) == 1) {
     echo "<a href='http://50.57.136.167/tools/work_info.php?work=$affiliate_url' target=_work_info>$affiliate_url</a> (<a href='$affiliate_url' target=_blank>web</a>)";
   }
   echo "</td></tr>\n";
-  echo "  <tr><td><b>Discovered:</b></td><td>$discovered ($discovered_seconds seconds ago)</td></tr>\n";
-  echo "  <tr><td><b>Last updated:</b></td><td>$last_updated ($last_updated_seconds seconds ago)</td></tr>\n";
-  echo "  <tr><td><b>Num updates:</b></td><td>$num_updates</td></tr>\n";
+  echo "  <tr><td><b>Discovered:</b></td><td>$discovered</td></tr>\n";
+  echo "  <tr><td><b>Last updated:</b></td><td>$last_updated</td></tr>\n";
   echo "  <tr><td><b>Duplicate:</b></td><td>$yesno[$dup]</td></tr>\n";
   if ($dup) {
     echo "  <tr><td><b>Duplicate ID:</b></td><td><a href='http://50.57.43.108/tools/deal_info.php?deal_url=$dup_id&submitid=search+by+id'>$dup_id</a></td></tr>\n";
@@ -199,14 +174,6 @@ if (isset($result) && mysql_num_rows($result) == 1) {
   echo "  <tr><td><b>Price:</b></td><td>$price</td></tr>\n";
   echo "  <tr><td><b>Value:</b></td><td>$value</td></tr>\n";
   echo "  <tr><td><b>Num purchased:</b></td><td>$num_purchased</td></tr>\n";
-  $yelp_review = "";
-  if (isset($yelp_url)) {
-    $yelp_review = "(<a href=\"$yelp_url\" target=_blank>Yelp review page</a>)";
-  }
-  echo "  <tr><td><b>Yelp rating:</b></td><td>$yelp_rating $yelp_review</td></tr>\n";
-  echo "  <tr><td><b>Yelp review count:</b></td><td>$yelp_review_count</td></tr>\n";
-  echo "  <tr><td><b>Facebook likes:</b></td><td>$fb_likes</td></tr>\n";
-  echo "  <tr><td><b>Facebook shares:</b></td><td>$fb_shares</td></tr>\n";
   echo "  <tr><td><b>Expired:</b></td><td>$yesno[$expired]&nbsp;&nbsp;";
 
   if ($expired) {
@@ -221,27 +188,13 @@ if (isset($result) && mysql_num_rows($result) == 1) {
 
   echo "</td></tr>\n";
   echo "  <tr><td><b>Upcoming:</b></td><td>$yesno[$upcoming]</td></tr>\n";
-  echo "  <tr><td><b>Deadline:</b></td><td>$deadline ($deadline_epoch)</td></tr>\n";
+  echo "  <tr><td><b>Deadline:</b></td><td>$deadline</td></tr>\n";
   echo "  <tr><td><b>Expires:</b></td><td>$expires</td></tr>\n";
   echo "  <tr><td><b>Business name:</b></td><td>$name</td></tr>\n";
   echo "  <tr><td><b>Website:</b></td><td><a href='$website' target=_blank>$website</a></td></tr>\n";
   echo "  <tr><td><b>Phone:</b></td><td>$phone</td></tr>\n";
   echo "</table>\n";
   echo "</form>\n";
-  
-  if (isset($num_purchased) && $num_purchased > 0) {
-    echo "<BR>\n";
-    echo "<script type=\"text/javascript\">\n";
-    echo "   $(function () {\n";
-    $data = getData($deal_id, $con);
-    echo "var d=".$data[0]."\n";
-
-    echo "  $.plot($(\"#placeholder\"), [d], {bars:{show:true, barWidth:30000}, xaxis:{mode:\"time\"}, yaxis: { min:".$data[1].",max:".$data[2]."}} );\n";
-    echo "     });\n";
-    echo "</script>\n";
-    echo "<center><div id=\"placeholder\" style=\"width:600px;height:300px;\"></div></center><BR><BR><BR>\n";
-  }
-
 }
 
 
@@ -411,7 +364,6 @@ $cities["31"] = "St Louis";
 $cities["32"] = "Pittsburgh";
 $cities["33"] = "San Antonio";
 $cities["34"] = "New Orleans";
-$cities["35"] = "Honolulu";
 
 if (isset($deal_id)) {
   $sql = "SELECT city_id FROM Cities777 where deal_id=$deal_id";
@@ -420,9 +372,9 @@ if (isset($deal_id)) {
     die('Error 7: ' .mysql_error());
   }
 
-  $edition_setting_link = "(<a href='http://50.57.43.108/tools/edition_tool.php?deal_id=$deal_id' target=_dealfixer>Add editions or set national</a>)";
+  $nation_setting_link = "(<a href='http://50.57.43.108/tools/nation_tool.php?deal_id=$deal_id' target=_dealfixer>Set national or not</a>)";
   echo "<p>\n";
-  echo "<h3 align=center>Cities $edition_setting_link</h3>\n";
+  echo "<h3 align=center>Cities $nation_setting_link</h3>\n";
   echo "<table>\n";
   echo "     <tr>\n";
   echo "        <td><b>City ID</b></td>\n";
@@ -440,40 +392,6 @@ if (isset($deal_id)) {
 }
 
 
-function getData($deal_id, $con) {
-  $sql = "select num_purchased, unix_timestamp(time) as time from NumPurchased777 where deal_id=$deal_id order by time";
-  //echo $sql."<BR>\n";
-  $result = doQuery($sql, $con);
-
-  $data = "[";
-
-  $min = 0;
-  $max = 0;
-  while ($row = @mysql_fetch_assoc($result)) {
-    if ($min == 0 || $row["num_purchased"] < $min) {
-      $min = $row["num_purchased"];
-    }
-
-    if ($max == 0 || $row["num_purchased"] > $max) {
-      $max = $row["num_purchased"];
-    }
-
-    $data .= "[".$row["time"]."00,".$row["num_purchased"]."],";
-  }
-  $data = substr($data, 0, -1);
-  $data .= "];";
-
-  $min = $min -3;
-  if ($min < 0) { $min = 0; }
-  $max = $max+2;
-
-  $return_array[] = $data;
-  $return_array[] = $min;
-  $return_array[] = $max;
-
-  return $return_array;
-
-}
 
 function expireDeal($deal_id, $expired_value, $con) {
   $sql = "update Deals777 set expired=$expired_value where id=$deal_id";

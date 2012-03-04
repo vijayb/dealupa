@@ -348,14 +348,21 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "<input type=hidden name=company_id value='".$company_id."'>\n";
   echo "<table><tr>\n";
   echo "<td width='700px'>\n";
-  echo "<b>Deal ID: </b> <a href='http://50.57.43.108/tools/deal_info.php?deal_url=$id&submitid=search+by+id' target=blank>$id</a> -  <a href='http://50.57.43.108/tools/address_fixer.php?deal_id=$id' target=_fixer>address fixer</a> -  <a href='http://50.57.43.108/tools/image_fixer.php?deal_id=$id' target=_fixer>image fixer</a><BR>\n";
+  echo "<b>Deal ID: </b> <a href='http://50.57.43.108/tools/deal_info.php?deal_url=$id&submitid=search+by+id' target=blank>$id</a> -  <a href='http://50.57.43.108/tools/address_fixer.php?deal_id=$id' t\
+arget=_fixer>address fixer</a> -  <a href='http://50.57.43.108/tools/image_fixer.php?deal_id=$id' target=_fixer>image fixer</a> - <a href='http://50.57.43.108/tools/edition_tool.php?deal_id=$id' target\
+=_fixer>edition fixer</a><BR>\n";
   echo "<b>URL: </b> <a href=\"$url\" target=blank>".htmlentities($url)."</a><BR>\n";
   if ($num_addresses >0) {
     echo "<b>Number of addresses</b>: $num_addresses<BR>\n";
   } else {
-    echo "<b>Number of addresses</b>: <span style='background-color:red'><b>$num_addresses</b></span><BR>\n";
+    echo "<a href='http://50.57.43.108/tools/address_fixer.php?deal_id=$id' target=_fixer><span style='background-color:red'><b>Number of addresses</b>: <b>$num_addresses</b></span></a><BR>\n";
   }
-  echo "<b>Number of hubs</b>: $num_cities<BR>\n";
+  if ($num_cities >0) {
+    echo "<b>Number of hubs</b>: $num_cities<BR>\n";
+  } else {
+    echo "<a href='http://50.57.43.108/tools/edition_tool.php?deal_id=$id' target=_fixer><span style='background-color:red'><b>Number of hubs</b>: <b>$num_cities</b></span></a><BR>\n";
+  }
+
   echo "<b>Number of title dups</b>: $num_title_dups<BR><BR>\n";
 
   echo "<b>Title: </b> $title<BR>\n";
