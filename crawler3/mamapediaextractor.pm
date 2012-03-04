@@ -35,12 +35,6 @@
 	$tree->parse(decode_utf8 $$deal_content_ref);
 	$tree->eof();
 
-	if ($deal->url() =~ /([^\/]+$)/) {
-	    $deal->affiliate_url("http://www.jdoqocy.com/click-5498612-10779141?url=".
-				 uri_escape($deal->url().
-					    "?utm_campaign=$1&utm_source=cj"));
-	}
-
 	my @title = $tree->look_down(
 		sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('name')) &&
 			defined($_[0]->attr('content')) &&

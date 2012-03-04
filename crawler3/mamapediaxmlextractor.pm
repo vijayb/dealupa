@@ -11,18 +11,13 @@
     use XML::TreeBuilder;
     use URI::Escape;
 
-    # Couldn't get CJ download authentication to work, so just went with
-    # standard hub page/deal page crawler setup...
-    # This file isn't used, but keep it just in case we figure out
-    # Commission Junction feed authentication.
 
     sub extract {
 	my $xml_content_ref = shift;
 	
 	my $tree = XML::TreeBuilder->new;
 	$tree->parse($$xml_content_ref);
-	my @deal_tags = $tree->look_down(sub{$_[0]->tag() eq "item"});
-
+	my @deal_tags = $tree->look_down(sub{$_[0]->tag() eq "product"});
 
 	my @deals;
 	foreach my $deal_tag (@deal_tags) {
@@ -33,6 +28,7 @@
 		$deal->affiliate_url($affiliate_url->as_text());
 		if ($affiliate_url->as_text() =~ /url=(.*)$/) {
 		    my $url = uri_unescape($1);
+		    $url =~ s/\?[^\?]*$//;
 		    if ($url =~ /^http/) {
 			$deal->url($url);
 		    } else {

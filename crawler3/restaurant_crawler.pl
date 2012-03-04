@@ -28,7 +28,7 @@ use constant {
     RESTAURANT_CACHE_DIRECTORY => "./restaurant_cache/",	
     FEED_RECRAWL_AGE => 18000, # 10 hours
     CJ_USERNAME => "3500744",
-    CJ_PASSWORD => "jroHW5JS"
+    CJ_PASSWORD => "758v6BY7"
 };
 
 

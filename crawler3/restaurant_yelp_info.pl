@@ -33,7 +33,7 @@ use constant {
     YELP_ID => "wu6Vp9sa7z62Wpv7H-7GwA",
     FEED_RECRAWL_AGE => 18000, # 10 hours
     CJ_USERNAME => "3500744",
-    CJ_PASSWORD => "7ucNNhi3",
+    CJ_PASSWORD => "758v6BY7",
     MAX_OFFERS_TO_PROCESS => 10
 };
 

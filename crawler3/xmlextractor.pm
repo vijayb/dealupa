@@ -13,6 +13,7 @@
     use crowdseatsxmlextractor;
     use landmarkxmlextractor;
     use plumdistrictxmlextractor;
+    use mamapediaxmlextractor;
     
     my %company_to_extractor_map;
 

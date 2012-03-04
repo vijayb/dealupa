@@ -13,7 +13,7 @@
         COOKIE_DURATION => 6000000,
 	CRAWL_CACHE_DIRECTORY => "./crawl_cache/",
 	CJ_USERNAME => "3500744",
-	CJ_PASSWORD => "jroHW5JS",
+	CJ_PASSWORD => "758v6BY7"
     };
 
     my $browser = LWP::UserAgent->new();
@@ -122,7 +122,13 @@
 	open(FILE, $feed_file) || return;
 	$feed_xml = <FILE>;
 	close(FILE);
-	return $feed_xml;
+
+	if (defined($feed_xml) && length($feed_xml) > 100) {
+	    my $response = HTTP::Response->new(200);
+	    $response->content($feed_xml);
+	    return $response;
+	} 
+	return undef;
     }
 
 
