@@ -56,7 +56,7 @@
 
 	my @price = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /^price/)});
+		    ($_[0]->attr('class') =~ /^singleprice/)});
 
 	if (@price && $price[0]->as_text() =~ /([0-9,\.]+)/) {
 	    my $price = $1;
@@ -65,8 +65,8 @@
 	}
 
 	my @value = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /^value/)});
+	    sub{defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /^off-price/)});
 
 	if (@value && $value[0]->as_text() =~ /([0-9,\.]+)/) {
 	    my $value = $1;
