@@ -176,12 +176,26 @@
 	    $deal->website($website[0]->attr('href'));
 	}
 
-	my @address_container = $tree->look_down(
+
+	my @addresses = $tree->look_down(
+	    sub{$_[0]->tag() eq "div" &&
+		    defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "map-address" &&
+		    defined($_[0]->attr('onclick'))});
+
+	foreach my $address (@addresses) {
+	    if ($address->attr('onclick') =~ /[\'\"]([^\'\"]+)/) {
+		$deal->addresses($1);
+	    }
+	}
+
+
+	my @phone_container = $tree->look_down(
 	    sub{$_[0]->tag() eq "table" &&
 		    $_[0]->as_text() =~ /larger\s*map/i});
 
-	if (@address_container) {
-	    my @divs = $address_container[0]->look_down(sub{$_[0]->tag() eq "div"});
+	if (@phone_container) {
+	    my @divs = $phone_container[0]->look_down(sub{$_[0]->tag() eq "div"});
 
 	    foreach my $div (@divs) {
 		my $phone = $div->as_text();
@@ -195,18 +209,7 @@
 		    $deal->phone($phone);
 		}
 	    }
-
-	    foreach my $div (@divs) {
-		my $address = $div->as_HTML();
-		if ($address =~ />([^<]+<br.*?)<div/) {
-		    $address = $1;
-		    $address =~ s/<[^>]*>/ /g;
-		    $deal->addresses($address);
-		    last;
-		}
-	    }
 	}
-
 
 
 	$tree->delete();
