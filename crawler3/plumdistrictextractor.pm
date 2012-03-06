@@ -85,7 +85,7 @@
 		$address =~ s/\s+/ /g;
 		$address =~ s/^\s*//;
 		$address =~ s/\s*$//;
-		if ($address =~ /(\(.*$)/) {
+		if ($address =~ /(\([0-9].*$)/) {
 		    my $phone = $1;
 		    my $tmpphone = $phone;
 		    $tmpphone =~ s/[^0-9]//g;

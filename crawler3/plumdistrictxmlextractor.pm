@@ -88,7 +88,7 @@
 	    
 	    # For debugging, to perform extraction on a particular element
 	    # in the feed, just uncomment lines below and choose the content id:
-	    #if (defined($content_id) && $content_id->as_text() == 19739) {
+	    #if (defined($content_id) && $content_id->as_text() == 20655) {
 	    push(@deals, $deal);
 	    #}
 
