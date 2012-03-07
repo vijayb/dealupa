@@ -185,7 +185,10 @@
 
 	foreach my $address (@addresses) {
 	    if ($address->attr('onclick') =~ /[\'\"]([^\'\"]+)/) {
-		$deal->addresses($1);
+		my $address = $1;
+		if (length($address) > 7) {
+		    $deal->addresses($address);
+		}
 	    }
 	}
 
