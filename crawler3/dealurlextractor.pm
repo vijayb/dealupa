@@ -118,11 +118,11 @@
             if ($deal->attr('href') !~
 		/categories|set_location_sort|special_content|discussion|options/)
 	    {
-                if ($deal->attr('href') =~ /^(\/deals\/[^\?]+)/) {
-                    addToDealUrls($_[0], "http://groupon.com$1");
+                if ($deal->attr('href') =~ /(http:\/\/www.groupon.com\/deals\/[^\?]+)/) {
+                    addToDealUrls($_[0], $1);
                 }
-                if ($deal->attr('href') =~ /^(\/ch\/[^\?]+)/) {
-                    addToDealUrls($_[0], "http://groupon.com$1");
+                if ($deal->attr('href') =~ /(http:\/\/www.groupon.com\/ch\/[^\?]+)/) {
+		    addToDealUrls($_[0], $1);
                 }
             }
         }
