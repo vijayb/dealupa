@@ -229,7 +229,9 @@
 		    my $clean_address = $1;
 		    $clean_address =~ s/%[0-9][A-Z]/ /g;
 		    $clean_address =~ s/\+/ /g;
-		    $deal->addresses($clean_address);
+		    if ($clean_address !~ /^http/) {
+			$deal->addresses($clean_address);
+		    }
 		}
 	    }
 
