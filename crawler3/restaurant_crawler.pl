@@ -23,6 +23,7 @@ use XML::TreeBuilder;
 
 use constant {
     WORK_TYPE => 8,
+    IMAGE_CRAWLER_WORK_TYPE => 9,
     RESTAURANT_COMPANY_ID => 31,
     MAX_DEALS_TO_ADD => 3000,
     RESTAURANT_CACHE_DIRECTORY => "./restaurant_cache/",	
@@ -129,7 +130,9 @@ sub doWork {
 	    my $score = score($merchant);
 
 	    if ($score > 4.07 && editionbounds::inLiveEdition($lat, $lng)) {
-		$new_deals += insertDeal($merchant, $output_dbh);
+		$new_deals += insertDeal($merchant, $output_dbh,
+					 ${$work_ref}{"output_server"},
+					 ${$work_ref}{"output_database"});
 		print ".";
 		$add_total++;
 	    }
@@ -149,7 +152,11 @@ sub doWork {
 sub insertDeal {
     my $merchant_ref = shift;
     my $dbh = shift;
+    my $output_server = shift;
+    my $output_database = shift;
+
     my $is_deal_new = 0;
+
 
     my $deal_id = &dealsdbutils::getDealId($dbh, $$merchant_ref{"url"});
     
@@ -158,6 +165,17 @@ sub insertDeal {
 	$deal_id =
 	    &dealsdbutils::createDealId($dbh, $$merchant_ref{"url"},
 					RESTAURANT_COMPANY_ID);
+
+	# If deal has any images, we need to add image crawling
+	# work to the WorkQueue
+	if (defined($$merchant_ref{"image_url"})) {
+	    workqueue::addWork($$merchant_ref{"url"}, IMAGE_CRAWLER_WORK_TYPE,
+			       RESTAURANT_COMPANY_ID, 0, 
+			       # Image crawler info should be put in same
+			       # database as deal
+			       $output_server, $output_database, 0);
+	}
+
 
 	if (!&dealsdbutils::inTable($dbh, $deal_id, "Addresses777")) {
 	    insertAddress($merchant_ref, $dbh, $deal_id);

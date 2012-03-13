@@ -23,6 +23,7 @@ use constant {
     WORK_TYPE => 6,
     GEOCODER_WORK_TYPE => 4,
     YELP_REVIEWER_WORK_TYPE => 5,
+    IMAGE_CRAWLER_WORK_TYPE => 9,
     # We don't set the yelp frequency to 0, which we do for geocoding. The
     # reason is that we may have to make multiple attempts at finding
     # the yelp review based on whether the geocoder has finished running
@@ -165,6 +166,25 @@ sub doWork {
 			next
 		    }		
 		}
+
+
+		# If deal has any images, we need to add image crawling
+		# work to the WorkQueue
+		if (scalar(keys(%{$deal->image_urls()})) > 0)
+		{
+		    unless (
+			workqueue::addWork($deal->url(), IMAGE_CRAWLER_WORK_TYPE,
+					   $company_id, 0, 
+					   # Image crawler info should be put in same
+					   # database as deal
+					   ${$work_ref}{"output_server"},
+					   ${$work_ref}{"output_database"},
+					   0))
+		    {
+			next;
+		    }
+		}
+	    
 		
 		$num_inserted++;
 	    }

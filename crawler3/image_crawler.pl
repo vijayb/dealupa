@@ -23,10 +23,11 @@ use constant {
     SMALL_IMAGE_WIDTH => 310,
     SMALL_IMAGE_QUALITY => 75,
     LARGE_IMAGE_PIXEL_AREA => 480000, # 800 x 600 pixels
-    LARGE_IMAGE_QUALITY => 60
+    LARGE_IMAGE_QUALITY => 60,
+    RETIREMENT_AGE => 18000
 };
 
-
+my $start_time = time();
 createCacheDirectory();
 
 my $s3 = Net::Amazon::S3->new(
@@ -38,13 +39,18 @@ my $s3 = Net::Amazon::S3->new(
 
 my $s3_bucket = $s3->bucket(S3_BUCKET);
 
-
-workqueue::registerWorker(\&doWork, WORK_TYPE, 5, 0, 60) ||
+workqueue::registerWorker(\&doWork, WORK_TYPE, 10, 1, 30) ||
     die "Unable to register worker\n";
 workqueue::run();
 
 
 sub doWork {
+    if (time() - $start_time > RETIREMENT_AGE) {
+	print "Process getting old, requesting shutdown...\n";
+	workqueue::requestShutdown();
+    }
+
+
     my $work_ref = shift;
     my $workqueue_dbh = shift;
     my $output_dbh = shift;
@@ -118,7 +124,7 @@ sub doWork {
 	    my $s3_large_key = sha1_hex($image_url);
 	    my $s3_small_key = sha1_hex($image_url) . "_small";
 
-	    print "\tWriting $image_url to s3...\n";
+	    print "Writing $image_url to s3...\n";
 	    my $error = 0;
 	    $s3_bucket->add_key_filename($s3_large_key, $image_file_name,
 					 { content_type => 'image/$type', },) 
@@ -130,6 +136,9 @@ sub doWork {
 
 	    markHasS3($output_dbh, $image_id, $status_ref, $status_message_ref) || last;
 
+	    unlink($image_file_name);
+	    unlink($small_image_file_name);
+
 	    if ($error) {
 		$$status_ref = 2;
 		$$status_message_ref = 
@@ -137,6 +146,9 @@ sub doWork {
 		last;
 	    }
 	} else {
+	    unlink($image_file_name);
+	    unlink($small_image_file_name);
+
 	    $$status_ref = 2;
 	    $$status_message_ref = "Failed processing image (id: $image_id): $image_url";
 	    last;

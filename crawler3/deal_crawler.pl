@@ -188,7 +188,7 @@ sub doWork {
 
             # If deal has any images, we need to add image crawling
             # work to the WorkQueue
-            if (!$deal_expired && scalar(keys(%{$deal->image_urls()})) > 0)
+            if (scalar(keys(%{$deal->image_urls()})) > 0)
 	    {
 		unless (
 		    workqueue::addWork($deal->url(), IMAGE_CRAWLER_WORK_TYPE,

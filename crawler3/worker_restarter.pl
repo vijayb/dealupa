@@ -25,14 +25,14 @@ $jobs{"108.166.127.22"} = ["hub_adder", "xml_crawler", "yelp_reviewer",
 			   "solr_reloader", "email_sender", "work_reaper"];
 
 # Crawler 2:
-$jobs{"184.106.175.144"} = ["hub_crawler", "deal_crawler", "geo_coder",
+$jobs{"184.106.175.144"} = ["hub_crawler", "deal_crawler", "geo_coder", "image_crawler",
 			    "restaurant_crawler"];
 
 # Crawler 3:
-$jobs{"184.106.174.162"} = ["hub_crawler", "deal_crawler", "geo_coder"];
+$jobs{"184.106.174.162"} = ["hub_crawler", "deal_crawler", "geo_coder", "image_crawler"];
 
 # Crawler 4:
-$jobs{"50.57.36.164"} = ["hub_crawler", "deal_crawler", "geo_coder"];
+$jobs{"50.57.36.164"} = ["hub_crawler", "deal_crawler", "geo_coder", "image_crawler"];
 
 # All other machines
 $jobs{"any_ip"} = ["hub_adder"];# "crawler", "deal_crawler", "geo_coder"];
