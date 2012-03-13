@@ -1,3 +1,4 @@
 yelp_cache/*
 crawl_cache/*
+image_cache/*
 restaurant_cache/*

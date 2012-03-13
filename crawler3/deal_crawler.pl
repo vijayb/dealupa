@@ -28,6 +28,7 @@ use constant {
     YELP_WORK_FREQUENCY => 300,
     MAX_CRAWLABLE_AGE => 864000, # 10 days in seconds
 
+    IMAGE_CRAWLER_WORK_TYPE => 9,
     # Since the deal crawler seems to slowly grow in memory usage
     # we'll retire it every 5 hours. It gets restarted by the worker_restarter
     # so it doesn't matter if they retire, they'll just get respawned.
@@ -184,6 +185,26 @@ sub doWork {
 		}		
 	    }
 	    
+
+            # If deal has any images, we need to add image crawling
+            # work to the WorkQueue
+            if (!$deal_expired && scalar(keys(%{$deal->image_urls()})) > 0)
+	    {
+		unless (
+		    workqueue::addWork($deal->url(), IMAGE_CRAWLER_WORK_TYPE,
+				       $deal->company_id(), 0, 
+				       # Image crawler info should be put in same
+				       # database as deal
+				       ${$work_ref}{"output_server"},
+				       ${$work_ref}{"output_database"},
+				       0))
+		{
+		    $$status_ref = 2;
+		    $$status_message_ref = "Unable to insert image crawling work onto ".
+			"work queue for deal: ".$deal_url;
+		    return;
+		}
+            }
 	    
 	    # If we've gotten this far, then we've successfully
 	    # extracted and inserted the deal, plus added any

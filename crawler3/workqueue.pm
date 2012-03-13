@@ -454,7 +454,7 @@
     }
 
     sub pid {
-	return $ip;
+	return $pid;
     }
     
     1;

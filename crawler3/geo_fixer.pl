@@ -14,7 +14,7 @@ use Geo::Coder::Googlev3;
 my $geocoder = Geo::Coder::Googlev3->new;
  
 use constant {
-    WORK_TYPE => 9,
+    WORK_TYPE => 10,
 };
 
 
