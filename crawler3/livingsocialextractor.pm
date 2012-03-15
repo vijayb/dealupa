@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
-# Copyright (c) 2011, All Rights Reserved
-# Author: Vijay Boyapati (vijayb@gmail.com) July, 2011
+# Copyright (c) 2011, 2012 All Rights Reserved
+# Author: Vijay Boyapati (vijayb@gmail.com) July, 2011 - March, 2012
 #
 {
     package livingsocialextractor;
@@ -8,7 +8,6 @@
     use strict;
     use warnings;
     use deal;
-    use genericextractor;
     use crawlerutils;
     use HTML::TreeBuilder;
     use Encode;
@@ -56,22 +55,27 @@
 	}
 
 
-	my $price = &genericextractor::extractBetweenPatternsN(
-	    3, $deal_content_ref, "<div\\s+class=[\'\"]deal-price",
-	    "<\\/div>", "<[^>]*>", "\\\$", "\\s+");
-	if (defined($price) && $price =~ /^([0-9]*\.?[0-9]+)$/) {
-	    $deal->price($1);
+	my @price = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /^deal-price/)});
+
+	if (@price && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
+	    my $price = $1;
+	    $price =~ s/,//g;
+	    $deal->price($price);
 	}
+
 
 	# LivingSocial doesn't directly give us the value, only
 	# the discount percentage. We have to infer the value.
 	if (defined($deal->price())) {
-	    my $value = &genericextractor::extractBetweenPatternsN(
-	    5, $deal_content_ref, "<div\\s+class=[\'\"]value",
-	    "<\\/div>", "<[^>]*>");
-	    if (defined($value) && $value =~ /([1-9][0-9]?)%/) {
+	    my @percent = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+			($_[0]->attr('id') eq "percentage")});
+	    
+	    if (@percent && $percent[0]->as_text() =~ /([1-9][0-9]?)%/) {
 		my $percent = $1/100.0;
-		$value = sprintf("%.0f", $deal->price()/(1.0-$percent));
+		my $value = sprintf("%.0f", $deal->price()/(1.0-$percent));
 		$deal->value($value);
 	    }
 	}
@@ -111,16 +115,20 @@
 	}
 
 	if (!defined($deal->expired()) && !$deal->expired()) {
-	    my $deadline = &genericextractor::extractBetweenPatternsN(
-		10, $deal_content_ref,
-		"<div\\s+id=[\'\"]countdown[\'\"]>", "<\\/div>",
-		"<[^>]*>", "\\s+");
-
-	    if (!defined($deadline)) {
-		$deadline = &genericextractor::extractBetweenPatternsN(
-		50, $deal_content_ref,
-		    "<ul\\s+class=[\'\"]clearfix\\s+deal-info", "remaining",
-		    "<[^>]*>", "\\s+");
+	    my $deadline;
+	    my @deadline = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+			($_[0]->attr('id') eq "countdown")});
+	    if (@deadline) {
+		$deadline = $deadline[0]->as_text();
+		$deadline =~ s/\s//g;
+	    } else {
+		@deadline = $tree->look_down(
+		    sub{defined($_[0]->attr('class')) &&
+			    ($_[0]->attr('class') =~ /clearfix\s*deal-info/)});
+		if (@deadline) {
+		    $deadline = $deadline[0]->as_text();
+		}
 	    }
 
 	    my $days = 0;
@@ -137,7 +145,7 @@
 	    # inaccurate will be the computed deadline. But hopefully
 	    # it won't be off by more than a few seconds.
 	    if (defined($deadline)) {
-		if ($deadline =~ /([0-9]{1,2})days?/) {
+		if ($deadline =~ /([0-9]{1,2})\s*days?/) {
 		    $days = $1;
 		} elsif ($deadline =~ /([0-9]{2}):([0-9]{2}):([0-9]{2})/) {
 		    $hours = $1;
@@ -173,28 +181,28 @@
 	    }
 	}
 
-	my @description = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "deal-description")});
-
-	if (@description) {
-	    my @text = $description[0]->look_down(
+	my @text = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "view-details-full")});
+	if (!@text) {
+	    @text = $tree->look_down(
 		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-			($_[0]->attr('id') =~ /full/)});
-	    if (@text) {
-		my $clean_text = $text[0]->as_HTML();
-		$clean_text =~ s/<\/?div[^>]*>//g;
-		$clean_text =~ s/<[^<]+>[^>]+<\/a>\s*$//;
-		$clean_text =~ s/<script[^>]*>//g;
-		$clean_text =~ s/\{\{[^\}]*\}\}>//g;
-		$deal->text($clean_text);
-	    }
+			($_[0]->attr('id') eq "sfwt_full_1")});
+	}
+
+	if (@text) {
+	    my $clean_text = $text[0]->as_HTML();
+	    $clean_text =~ s/<\/?div[^>]*>//g;
+	    $clean_text =~ s/<[^<]+>[^>]+<\/a>\s*$//;
+	    $clean_text =~ s/<script[^>]*>//g;
+	    $clean_text =~ s/\{\{[^\}]*\}\}>//g;
+	    $deal->text($clean_text);
 	}
 
 
 	my @fine_print = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "sfwt_full_2")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "fine-print")});
 	if (@fine_print) {
 	    my $clean_fine_print = $fine_print[0]->as_HTML();
 	    $clean_fine_print =~ s/<\/?div[^>]*>//g;
@@ -218,14 +226,31 @@
 	    }
 	}
 
+	# Name
+	my @name = $tree->look_down(
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    ($_[0]->attr('property') eq "og:merchant")});
+	if (@name) {
+	    $deal->name($name[0]->attr('content'));
+	}
 
-	# Get both the name and website in one go.
-	if (defined($deal->title())) {
-	    my $website_regex = 
-		"href=[\'\"]([^\'\"]+)[\'\"][^>]*>".$deal->title();
-	    if (defined($deal->text()) && $deal->text() =~ /$website_regex/i) {
-		$deal->website($1);
-		$deal->name($deal->title());
+	# Website
+	my @website_container = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "view-details-full")});
+	if (!@website_container) {
+	    @website_container = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "deal-description")});
+	}
+
+	if (@website_container) {
+	    my @website = $website_container[0]->look_down(
+		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+			($_[0]->attr('href') =~ /^http/)});
+	    if (@website) {
+		$deal->website($website[0]->attr('href'));
 	    }
 	}
 

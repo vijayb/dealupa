@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
-# Copyright (c) 2011, All Rights Reserved
-# Author: Vijay Boyapati (vijayb@gmail.com) July-November, 2011
+# Copyright (c) 2011, 2012 All Rights Reserved
+# Author: Vijay Boyapati (vijayb@gmail.com) July, 2011 - March,2012
 #
 {
     package dealurlextractor;
@@ -133,49 +133,18 @@
         my $hub_properties = $_[1];
         my $tree_ref = $_[2];
         
-	my @links_div = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "nearby-deals inline"});
+	my @links = ${$tree_ref}->look_down(
+            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+		    $_[0]->attr('href') =~ /^\/deals\// &&
+		    $_[0]->as_text() =~ /view\s*deal/i &&
+		    defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') =~ /button\s*buy-now/});
 	
-	if (!@links_div) {
-	    @links_div = ${$tree_ref}->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-			$_[0]->attr('class') eq "near-cities clearfix"});
-	}
 
-
-	foreach my $link_div (@links_div) {
-	    my @deal_urls = $link_div->look_down(
-		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href'))});
-	    foreach my $deal (@deal_urls) {
-		if ($deal->attr('href') =~ /^(\/deals\/[0-9]+-[^\?]+)/)
-		{
-		    addToDealUrls($_[0], "http://livingsocial.com$1");
-		}
-
-		if ($deal->attr('href') =~
-		    /^(\/cities\/[0-9]+\/deals\/[0-9]+-[^\?]+)/)
-		{
-		    addToDealUrls($_[0], "http://livingsocial.com$1");
-		}
-	    }
-	}
-
-
-	my @buy_box = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    $_[0]->attr('id') eq "deal-buy-box"});
-
-	if (@buy_box) {
-	    my @deal_urls = $buy_box[0]->look_down(
-		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href'))});
-	    foreach my $deal (@deal_urls) {
-		if ($deal->attr('href') =~
-		    /^(\/deals\/[0-9]+[^\/]+)\/purchases\/new/)
-		{
-		    addToDealUrls($_[0], "http://livingsocial.com$1");
-		}
-	    }    
+	foreach my $link (@links) {
+	    my $url = "http://www.livingsocial.com".$link->attr('href');
+	    #print "[$url]\n";
+	    addToDealUrls($_[0], $url);
 	}
     }
 
