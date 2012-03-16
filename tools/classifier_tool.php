@@ -242,7 +242,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   }
 
   if (($num_addresses==0 && ($num_cities > 2 || $num_title_dups > 2)) || 
-      ($num_addresses==0 && $company_id==42) || // Plumdistrict
+      ($num_addresses==0 && $company_id==42 && !preg_match("/cleaning/i", $row['title'])) || // Plumdistrict
       (isset($row['title']) && preg_match("/Online Deal/", $row['title'])) ||
       (isset($row['url']) && preg_match("/\/nation/", $row['title']))) {
     $national_checked = "checked=yes";
@@ -278,7 +278,9 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "<b>Title: </b> $title<BR>\n";
   echo "<b>Subtitle: </b> $subtitle<BR>\n";
   echo "<b>Yelp categories: </b> $yelp_categories<BR>\n";
-  echo "<img src='$image_url'><br>\n";
+
+  $s3_image_url = "http://dealupa_images.s3.amazonaws.com/".sha1($image_url);
+  echo "<img src='$s3_image_url' width=250px><br>\n";
   $text = preg_replace("/<script[^>]+>/", "", $text);
   echo "<b>Text: </b><BR>\n\n<blockquote>$text\n\n</blockquote>\n";
   echo "<BR><BR><BR><b>Fine print: </b> $fine_print<BR>\n";

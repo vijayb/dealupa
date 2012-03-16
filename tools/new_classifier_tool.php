@@ -331,7 +331,9 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     $num_title_dups = 0;
   }
 
+
   if (($num_addresses==0 && ($num_cities > 2 || $num_title_dups > 2)) ||
+      ($num_addresses==0 && $company_id==42 && !preg_match("/cleaning/i", $row['title'])) || // Plumdistrict                                                                                              
       (isset($row['title']) && preg_match("/Online Deal/", $row['title'])) ||
       (isset($row['url']) && preg_match("/\/nation/", $row['title']))) {
     $national_checked = "checked=yes";

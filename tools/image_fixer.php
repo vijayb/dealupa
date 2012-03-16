@@ -45,6 +45,18 @@ if (!$con) {
   die('Error: could not connect. ' . mysql_error());
 }
 mysql_select_db("Deals", $con) or die(mysql_error());
+
+
+$wq_con = mysql_connect("50.57.136.167", "crawler", "daewoo");
+if (!$wq_con) {
+  die('Error: could not connect. ' . mysql_error());
+}
+mysql_select_db("WorkQueue", $wq_con) or die(mysql_error());
+
+
+
+
+
 // MySQL connection
 
 
@@ -60,6 +72,7 @@ if (isset($_POST["add_image"])) {
   $update_deal_id = $_POST["deal_id"];
   if (isset($_POST["image_url"]) && strlen($_POST["image_url"]) > 10) {
     addImage($update_deal_id, $_POST["image_url"], $con);
+    resetImageWork($update_deal_id, $con, $wq_con);
     echo "<font color='green'>Successfully added image</font><BR>\n";
   } else {
     echo "<font color='red'>Invalid image url, not long enough, so not adding it</font><BR>\n";
@@ -176,6 +189,23 @@ function addImage($deal_id, $image_url, $con) {
   updateDeal($deal_id, $con);
 
 }
+
+function resetImageWork($deal_id, $deals_con, $wq_con) {
+  $sql = "select url from Deals777 where id=$deal_id limit 1";
+  $result = doQuery($sql, $deals_con);
+  if ($row = @mysql_fetch_assoc($result)) {
+    $url = $row['url'];
+    $sql = "update WorkQueue set started=null, completed=null, status=null, status_message=null where type=9 and completed is not null ".
+      "and strcmp(work, '".mysql_real_escape_string($url)."')=0";
+    doQuery($sql, $wq_con);
+    echo "[$sql]<BR>\n";
+  } else {
+    echo "Failed getting URL for id\n";
+    exit;
+  }
+
+}
+
 
 function removeImage($deal_id, $image_id, $con) {
   $sql = "delete from Images777 where id=$image_id limit 1";

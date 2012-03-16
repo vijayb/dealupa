@@ -69,6 +69,7 @@ $companies["39"] = "MSN Offers";
 $companies["40"] = "CBS Local Offers";
 $companies["41"] = "CrowdSavings";
 $companies["42"] = "PlumDistrict";
+$companies["43"] = "Mamapedia";
 
 
 $yesno["0"] = "No";
@@ -306,7 +307,7 @@ if (isset($deal_id)) {
 
 
 if (isset($deal_id)) {
-  $sql = "SELECT image_url FROM Images777 where deal_id=$deal_id";
+  $sql = "SELECT image_url, on_s3 FROM Images777 where deal_id=$deal_id";
 
   $result = mysql_query($sql);
   if (!$result) {
@@ -324,9 +325,20 @@ if (isset($deal_id)) {
   
   for ($i=0;$i < mysql_num_rows($result); $i++) {
     $image_url = mysql_result($result, $i, "image_url");
+    $on_s3 = mysql_result($result, $i, "on_s3");
+    $s3_info = "";
+    $s3_image = "";
+    if ($on_s3) {
+      $s3_info = "<font color=\"green\">On s3: </font>";
+      $s3_image = "<img src=\"http://dealupa_images.s3.amazonaws.com/".sha1($image_url)."_small\" >";
+    } else {
+      $s3_info = "<font color=\"red\"><b>NOT on s3:</b> </font>";
+    }
+
+    $blah = sha1($image_url);
     
     echo "     <tr>\n";
-    echo "        <td><a href='$image_url' target=_blank>$image_url</a></td>\n";
+    echo "        <td>$s3_info <a href='$image_url' target=_blank>$image_url</a> $s3_image</td>\n";
     echo "     </tr>\n";
     
   }
