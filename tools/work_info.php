@@ -64,6 +64,8 @@ $types["5"] = "Yelp reviewer";
 $types["6"] = "XML feed crawler";
 $types["7"] = "Restaurant.com yelp info gatherer";
 $types["8"] = "Restaurant.com feed crawler";
+$types["9"] = "Image crawler";
+$types["10"] = "Geo fixer";
 $types["101"] = "Cache reloader";
 $types["102"] = "Solr rebuilder";
 $types["103"] = "Email sender";
@@ -109,6 +111,8 @@ $companies["38"] = "Savored";
 $companies["39"] = "MSN Offers";
 $companies["40"] = "CBS Local Offers";
 $companies["41"] = "CrowdSavings";
+$companies["42"] = "PlumDistrict";
+$companies["43"] = "Mamapedia";
 
 
 
