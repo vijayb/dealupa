@@ -22,10 +22,10 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Images777`
+-- Table structure for table `Images`
 --
 
-CREATE TABLE IF NOT EXISTS `Images777` (
+CREATE TABLE IF NOT EXISTS `Images` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `deal_id` int(10) unsigned NOT NULL,
   `image_url` varchar(2000) NOT NULL,
@@ -36,14 +36,14 @@ CREATE TABLE IF NOT EXISTS `Images777` (
   KEY `deal_id` (`deal_id`),
   KEY `image_url_hash` (`image_url_hash`),
   KEY `on_s3` (`on_s3`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=116589 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
--- Triggers `Images777`
+-- Triggers `Images`
 --
 DROP TRIGGER IF EXISTS `imagestrigger`;
 DELIMITER //
-CREATE TRIGGER `imagestrigger` BEFORE INSERT ON `Images777`
+CREATE TRIGGER `imagestrigger` BEFORE INSERT ON `Images`
  FOR EACH ROW SET
     NEW.image_url_hash = UNHEX(SHA1(NEW.image_url))
 //

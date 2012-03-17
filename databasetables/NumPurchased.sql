@@ -22,14 +22,14 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `NumPurchased777`
+-- Table structure for table `NumPurchased`
 --
 
-CREATE TABLE IF NOT EXISTS `NumPurchased777` (
+CREATE TABLE IF NOT EXISTS `NumPurchased` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `deal_id` int(10) unsigned NOT NULL,
   `num_purchased` int(11) NOT NULL,
   `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `deal_id` (`deal_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=248674 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

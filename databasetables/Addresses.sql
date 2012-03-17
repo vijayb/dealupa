@@ -22,10 +22,10 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Addresses777`
+-- Table structure for table `Addresses`
 --
 
-CREATE TABLE IF NOT EXISTS `Addresses777` (
+CREATE TABLE IF NOT EXISTS `Addresses` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `deal_id` int(10) unsigned NOT NULL,
   `raw_address` varchar(500) NOT NULL,
@@ -40,4 +40,4 @@ CREATE TABLE IF NOT EXISTS `Addresses777` (
   `longitude` float DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `deal_id` (`deal_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=74846 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

@@ -22,10 +22,10 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Deals777`
+-- Table structure for table `Deals`
 --
 
-CREATE TABLE IF NOT EXISTS `Deals777` (
+CREATE TABLE IF NOT EXISTS `Deals` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `url` varchar(2000) NOT NULL,
   `url_hash` binary(20) NOT NULL,
@@ -84,21 +84,21 @@ CREATE TABLE IF NOT EXISTS `Deals777` (
   KEY `discovered` (`discovered`),
   KEY `dup` (`dup`),
   KEY `dup_id` (`dup_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=96717 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
--- Triggers `Deals777`
+-- Triggers `Deals`
 --
 DROP TRIGGER IF EXISTS `dealstrigger`;
 DELIMITER //
-CREATE TRIGGER `dealstrigger` BEFORE INSERT ON `Deals777`
+CREATE TRIGGER `dealstrigger` BEFORE INSERT ON `Deals`
  FOR EACH ROW SET
     NEW.url_hash = UNHEX(SHA1(NEW.url))
 //
 DELIMITER ;
 DROP TRIGGER IF EXISTS `dealstrigger2`;
 DELIMITER //
-CREATE TRIGGER `dealstrigger2` BEFORE UPDATE ON `Deals777`
+CREATE TRIGGER `dealstrigger2` BEFORE UPDATE ON `Deals`
  FOR EACH ROW SET
     NEW.num_updates=NEW.num_updates+1
 //
