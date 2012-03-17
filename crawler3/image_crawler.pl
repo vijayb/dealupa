@@ -67,7 +67,7 @@ sub doWork {
         return;
     }
     
-    my $sql = "select id, image_url from Images777 where deal_id=?";
+    my $sql = "select id, image_url from Images where deal_id=?";
     my $sth = $output_dbh->prepare($sql);
     $sth->bind_param(1, $deal_id);
     if (!$sth->execute()) {
@@ -184,7 +184,7 @@ sub markHasS3 {
     my $status_ref = shift;
     my $status_message_ref = shift;
 
-    my $sql = "update Images777 set on_s3=true where id=?";
+    my $sql = "update Images set on_s3=true where id=?";
     
     my $sth = $dbh->prepare($sql);
     $sth->bind_param(1, $image_id);
@@ -202,7 +202,7 @@ sub updateDeal {
     my $dbh = shift;
     my $deal_id = shift;
 
-    my $sql = "update Deals777 set last_updated=UTC_TIMESTAMP() where id=?";
+    my $sql = "update Deals set last_updated=UTC_TIMESTAMP() where id=?";
     
     my $sth = $dbh->prepare($sql);
     $sth->bind_param(1, $deal_id);

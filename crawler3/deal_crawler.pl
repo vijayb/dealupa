@@ -281,17 +281,17 @@ sub insertDeal {
     }
 
 
-    if (!&dealsdbutils::inTable($dbh, $deal_id, "Addresses777")) {
+    if (!&dealsdbutils::inTable($dbh, $deal_id, "Addresses")) {
 	insertAddresses($dbh, $deal, $deal_id,
 			$status_ref, $status_message_ref) || return 0;
     }
 
-    if (!&dealsdbutils::inTable($dbh, $deal_id, "Images777")) {
+    if (!&dealsdbutils::inTable($dbh, $deal_id, "Images")) {
 	insertImages($dbh, $deal, $deal_id, 
 		     $status_ref, $status_message_ref) || return 0;
     }
 
-    if (!&dealsdbutils::inTable($dbh, $deal_id, "Categories777")) {
+    if (!&dealsdbutils::inTable($dbh, $deal_id, "Categories")) {
 	# If the deal hasn't been classified, and it has categories
 	# AND no addresses, we will assume it's a national deal.
 	# If we don't assume this the local editions start getting
@@ -336,7 +336,7 @@ sub insertDeal {
         $update_values = $update_values.", num_purchased=?";
         push(@update_params, $deal->num_purchased());
 
-	recordHistory($dbh, $deal_id, "NumPurchased777", "num_purchased",
+	recordHistory($dbh, $deal_id, "NumPurchased", "num_purchased",
 		      $deal->num_purchased());
     }
     if (defined($deal->fb_likes())) {
@@ -390,7 +390,7 @@ sub insertDeal {
         push(@update_params, $deal->phone());
     }
     
-    my $sql = "UPDATE Deals777 set $update_values where id=$deal_id";
+    my $sql = "UPDATE Deals set $update_values where id=$deal_id";
 
     my $sth = $dbh->prepare($sql);
     for (my $i=0; $i <= $#update_params; $i++) {
@@ -412,7 +412,7 @@ sub markDup {
     my $deal_id = shift;
     my $dup_id = shift;
 
-    my $sql = "update Deals777 set dup=true,dup_id=? where id=?";
+    my $sql = "update Deals set dup=true,dup_id=? where id=?";
     my $sth = $dbh->prepare($sql);
     $sth->bind_param(1, $dup_id);
     $sth->bind_param(2, $deal_id);
@@ -431,7 +431,7 @@ sub insertAddresses {
 
     my $addresses_ref = $deal->addresses();
     foreach my $address (keys %{$addresses_ref}) {
-	my $sql = "insert into Addresses777 (deal_id, raw_address) ".
+	my $sql = "insert into Addresses (deal_id, raw_address) ".
 	    "values (?,?)";
 	
 	my $sth = $dbh->prepare($sql);
@@ -458,7 +458,7 @@ sub insertImages {
     
     my $image_urls_ref = $deal->image_urls();
     foreach my $image_url (keys %{$image_urls_ref}) {
-	my $sql = "insert into Images777 (deal_id, image_url) ".
+	my $sql = "insert into Images (deal_id, image_url) ".
 	    "values (?,?) on duplicate key update id=id";
 	
 	my $sth = $dbh->prepare($sql);
@@ -487,7 +487,7 @@ sub insertCategories {
     my $status_message_ref = shift;
 
     if (defined($deal->category_id())) {
-        my $sql = "insert into Categories777 (deal_id, category_id) ".
+        my $sql = "insert into Categories (deal_id, category_id) ".
                "values (?, ?) on duplicate key update id=id";
 
 	my $sth = $dbh->prepare($sql);
@@ -511,7 +511,7 @@ sub insertNational {
     my $status_ref = shift;
     my $status_message_ref = shift;
 
-    my $sql = "insert into Cities777 (deal_id, city_id) ".
+    my $sql = "insert into Cities (deal_id, city_id) ".
 	"values (?, 2) on duplicate key update id=id";
     
     my $sth = $dbh->prepare($sql);

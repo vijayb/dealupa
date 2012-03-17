@@ -177,15 +177,15 @@ sub insertDeal {
 	}
 
 
-	if (!&dealsdbutils::inTable($dbh, $deal_id, "Addresses777")) {
+	if (!&dealsdbutils::inTable($dbh, $deal_id, "Addresses")) {
 	    insertAddress($merchant_ref, $dbh, $deal_id);
 	}
 	
-	if (!&dealsdbutils::inTable($dbh, $deal_id, "Images777")) {
+	if (!&dealsdbutils::inTable($dbh, $deal_id, "Images")) {
 	    insertImage($merchant_ref, $dbh, $deal_id);
 	}
 	
-	if (!&dealsdbutils::inTable($dbh, $deal_id, "Categories777")) {
+	if (!&dealsdbutils::inTable($dbh, $deal_id, "Categories")) {
 	    insertCategory($merchant_ref, $dbh, $deal_id);
 	}
     }
@@ -211,7 +211,7 @@ sub insertDeal {
     }
     
     $" = ",";
-    my $sql = "update Deals777 set $set,@set_keys where id=$deal_id";
+    my $sql = "update Deals set $set,@set_keys where id=$deal_id";
     
     #print "[$sql]\n";
     my $sth = $dbh->prepare($sql);
@@ -245,7 +245,7 @@ sub insertAddress {
     }
 
     $" = ",";
-    my $sql = "insert into Addresses777 (@keys) values (@key_place_holders)";
+    my $sql = "insert into Addresses (@keys) values (@key_place_holders)";
 
     #print "[$sql]\n";
     my $sth = $dbh->prepare($sql);
@@ -263,7 +263,7 @@ sub insertImage {
     my $deal_id = shift;
 
     if (defined($$merchant_ref{"image_url"})) {
-	my $sql = "insert into Images777 (deal_id, image_url) values (?,?) ".
+	my $sql = "insert into Images (deal_id, image_url) values (?,?) ".
 	    "on duplicate key update id=id";
 	my $sth = $dbh->prepare($sql);
 	$sth->bind_param(1, $deal_id);
@@ -279,7 +279,7 @@ sub insertCategory {
     my $dbh = shift;
     my $deal_id = shift;
      
-    my $sql = "insert into Categories777 (deal_id, category_id, rank) ".
+    my $sql = "insert into Categories (deal_id, category_id, rank) ".
 	"values ($deal_id,1,0) on duplicate key update id=id";
     my $sth = $dbh->prepare($sql);
     $sth->execute();

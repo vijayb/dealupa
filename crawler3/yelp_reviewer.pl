@@ -53,11 +53,11 @@ sub doWork {
     }
  
     
-    my $sql = "SELECT Deals777.name, Deals777.phone, Addresses777.id, ".
-	"Addresses777.latitude, Addresses777.longitude FROM Deals777 left ".
-	"join Addresses777 on Addresses777.deal_id=Deals777.id where ".
-	"Deals777.name is not null and (Addresses777.raw_address is ".
-	"not null or Deals777.phone is not null) and Deals777.id=?";
+    my $sql = "SELECT Deals.name, Deals.phone, Addresses.id, ".
+	"Addresses.latitude, Addresses.longitude FROM Deals left ".
+	"join Addresses on Addresses.deal_id=Deals.id where ".
+	"Deals.name is not null and (Addresses.raw_address is ".
+	"not null or Deals.phone is not null) and Deals.id=?";
     
     my $sth = $output_dbh->prepare($sql);
     $sth->bind_param(1, $deal_id);
@@ -208,7 +208,7 @@ sub insertYelpInfo {
     }
     
     $" = ",";
-    my $sql = "update Deals777 set ".
+    my $sql = "update Deals set ".
 	"last_updated=UTC_TIMESTAMP(), @set_values where id=?";
     my $sth = $output_dbh->prepare($sql);
     my $i;

@@ -36,7 +36,7 @@ sub doWork {
     my $deal_url = ${$work_ref}{"work"}; 
 
     
-    my $sql = "select id, raw_address from Addresses777 where latitude is null";
+    my $sql = "select id, raw_address from Addresses where latitude is null";
     my $sth = $output_dbh->prepare($sql);
     if (!$sth->execute()) {
         $$status_ref = 2;
@@ -105,7 +105,7 @@ sub doWork {
         
 
         if (scalar(keys(%address_components)) > 0) {
-            if (insertGeoInformation777($output_dbh, $address_id,
+            if (insertGeoInformation($output_dbh, $address_id,
 					\%address_components,
 					$status_ref, $status_message_ref)) {
                 $num_geocoded++;    
@@ -131,7 +131,7 @@ sub doWork {
 }
 
 
-sub insertGeoInformation777 {
+sub insertGeoInformation {
     my $dbh = shift;
     my $address_id = shift;
     my $address_components_ref = shift;
@@ -148,7 +148,7 @@ sub insertGeoInformation777 {
     
     # Insert the address information for the given $address_id
     $" = ",";
-    my $sql = "update Addresses777 set @set_values where id=$address_id";
+    my $sql = "update Addresses set @set_values where id=$address_id";
     my $sth = $dbh->prepare($sql);
     for (my $i=0; $i <= $#insert_params; $i++) {
         $sth->bind_param($i+1, $insert_params[$i]);

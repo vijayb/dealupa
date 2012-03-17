@@ -39,7 +39,7 @@ sub doWork {
     my $deal_url = ${$work_ref}{"work"}; 
 
     
-    my $sql = "select deal_id from Images777  where on_s3=0 GROUP BY deal_id";
+    my $sql = "select deal_id from Images  where on_s3=0 GROUP BY deal_id";
     my $sth = $output_dbh->prepare($sql);
     if (!$sth->execute()) {
         $$status_ref = 2;
@@ -79,7 +79,7 @@ sub getURL {
     my $dbh = shift;
     my $deal_id = shift;
 
-    my $sql = "select url,company_id from Deals777 where id=$deal_id";
+    my $sql = "select url,company_id from Deals where id=$deal_id";
     my $sth = $dbh->prepare($sql);
     if (!$sth->execute()) {
 	return;        

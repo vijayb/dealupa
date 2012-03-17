@@ -40,7 +40,7 @@ sub doWork {
         return;
     }
     
-    my $sql = "select id, raw_address from Addresses777 where deal_id=?";
+    my $sql = "select id, raw_address from Addresses where deal_id=?";
     my $sth = $output_dbh->prepare($sql);
     $sth->bind_param(1, $deal_id);
     if (!$sth->execute()) {
@@ -154,7 +154,7 @@ sub insertGeoInformation {
     
     # Insert the address information for the given $address_id
     $" = ",";
-    my $sql = "update Addresses777 set @set_values where id=$address_id";
+    my $sql = "update Addresses set @set_values where id=$address_id";
     my $sth = $dbh->prepare($sql);
     for (my $i=0; $i <= $#insert_params; $i++) {
         $sth->bind_param($i+1, $insert_params[$i]);
@@ -169,7 +169,7 @@ sub insertGeoInformation {
     # Since we updated address information for a deal, which should
     # set the last_updated field for the deal (otherwise the frontends
     # won't know this deal has new information)
-    $sql = "update Deals777 set last_updated=UTC_TIMESTAMP() where id=?";
+    $sql = "update Deals set last_updated=UTC_TIMESTAMP() where id=?";
     $sth = $dbh->prepare($sql);
     $sth->bind_param(1, $deal_id);
     

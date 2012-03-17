@@ -194,7 +194,7 @@ sub insertHubCities {
 
     # Assign cities to this deal:
     foreach my $city_id (@{$hub_cities_ref}) {
-	my $sql = "insert into Cities777 (deal_id, city_id) ".
+	my $sql = "insert into Cities (deal_id, city_id) ".
 	    "values (?, ?) on duplicate key update id=id";
 
 	my $sth = $deal_output_dbh->prepare($sql);
@@ -209,13 +209,13 @@ sub insertCategory {
     my $deal_id = shift;
     my $category_id = shift;
 
-    if (&dealsdbutils::inTable($deal_output_dbh, $deal_id, "Categories777")) {
+    if (&dealsdbutils::inTable($deal_output_dbh, $deal_id, "Categories")) {
 	return;
     }    
     
     # Assign the category to the deal (so long as it isn't 0)
     if ($category_id != 0) {
-	my $sql = "insert into Categories777 (deal_id, category_id) ".
+	my $sql = "insert into Categories (deal_id, category_id) ".
 	    "values (?, ?) on duplicate key update id=id";
 	my $sth = $deal_output_dbh->prepare($sql);
 	$sth->bind_param(1, $deal_id);
