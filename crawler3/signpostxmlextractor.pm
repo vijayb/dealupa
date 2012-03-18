@@ -75,21 +75,6 @@
 	    }
 
 
-	    my $category =
-		$deal_tag->look_down(sub{$_[0]->tag() eq "category"});
-	    if (defined($category)) {
-		if ($category->as_text() =~ /food/i) {
-		    $deal->category_id(1);
-		}
-		if ($category->as_text() =~ /beauty/i) {
-		    $deal->category_id(3);
-		}
-		if ($category->as_text() =~ /shopping/i) {
-		    $deal->category_id(5);
-		}
-
-	    }
-	    
 	    my @locations =
 		$deal_tag->look_down(sub{$_[0]->tag() eq "location"});
 	    foreach my $location (@locations) {

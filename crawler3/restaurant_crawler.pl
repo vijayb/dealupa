@@ -279,6 +279,9 @@ sub insertCategory {
     my $dbh = shift;
     my $deal_id = shift;
      
+    # Insert category 1 (casual dining) for now because it's going
+    # to be too much manual work to classify all the restaurant.com
+    # deals. Eventually we'll want to turn it off
     my $sql = "insert into Categories (deal_id, category_id, rank) ".
 	"values ($deal_id,1,0) on duplicate key update id=id";
     my $sth = $dbh->prepare($sql);

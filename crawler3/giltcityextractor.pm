@@ -144,17 +144,22 @@
 			$image->attr('src'); 
 		    $image_link =~ s/\?.*$//;
 		    $deal->image_urls($image_link);
+		} elsif ($image->attr('src') =~ /^http/) {
+		    my $image_link = $image->attr('src');
+		    $image_link =~ s/\?.*$//;
+		    $deal->image_urls($image_link);
 		}
 	    }
 	}
 
 
-	my @expired = $tree->look_down(
-	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "tab-sold-out")});
-	if (@expired) {
-	    $deal->expired(1);
-	}
+	
+	#my @expired = $tree->look_down(
+	#    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
+	#	    ($_[0]->attr('class') eq "tab-sold-out")});
+	#if (@expired) {
+	#    $deal->expired(1);
+	#}
 
 	if ($tree->as_text() =~ /offer\s*ended/i) {
 	    $deal->expired(1);

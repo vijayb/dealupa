@@ -101,7 +101,10 @@ sub doWork {
             $deal->company_id($company_id);
             dealextractor::extractDeal($deal, \$deal_content);
             my @errors = $deal->check_for_extraction_error();
-            dealclassifier::classifyDeal($deal, \$deal_content);
+
+	    #####################################################
+	    # Turn off automatic classification for now
+            #dealclassifier::classifyDeal($deal, \$deal_content);
 
 	    my $insert_status =	insertDeal($output_dbh, ${$work_ref}{"output_server"},
 					   $deal, $status_ref, $status_message_ref);

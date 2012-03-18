@@ -30,7 +30,7 @@
 	my $deal_url_hash = sha1($deal_url);
 	
 	# Try find the id for the given deal_url
-	my $sql = "select id from Deals777 where url_hash=?";
+	my $sql = "select id from Deals where url_hash=?";
 	my $sth = $deals_dbh->prepare($sql);
 	$sth->bind_param(1, $deal_url_hash);
 	$sth->execute() || return 0;
@@ -51,7 +51,7 @@
 
 	my $deal_url_hash = sha1($deal_url);
 
-	my $sql = "insert into Deals777 (url, company_id, discovered, ".
+	my $sql = "insert into Deals (url, company_id, discovered, ".
 	    "last_updated) values (?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP()) ".
 	    "on duplicate key update id=id";
 	my $sth = $deals_dbh->prepare($sql);
@@ -99,7 +99,7 @@
 	my $field;
 
 	# Try find field for the given deal ID
-	my $sql = "select $field_name from Deals777 where id=?";
+	my $sql = "select $field_name from Deals where id=?";
 	my $sth = $deals_dbh->prepare($sql);
 	$sth->bind_param(1, $deal_id);
 	$sth->execute() || return 0;
