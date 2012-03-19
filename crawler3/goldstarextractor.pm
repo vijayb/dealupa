@@ -51,10 +51,14 @@
 	    sub{$_[0]->tag() eq 'dl' && defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') =~ /our_price/)});
 
-	if (@price && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
-	    my $price = $1;
-	    $price =~ s/,//g;
-	    $deal->price($price);
+	if (@price) {
+	    if ($price[0]->as_text() =~ /\$([0-9,\.]+)/) {
+		my $price = $1;
+		$price =~ s/,//g;
+		$deal->price($price);
+	    } elsif ($price[0]->as_text() =~ /sold\sout/i) {
+		$deal->expired(1);
+	    }
 	}
 
 	my @value = $tree->look_down(

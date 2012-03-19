@@ -127,11 +127,11 @@ sub doWork {
 	    print "Writing $image_url to s3...\n";
 	    my $error = 0;
 	    $s3_bucket->add_key_filename($s3_large_key, $image_file_name,
-					 { content_type => 'image/$type', },) 
+					 { content_type => "image/".$type, },) 
 		or $error = 1;
 
 	    $s3_bucket->add_key_filename($s3_small_key, $small_image_file_name,
-					 { content_type => 'image/$type', },) 
+					 { content_type => "image/".$type, },) 
 		or $error = 1;
 
 	    markHasS3($output_dbh, $image_id, $status_ref, $status_message_ref) || last;
