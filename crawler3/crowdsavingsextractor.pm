@@ -71,7 +71,6 @@
 	    $deal->title() =~ /([0-9,\.]+)\s*(value|worth)/i) {
 	    my $value = $1;
 	    $value =~ s/,//g;
-	    print "[$value]\n";
 	    $deal->value($value);
 	}
 
