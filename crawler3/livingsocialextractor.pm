@@ -166,20 +166,26 @@
 	my @images = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('style')) &&
 		    defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /alpha\s+portrait/)});
-
-	if (!@images) {
-	    @images = $tree->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('style')) &&
-			defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') =~ /^slide/)});
-	}
+		    ($_[0]->attr('class') =~ /^slide/)});
 	
 	foreach my $image (@images) {
 	    if ($image->attr('style') =~ /url\(\'?(http[^\'\)]+)/) {
 		$deal->image_urls($1);
 	    }
 	}
+
+
+	if (!@images) {
+	    my @image = $tree->look_down(
+		sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+			defined($_[0]->attr('content')) &&
+			($_[0]->attr('property') eq "og:image") &&
+			$_[0]->attr('content') =~ /^http/});
+	    if (@image) {
+		$deal->image_urls($image[0]->attr('content'));
+	    }
+	}
+	
 
 	my @text = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&

@@ -42,21 +42,29 @@ sub doWork {
     my $count = 0;
     while (my $line = <FILE>) {
 	chomp($line);
-	if ($line =~ /^([0-9]+):/) {
+	if ($line =~ /^([0-9]+)/) {
 	    my $deal_id= $1;
 
-	    if ($line =~ /teeth.*white/i) {
+	    if ($line =~ /\(33\):/i) {
 		$count++;
 		print $line,"\n";
+
 		my $sql =
 		    "insert into Categories (deal_id, category_id, rank) ".
-		    "values ($deal_id, 10, 0) on duplicate key update id=id";
+		    "values ($deal_id, 22, 0) on duplicate key update id=id";
 		doSQL($output_dbh, $sql) || last;
 
 		#$sql =
 		#    "insert into Categories (deal_id, category_id, rank) ".
-		#    "values ($deal_id, 44, 0) on duplicate key update id=id";
+		#    "values ($deal_id, 21, 0) on duplicate key update id=id";
 		#doSQL($output_dbh, $sql) || last;
+
+
+
+		#my $sql =
+		#    "delete from Categories where deal_id=$deal_id and category_id=31";
+		#doSQL($output_dbh, $sql) || last;
+
 
 
 		$sql = "update Deals set last_updated=UTC_TIMESTAMP() ".

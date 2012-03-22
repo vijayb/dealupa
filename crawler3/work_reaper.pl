@@ -28,6 +28,7 @@ $reap_age_map{"5"} = 7200;
 $reap_age_map{"6"} = 7200;
 $reap_age_map{"7"} = 7200;
 $reap_age_map{"8"} = 7200;
+$reap_age_map{"9"} = 7200;
 
 
 
