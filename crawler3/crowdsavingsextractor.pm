@@ -59,7 +59,7 @@
 
 	my @price = $tree->look_down(
 	    sub{$_[0]->tag() eq "div" && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "price-discount")});
+		    ($_[0]->attr('class') eq "price")});
 
 	if (@price && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
 	    my $price = $1;
@@ -67,20 +67,16 @@
 	    $deal->price($price);
 	}
 
-	my @value = $tree->look_down(
-	    sub{$_[0]->tag() eq "div" && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "price-original"});
-
-	if (@value && $value[0]->as_text() =~ /\$([0-9,\.]+)/) {
+	if (defined($deal->title()) &&
+	    $deal->title() =~ /([0-9,\.]+)\s*(value|worth)/i) {
 	    my $value = $1;
 	    $value =~ s/,//g;
+	    print "[$value]\n";
 	    $deal->value($value);
 	}
 
-	my @num_purchased = $tree->look_down(
-	    sub{$_[0]->tag() eq "div" && defined($_[0]->attr('id')) &&
-		    $_[0]->attr('id') eq "meter"});
-	if (@num_purchased && $num_purchased[0]->as_text() =~ /([0-9,]+)\s*sold/i) {
+
+	if ($tree->as_text() =~ /([0-9,]+)\s*sold/i) {
 	    my $num_purchased = $1;
 	    $num_purchased =~ s/,//g;
 	    $deal->num_purchased($num_purchased);
@@ -108,20 +104,15 @@
 	    $deal->fine_print($clean_fine_print);
 	}
 
-	my @slideshow = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "slideshow")});
 
-	if (@slideshow) {
-	    my @images = $slideshow[0]->look_down(
-		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src'))
-			&& $_[0]->attr('src') =~ /^\//});
+	my @image = $tree->look_down(
+	    sub{$_[0]->tag() eq "meta" && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    $_[0]->attr('content') =~ /^http/ &&
+		    ($_[0]->attr('property') eq "og:image")});
 
-	    foreach my $image (@images) {
-		my $image_url =
-		    "http://www.crowdsavings.com".$image->attr('src');
-		$deal->image_urls($image_url);
-	    }
+	if (@image) {
+	    $deal->image_urls($image[0]->attr('content'));
 	}
 
 
