@@ -8,7 +8,6 @@
     use strict;
     use warnings;
     use deal;
-    use genericextractor;
     use HTML::TreeBuilder;
     use Encode;
     use Time::Local;
@@ -34,7 +33,7 @@
 
 	my @price = $tree->look_down(
 	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') =~ /Main_NonMemberPriceLabel/)});
+		    ($_[0]->attr('id') =~ /NonMemberPriceLabel/)});
 	if (@price) {
 	    my $price = $price[0]->as_text();
 	    if ($price =~ /([0-9,\.]+)/) {
@@ -46,7 +45,7 @@
 
 	my @value = $tree->look_down(
 	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') =~ /Main_ValueLabel/)});
+		    ($_[0]->attr('id') =~ /ValueLabel/)});
 	if (@value) {
 	    my $value = $value[0]->as_text();
 	    if ($value =~ /([0-9,\.]+)/) {
@@ -78,7 +77,9 @@
 
 	my @image = $tree->look_down(
 	    sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') =~ /Main_DealImage/)});
+		    defined($_[0]->attr('src')) &&
+		    $_[0]->attr('src') =~ /^http/i &&
+		    ($_[0]->attr('id') =~ /ImageItemPhoto/)});
 	if (@image) {
 	    $deal->image_urls($image[0]->attr('src'));
 	}
@@ -167,15 +168,17 @@
 
 
 	my @name = $tree->look_down(
-	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /BigDealServiceProviderName/)});
+	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') =~ /ProviderName/)});
 	if (@name) {
 	    $deal->name($name[0]->as_text());
 	}
 
 	my @website = $tree->look_down(
 	    sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') =~ /ContactWebSiteLink/i)});
+		    defined($_[0]->attr('href')) &&
+		    $_[0]->attr('href') =~ /^http/i &&
+		    ($_[0]->attr('id') =~ /ContactWebSite/i)});
 	if (@website) {
 	    $deal->website($website[0]->attr('href'));
 	}
@@ -184,7 +187,7 @@
 	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('id')) &&
 		    # They misspell Address! heh. Put correct spelling in
 		    # just in case they fix it later
-		    ($_[0]->attr('id') =~ /ContactAddres[s]?Label/)});
+		    ($_[0]->attr('id') =~ /ContactAddres/)});
 	if (@addresses) {
 	    my $address = $addresses[0]->as_HTML();
 	    $address =~ s/<[^>]+>/ /g;
@@ -192,8 +195,7 @@
 	    $address =~ s/\s+$//;
 	    $address =~ s/^[Aa]ddress:\s*//;
 
-	    if ($address =~ /([A-Z]{2})\s+[0-9]{5}$/ &&
-		genericextractor::isState($1)) {
+	    if (length($address) > 7) {
 		$deal->addresses($address);
 	    }
 	}
