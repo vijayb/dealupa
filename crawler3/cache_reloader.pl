@@ -13,6 +13,12 @@ use constant {
     WORK_TYPE => 101,
 };
 
+
+# Since reloading cache can take a long time,
+# turn off timeouts on the requests to build it.
+downloader::setTimeout(0);
+
+
 workqueue::registerWorker(\&doWork, WORK_TYPE, 10, 0, 60) || 
     die "Unable to register worker\n";
 workqueue::run();
