@@ -98,7 +98,7 @@
 		    }
 		}
 
-		if (length($address) > 7) {
+		if (length($address) > 7 && $address !~ /http/) {
 		    $deal->addresses($address);
 		}
 	    }
