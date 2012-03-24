@@ -232,21 +232,20 @@
 			$_[0]->attr('class') eq "gwt-HTML"});
 
 	    foreach my $address_phone (@addresses) {
-		if ($address_phone->as_text() =~
-		    /([^,]+,\s*)([A-Z]{2})\s*(.*)/) {
-		    my $address = $1;
-		    my $state = $2;
-		    my $phone = $3;
-		    $phone =~ s/\s//g;
-		    if (genericextractor::isState($state)) {
-			$deal->addresses($address.$state);		    
-		    }
-		    my $tmpphone = $phone;
-		    $tmpphone =~ s/[^0-9]//g;
-		    if (length($tmpphone) > 8 &&
-			length($phone) -length ($tmpphone) <=4) {
-			$deal->phone($phone);
-		    }
+		my $address_html = $address_phone->as_HTML();
+		if ($address_phone->as_HTML() =~
+		    />\s*([\(\)\s\-\.0-9]{9,17})\s*<\/div>/) {
+		    $deal->phone($1);
+		    $address_html =~ 
+			s/>\s*([\(\)\s\-\.0-9]{9,17})\s*<\/div>/><\/div>/;
+		}
+
+		$address_html =~ s/<[^>]*>/ /g;
+		$address_html =~ s/\s+/ /g;
+		$address_html =~ s/^\s+//;
+		$address_html =~ s/\s+$//g;
+		if (length($address_html) > 7) {
+		    $deal->addresses($address_html);
 		}
 	    }
 	}
