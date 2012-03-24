@@ -8,7 +8,6 @@
     use strict;
     use warnings;
     use deal;
-    use genericextractor;
     use HTML::TreeBuilder;
     use Encode;
 
