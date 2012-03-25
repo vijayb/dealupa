@@ -135,7 +135,7 @@
         
 	my @links = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    $_[0]->attr('href') =~ /^\/deals\// &&
+		    $_[0]->attr('href') =~ /^\// &&
 		    $_[0]->as_text() =~ /view\s*deal/i &&
 		    defined($_[0]->attr('class')) &&
 		    $_[0]->attr('class') =~ /button\s*buy-now/});
