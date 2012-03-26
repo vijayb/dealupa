@@ -112,9 +112,13 @@
 		    defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "slide")});
 	
-	foreach my $image (@images) {
-	    if ($image->attr('style') =~ /url\(\'?(http[^\'\)]+)/) {
-		$deal->image_urls($1);
+	foreach my $image_container (@images) {
+	    my @image = $image_container->look_down(
+		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
+			($_[0]->attr('src') =~ /^http/)});
+
+	    if (@image) {
+		$deal->image_urls($image[0]->attr('src'));
 	    }
 	}
 
