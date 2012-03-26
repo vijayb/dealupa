@@ -249,6 +249,22 @@
 		if (length($address) > 15) {
 		    $deal->addresses($address);
 		}
+	    } else {
+		my @address_container = $info[0]->look_down(
+		    sub{$_[0]->tag() eq 'ul' && defined($_[0]->attr('class')) &&
+			    ($_[0]->attr('class') eq "addresses")});
+		
+		if (@address_container) {
+		    my @addresses = $address_container[0]->look_down(
+			sub{$_[0]->tag() eq 'li'});
+
+		    foreach my $address (@addresses) {
+			if (length($address->as_text()) > 10) {
+			    $deal->addresses($address->as_text());
+			}
+		    }
+		}
+
 	    }
 	}
 

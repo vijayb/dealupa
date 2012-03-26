@@ -56,7 +56,8 @@
 
 
 	my @price = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+	    sub{($_[0]->tag() eq 'div' || $_[0]->tag() eq 'span') && 
+		    defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') =~ /^deal-price/)});
 
 	if (@price && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
@@ -122,7 +123,9 @@
 	    if (@deadline) {
 		$deadline = $deadline[0]->as_text();
 		$deadline =~ s/\s//g;
-	    } else {
+	    } 
+
+	    if (!@deadline) {
 		@deadline = $tree->look_down(
 		    sub{defined($_[0]->attr('class')) &&
 			    ($_[0]->attr('class') =~ /clearfix\s*deal-info/)});
@@ -130,6 +133,16 @@
 		    $deadline = $deadline[0]->as_text();
 		}
 	    }
+	    
+	    if (!@deadline) {
+		@deadline = $tree->look_down(
+		    sub{defined($_[0]->attr('class')) &&
+			    ($_[0]->attr('class') eq "time-left")});
+		if (@deadline) {
+		    $deadline = $deadline[0]->as_text();
+		}
+	    }
+
 
 	    my $days = 0;
 	    my $hours = 0;
@@ -171,6 +184,14 @@
 	foreach my $image (@images) {
 	    if ($image->attr('style') =~ /url\(\'?(http[^\'\)]+)/) {
 		$deal->image_urls($1);
+	    } else {
+		my @the_image = $image->look_down(
+		    sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
+			    ($_[0]->attr('src') =~ /^http/)});
+
+		if (@the_image) {
+		    $deal->image_urls($the_image[0]->attr('src'));
+		}
 	    }
 	}
 
@@ -194,6 +215,12 @@
 	    @text = $tree->look_down(
 		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
 			($_[0]->attr('id') eq "sfwt_full_1")});
+	}
+
+	if (!@text) {
+	    @text = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') =~ /^description/)});
 	}
 
 	if (@text) {
@@ -248,6 +275,12 @@
 	if (!@website_container) {
 	    @website_container = $tree->look_down(
 		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') =~ /^description/)});
+	}
+
+	if (!@website_container) {
+	    @website_container = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
 			($_[0]->attr('class') eq "deal-description")});
 	}
 
@@ -265,6 +298,12 @@
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') =~ /alpha\slocation/)});
 	
+	if (!@address_container) {
+	    @address_container = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "deal-location")});
+	}
+
 	if (@address_container) {
 	    my @addresses = $address_container[0]->look_down(
 		sub{defined($_[0]->attr('class')) &&
