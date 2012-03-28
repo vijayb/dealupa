@@ -70,6 +70,12 @@
 	    sub{$_[0]->tag() eq 'section' && defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "pkg-buy")});
 
+	if (!@price) {
+	    @price = $tree->look_down(
+		sub{$_[0]->tag() eq 'section' && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "preview-tease")});
+	}
+
 	if (@price) {
 	    if ($price[0]->as_text() =~ /\$([0-9,]+)[^\$]+\$([0-9,]+)/) {
 		my $price = $1;
@@ -165,9 +171,23 @@
 	    $deal->expired(1);
 	}
 
+	if ($tree->as_text() =~ /begins\s*on\s*:/i) {
+	    $deal->upcoming(1);
+	}
+
+	my @description = $tree->look_down(
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    $_[0]->attr('content') =~ /unlock\sthis/ &&
+		    ($_[0]->attr('property') eq "og:description" || 
+		     $_[0]->attr('property') eq "og:title")});
+	if (@description) {
+	    $deal->upcoming(1);
+	}
 
 
-	if (!defined($deal->expired()) && !$deal->expired()) {
+	if (!defined($deal->expired()) && !$deal->expired() &&
+	    !defined($deal->upcoming()) && !$deal->upcoming()) {
 	    my @deadline = $tree->look_down(
 		sub{defined($_[0]->attr('class')) &&
 			($_[0]->attr('class') =~ /^offer-ends/)});

@@ -126,6 +126,14 @@
 	foreach my $image (@images) {
 	    if ($image->attr('style') =~ /url\(\'?(http[^\'\)]+)/) {
 		$deal->image_urls($1);
+	    } else {
+		my @the_image = $image->look_down(
+		    sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
+			    ($_[0]->attr('src') =~ /^http/)});
+
+		if (@the_image) {
+		    $deal->image_urls($the_image[0]->attr('src'));
+		}
 	    }
 	}
 
