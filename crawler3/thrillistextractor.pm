@@ -33,6 +33,7 @@
 	"Aug" => 8,
 	"August" => 8,
 	"Sep" => 9,
+	"Sept" => 9,
 	"September" =>9,
 	"Oct" => 10,
 	"October" => 10,
@@ -50,53 +51,28 @@
 	$tree->parse(decode_utf8 $$deal_content_ref);
 	$tree->eof();
 
-	# This is a bit of a hack that we only do for Thrillist:
-	# We get the actual url from the deal's og:url field because
-	# the dealurlextractor for Thrillist throws away the last part
-	# of their URLs, since they're not needed, and stripping the end
-	# means no dup detection needs to take place. For example:
-	# http://rewards.thrillist.com/deal/6026/boudoir-photo-shoot/sf
-	# and
-	# http://rewards.thrillist.com/deal/6026/boudoir-photo-shoot/nyc
-	# are the same deal. So that last part is stripped in deal url
-	# extraction, and the deal that is crawled and eventually passed
-	# to this extractor will only have:
-	# http://rewards.thrillist.com/deal/6026/boudoir-photo-shoot/
-	# as its URL. The problem with that is that the code which normally
-	# obtains the FB shares/likes in deal_crawler.pl won't work, because
-	# it requires the actual URLs that people share.
-	my @actual_url = $tree->look_down(
-	    sub{$_[0]->tag() eq "meta" && defined($_[0]->attr('property')) &&
-		    defined($_[0]->attr('content')) &&
-		    $_[0]->attr('property') eq "og:url" &&
-		    $_[0]->attr('content') =~ /^http/});
-
-	if (@actual_url) {
-	    &dealsdbutils::setFBInfo($deal, $actual_url[0]->attr('content'));
-	}
-
 	my @title = $tree->look_down(
-	    sub{$_[0]->tag() eq 'h2'});
+	    sub{$_[0]->tag() eq 'h1'});
 	if (@title) {
 	    $deal->title($title[0]->as_text());
 	}
 
 
 	my @subtitle = $tree->look_down(
-	    sub{defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "subhead")});
-
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    ($_[0]->attr('property') eq "og:description")});
+	
 	if (@subtitle) {
-	    $deal->subtitle($subtitle[0]->as_text());
-
+	    $deal->subtitle($subtitle[0]->attr('content'));
 	}
 
 
-	my @amounts = $tree->look_down(
+	my @price = $tree->look_down(
 	    sub{defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "amount")});
+		    ($_[0]->attr('class') eq "rewardPrice")});
 
-	if ($#amounts >=0 && $amounts[0]->as_text() =~ /\$([0-9,\.]+)/) {
+	if ($#price >=0 && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
 	    my $price = $1;
 	    $price =~ s/,//g;
 	    $deal->price($price);
@@ -104,8 +80,7 @@
 
 	my @value = $tree->look_down(
 	    sub{$_[0]->tag() eq "span" && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "amount" &&
-		    $_[0]->parent->as_text() =~ /value/i});
+		    $_[0]->attr('class') eq "fullPrice"});
 
 	if (@value && $value[0]->as_text() =~ /\$([0-9,\.]+)/) {
 	    my $value = $1;
@@ -114,8 +89,8 @@
 	}
 
 	my @text = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "description")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "singleDescript")});
 
 	if (@text) {
 	    my $clean_text = $text[0]->as_HTML();
@@ -126,7 +101,7 @@
 
 	my @fine_print = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "fine-print")});
+		    ($_[0]->attr('class') eq "brassTacksContent")});
 
 	if (@fine_print) {
 	    my $clean_fine_print = $fine_print[0]->as_HTML();
@@ -138,12 +113,12 @@
 
 	my @image_container = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "nivoSlider")});
+		    ($_[0]->attr('class') =~ /slideshow/i)});
 
 	if (@image_container) {
 	    my @images = $image_container[0]->look_down(
 		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
-			($_[0]->attr('src') =~ /http/)});
+			($_[0]->attr('src') =~ /^http/)});
 
 	    foreach my $image (@images) {
 		$deal->image_urls($image->attr('src'));
@@ -163,25 +138,27 @@
 
 	my @expired = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "sold-out-overlay"});
+		    $_[0]->attr('class') eq "soldOut"});
 
 	if (@expired) {
 	    $deal->expired(1);
 	}
 
 
-	# Thrillist doesn't give us a deadline, so just make one up, 15 days from now
 	if (!defined($deal->expired()) && !$deal->expired()) {
-	    my $offset = 10*3600*24;
-	    
-	    my ($year, $month, $day, $hour, $minute);
-	    ($year, $month, $day, $hour, $minute) =
-		(gmtime(time()+$offset))[5,4,3,2,1];
-	    
-	    my $deadline = sprintf("%d-%02d-%02d %02d:%02d:01",
-				   1900+$year, $month+1, $day,
-				   $hour, $minute);
-	    $deal->deadline($deadline);
+	    my @deadline = $tree->look_down(
+		sub{defined($_[0]->attr('id')) &&
+			$_[0]->attr('id') eq "offerEnds"});
+
+	    if (@deadline && $deadline[0]->as_text() =~ 
+		/([0-9]{2}).([0-9]{2}).([0-9]{2})/) {
+		my $month = $1;
+		my $day = $2;
+		my $year = 2000+$3;
+		my $deadline = sprintf("%d-%02d-%02d 01:01:01",
+				       $year, $month, $day);
+		$deal->deadline($deadline);
+	    }
 	}
 
 
@@ -210,44 +187,101 @@
 	    }
 	}
 	
-	
-	my @biz_info = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "vendor"});
 
-	if (@biz_info) {
-	    # Name
-	    my @name = $biz_info[0]->look_down(
-		sub{$_[0]->tag() =~ /h[0-9]/i});
-	    if (@name) {
-		$deal->name($name[0]->as_text());
+	# Name
+	# Unfortunately Thrillist gives us no structure from which to extract
+	# the name of the merchant, so we have to use a bunch of heuristics
+	my @namephone = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    $_[0]->attr('id') eq "singleRedeem"});
+
+	if (@namephone) {
+	    if ($namephone[0]->as_text() =~ /[Cc]all\s([A-Z].*?)\sat\s*([^a-zA-Z\s]+)/) {
+		my $name = $1;
+		my $phone = $2;
+
+		my $tmpphone = $phone;
+		$tmpphone =~ s/[^0-9]//g;
+		if (length($tmpphone) > 8 &&
+		    length($phone) - length($tmpphone) <=4) {
+		    $phone =~ s/[^0-9]//g;
+		    $deal->phone($phone);
+		    $deal->name($name);
+		}
+	    } elsif ($namephone[0]->as_text() =~ /(hit|visit)\s([^\']*?)'s\swebsite/) {
+		my $name = $2;
+		if (length($name) > 3 && length($name) < 30) {
+		    $deal->name($name);
+		}
+	    } elsif ($namephone[0]->as_text() =~ /at\s([A-Z].*?)\son/) {
+		my $name = $1;
+		$name =~ s/\([^\)]*\)//;
+		if (length($name) > 3 && length($name) < 30) {
+		    $deal->name($name);
+		}
+	    } elsif (defined($deal->title()) && $deal->title() =~
+		     /(at|from|by)\s([A-Z].*)/) {
+		my $name = $2;
+		if ($name =~ /([A-Z][^\s]+)$/) {
+		    $deal->name($name);
+		}
+	    } elsif (defined($deal->subtitle()) && $deal->subtitle() =~
+		     /(at|from|by)\s([A-Z].*)/) {
+		my $name = $2;
+		if ($name =~ /([A-Z][^\s]+)$/) {
+		    $deal->name($name);
+		}
 	    }
 
+	    if (!defined($deal->phone())) {
+		if ($namephone[0]->as_text() =~ /at\s([\(\)0-9\-\.\s]{9,17})/) {
+		    my $phone = $1;
+		    $phone =~ s/\s//g;
+		    my $tmpphone = $phone;
+		    $tmpphone =~ s/[^0-9]//g;
+		    if (length($tmpphone) > 8 &&
+			length($phone) - length($tmpphone) <=4) {
+			$phone =~ s/[^0-9]//g;
+			$deal->phone($phone);
+		    }
+		}
+	    }
+
+
 	    # Website
-	    my @website = $biz_info[0]->look_down(
+	    my @website = $namephone[0]->look_down(
 		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-			$_[0]->as_text() =~ /website/i});
+			defined($_[0]->attr('target')) &&
+			$_[0]->attr('href') =~ /^http/});
 	    if (@website) {
 		$deal->website($website[0]->attr('href'));
 	    }
 
-	    # Thrillist doesn't give us the phone :(
-	    
-	    # Address
-	    my @addresses = $biz_info[0]->look_down(
-		sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
-			$_[0]->attr('class') eq "mapDisplayAddress"});
-	    foreach my $address (@addresses) {
-		my $clean_address = $address->as_HTML();
-		$clean_address =~ s/<[^>]*>/ /g;
-		$clean_address =~ s/\s+/ /g;
-		if (length($clean_address) > 5) {
-		    $deal->addresses($clean_address);
-		}
-	    }
+	}
+	
+	# Website
+	my @website = $tree->look_down(
+	    sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+		    $_[0]->as_text() =~ /\s*website\s*/i &&
+		    $_[0]->attr('href') =~ /^http/});
+	if (@website) {
+	    $deal->website($website[0]->attr('href'));
 	}
 
 
+	# Address
+	my @addresses = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "mapAddress"});
+	foreach my $address (@addresses) {
+	    my $clean_address = $address->as_text();
+	    $clean_address =~ s/\s+/ /g;
+	    $clean_address =~ s/^\s+//;
+	    $clean_address =~ s/\s+$//;
+	    if (length($clean_address) > 5) {
+		$deal->addresses($clean_address);
+	    }
+	}
 
 	$tree->delete();
     }

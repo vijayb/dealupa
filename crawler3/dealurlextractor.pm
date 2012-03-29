@@ -757,19 +757,15 @@
         my $tree_ref = $_[2];
         
         my @deal_urls = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "buy-link"});
+            sub{$_[0]->tag() eq 'section' && defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "popup"});
 
-        foreach my $deal (@deal_urls) {
-	    my @href = $deal->look_down(
+        foreach my $deal_container (@deal_urls) {
+	    my @href = $deal_container->look_down(
 		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-			$_[0]->attr('href') =~ /^http/});
+			$_[0]->attr('href') =~ /^deal/});
 	    if (@href) {
-		my $clean_url = $href[0]->attr('href');
-		# chop the end off the URL since it's not needed
-		# (it has the city name) and it causes more crawling
-		# than is necessary
-		$clean_url =~ s/[^\/]*$//;
+		my $clean_url = "http://rewards.thrillist.com/".$href[0]->attr('href');
 		addToDealUrls($_[0], $clean_url);
 	    }
 
