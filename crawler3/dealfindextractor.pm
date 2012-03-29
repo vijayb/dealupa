@@ -128,14 +128,10 @@
 	}
 
 
-	my @expired = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "dealEnded"});
-
-	if (@expired) {
+	if ($tree->as_HTML() =~ /var\s*DealSoldOut[^A-Za-z]*true/i ||
+	    $tree->as_HTML() =~ /var\s*DealEnded[^A-Za-z]*true/i) {
 	    $deal->expired(1);
 	}
-
 
 
 	if (!defined($deal->expired()) && !$deal->expired()) {
