@@ -107,7 +107,7 @@ if (isset($_GET["deal_url"])) {
   }
 
 
-  $sql = "SELECT id, url, affiliate_url, discovered, last_updated, UNIX_TIMESTAMP(discovered) as discovered_seconds, UNIX_TIMESTAMP(last_updated) as last_updated_seconds, num_updates, dup, dup_id, company_id, title, subtitle, price, value, num_purchased, yelp_url, yelp_rating, yelp_review_count, fb_likes, fb_shares, text, fine_print, expired, upcoming, deadline, expires, UNIX_TIMESTAMP(deadline) as deadline_epoch, name, website, phone FROM Deals777 where $criteria";
+  $sql = "SELECT id, url, affiliate_url, discovered, last_updated, UNIX_TIMESTAMP(discovered) as discovered_seconds, UNIX_TIMESTAMP(last_updated) as last_updated_seconds, num_updates, dup, dup_id, company_id, title, subtitle, price, value, num_purchased, yelp_url, yelp_rating, yelp_review_count, fb_likes, fb_shares, text, fine_print, expired, upcoming, deadline, expires, UNIX_TIMESTAMP(deadline) as deadline_epoch, name, website, phone FROM Deals where $criteria";
 
   $result = mysql_query($sql);
   if (!$result) {
@@ -165,11 +165,11 @@ if (isset($result) && mysql_num_rows($result) == 1) {
   echo "<form action='$deal_info_url' method=post align=center>\n";
   echo "<table>\n";
   echo "  <tr><td><b>ID:</b></td><td>$deal_id</td></tr>\n";
-  echo "  <tr><td><b>URL:</b></td><td><a href='http://50.57.136.167/tools/work_info.php?work=$url' target=_work_info>$url</a> (<a href='$url' target=_blank>web</a>)</td></tr>\n";
+  echo "  <tr><td><b>URL:</b></td><td><a href='http://50.57.136.167/tools/work_info.php?work=".urlencode($url)."' target=_work_info>$url</a> (<a href='$url' target=_blank>web</a>)</td></tr>\n";
   echo "  <tr><td><b>Affiliate URL:</b></td><td>";
 
   if (isset($affiliate_url)) {
-    echo "<a href='http://50.57.136.167/tools/work_info.php?work=$affiliate_url' target=_work_info>$affiliate_url</a> (<a href='$affiliate_url' target=_blank>web</a>)";
+    echo "<a href='$affiliate_url' target=_work_info>$affiliate_url</a> (<a href='$affiliate_url' target=_blank>web</a>)";
   }
   echo "</td></tr>\n";
   echo "  <tr><td><b>Discovered:</b></td><td>$discovered ($discovered_seconds seconds ago)</td></tr>\n";
@@ -248,7 +248,7 @@ if (isset($result) && mysql_num_rows($result) == 1) {
 
 
 if (isset($deal_id)) {
-  $sql = "SELECT id, raw_address, street, city, state, country, latitude, longitude FROM Addresses777 where deal_id=$deal_id";
+  $sql = "SELECT id, raw_address, street, city, state, country, latitude, longitude FROM Addresses where deal_id=$deal_id";
   $result = mysql_query($sql);
   if (!$result) {
     die('Error 4: ' .mysql_error());
@@ -307,7 +307,7 @@ if (isset($deal_id)) {
 
 
 if (isset($deal_id)) {
-  $sql = "SELECT image_url, on_s3 FROM Images777 where deal_id=$deal_id";
+  $sql = "SELECT image_url, on_s3 FROM Images where deal_id=$deal_id";
 
   $result = mysql_query($sql);
   if (!$result) {
@@ -358,7 +358,7 @@ $categories["9"] = "Hotels & Vacations";
 
 
 if (isset($deal_id)) {
-  $sql = "SELECT category_id,rank FROM Categories777 where deal_id=$deal_id";
+  $sql = "SELECT category_id,rank FROM Categories where deal_id=$deal_id";
   $result = mysql_query($sql);
   if (!$result) {
     die('Error 6: ' .mysql_error());
@@ -426,7 +426,7 @@ $cities["34"] = "New Orleans";
 $cities["35"] = "Honolulu";
 
 if (isset($deal_id)) {
-  $sql = "SELECT city_id FROM Cities777 where deal_id=$deal_id";
+  $sql = "SELECT city_id FROM Cities where deal_id=$deal_id";
   $result = mysql_query($sql);
   if (!$result) {
     die('Error 7: ' .mysql_error());
@@ -453,7 +453,7 @@ if (isset($deal_id)) {
 
 
 function getData($deal_id, $con) {
-  $sql = "select num_purchased, unix_timestamp(time) as time from NumPurchased777 where deal_id=$deal_id order by time";
+  $sql = "select num_purchased, unix_timestamp(time) as time from NumPurchased where deal_id=$deal_id order by time";
   //echo $sql."<BR>\n";
   $result = doQuery($sql, $con);
 
@@ -488,7 +488,7 @@ function getData($deal_id, $con) {
 }
 
 function expireDeal($deal_id, $expired_value, $con) {
-  $sql = "update Deals777 set expired=$expired_value where id=$deal_id";
+  $sql = "update Deals set expired=$expired_value where id=$deal_id";
   echo $sql."<BR>\n";
   doQuery($sql, $con);
   updateDeal($deal_id, $con);
@@ -496,13 +496,13 @@ function expireDeal($deal_id, $expired_value, $con) {
 
 
 function updateDeal($deal_id, $con) {
-  $sql = "update Deals777 set last_updated=UTC_TIMESTAMP() where id=$deal_id";
+  $sql = "update Deals set last_updated=UTC_TIMESTAMP() where id=$deal_id";
   echo $sql."<BR>\n";
   doQuery($sql, $con);
 }
 
 function getDups($deal_id, $con) {
-  $sql = "select id from Deals777 where dup_id=$deal_id";
+  $sql = "select id from Deals where dup_id=$deal_id";
   echo $sql."<BR>\n";
   $result = doQuery($sql, $con);
 

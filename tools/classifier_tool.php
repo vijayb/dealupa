@@ -1,90 +1,117 @@
 <html>
 
 <head>
+
+<style>
+ol
+{
+width: 45em;  /* room for 3 columns */
+}
+ol li
+{
+  float: left;
+width: 15em;  /* accommodate the widest item */
+}
+/* stop the floating after the list */
+br
+{
+clear: left;
+}
+/* separate the list from what follows it */
+div.wrapper
+{
+  margin-bottom: 1em;
+}
+
+</style>
+
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
-
+<SCRIPT language="JavaScript" src="autocomplete.js"></SCRIPT>
 <script>
 
-function atLeastOneRadio() {
-    return ($('input[type=radio]:checked').size() > 0);
+function checkCategoriesValid() {
+  var re = /[0-9]+/;
+  if (re.test($("#category_id1").val())) {
+    if (($("#category_id2").val() == "" ||
+	 re.test($("#category_id2").val())) &&
+	($("#category_id3").val() == "" ||
+	 re.test($("#category_id3").val())) &&
+	($("#category_id4").val() == "" ||
+	 re.test($("#category_id4").val()))) {
+      return true;
+    }
+  }
+
+  $("#set-category-warning").show();
+  return false;
+  //return ($('input[type=radio]:checked').size() > 0);
 }
 
 
-var instant = 0;
-
+ 
 $(document).ready(function() {
+    $("#category_id1").focus();
     $(document).keyup(function(e) {
 	var code = e.keyCode || e.which;
+
 	if(code == 13) {
-	  if (atLeastOneRadio()) {
-	    $("form#myform1").submit();
+
+	  if (checkCategoriesValid()) {
+	    //$("form#myform1").submit();
 	  }
 	}
-	if(code == 70) {
-		$('input[name=category_id1]:eq(0)').attr('checked', 'checked');
-		if (instant) { $("form#myform1").submit(); }
-	}
 
-	if(code == 65) {
-		$('input[name=category_id1]:eq(1)').attr('checked', 'checked');
-		if (instant) { $("form#myform1").submit(); }
-	}
-
-	if(code == 83) {
-		$('input[name=category_id1]:eq(2)').attr('checked', 'checked');
-		if (instant) { $("form#myform1").submit(); }
-	}
-	if(code == 75) {
-		$('input[name=category_id1]:eq(3)').attr('checked', 'checked');
-		if (instant) { $("form#myform1").submit(); }
-	}
-	if(code == 82) {
-		$('input[name=category_id1]:eq(4)').attr('checked', 'checked');
-		if (instant) { $("form#myform1").submit(); }
-	}
-	if(code == 67) {
-		$('input[name=category_id1]:eq(5)').attr('checked', 'checked');
-		if (instant) { $("form#myform1").submit(); }
-	}
-	if(code == 72) {
-		$('input[name=category_id1]:eq(6)').attr('checked', 'checked');
-		if (instant) { $("form#myform1").submit(); }
-	}
-	if(code == 77) {
-		$('input[name=category_id1]:eq(7)').attr('checked', 'checked');
-		if (instant) { $("form#myform1").submit(); }
-	}
-	if(code == 86) {
-		$('input[name=category_id1]:eq(8)').attr('checked', 'checked');
-		$('input[name=is_nation]').attr('checked', true);
-		if (instant) { $("form#myform1").submit(); }
-	}
-	
-	if(code == 78) {
-		if ($('input[name=is_nation]').is(':checked')) {
-			$('input[name=is_nation]').attr('checked', false);
-		} else {
-			$('input[name=is_nation]').attr('checked', true);
-		}
-		if (instant) { $("form#myform1").submit(); }
+	if(code == 27) {
+	  if ($('input[name=is_nation]').is(':checked')) {
+	    $('input[name=is_nation]').attr('checked', false);
+	  } else {
+	    $('input[name=is_nation]').attr('checked', true);
+	  }
 	}
 
 	
 
     });  
   });	
+
+  /*
+
+	if(code == 70) {
+	  $('input[name=category_id1]:eq(0)').attr('checked', true);
+	}
+
+	if(code == 65) {
+	  $('input[name=category_id1]:eq(1)').attr('checked', true);
+	}
+	
+	if(code == 83) {
+	  $('input[name=category_id1]:eq(2)').attr('checked', true);
+	}
+	if(code == 75) {
+	  $('input[name=category_id1]:eq(3)').attr('checked', true);
+	}
+	if(code == 82) {
+	  $('input[name=category_id1]:eq(4)').attr('checked', true);
+	}
+	if(code == 67) {
+	  $('input[name=category_id1]:eq(5)').attr('checked', true);
+	}
+	if(code == 72) {
+	  $('input[name=category_id1]:eq(6)').attr('checked', true);
+	}
+	if(code == 77) {
+	  $('input[name=category_id1]:eq(7)').attr('checked', true);
+	}
+	if(code == 86) {
+	  $('input[name=category_id1]:eq(8)').attr('checked', true);
+	  $('input[name=is_nation]').attr('checked', true);
+	}
+	
+
+ */
 </script>
-
-
-
-
-</head>
-
-
-
-<body>
 
 
 <?php
@@ -100,13 +127,31 @@ if (!$con) {
 mysql_select_db("Deals", $con) or die(mysql_error());
 // MySQL connection
 
-//foreach ($_POST as $key => $value) {
-//  echo "[$key] [$value]<BR>\n";
-//}
+foreach ($_POST as $key => $value) {
+  //echo "[$key] [$value]<BR>\n";
+}
 
 $memcache = new Memcache;
 $success = $memcache->connect('localhost', 11211);
-$indexes = $memcache->get("categories_index777");
+$indexes = $memcache->get("categories_index");
+
+echo "<script>\n";
+$categories = getAllCategories($con);
+echo "var categories = new Array(";
+for ($i=0; $i< count($categories); $i++) {
+  $cid= $i+1;
+  echo "'".$categories[$i]["name"]." ($cid)',";
+}
+$cid++;
+echo "'".$categories[count($categories)-1]["name"]." ($cid)'";
+echo ");\n";
+echo "</script>\n";
+
+echo "</head>\n";
+echo "<body>\n";
+
+
+
 
 if ($success && $indexes != false && !isset($_GET["reload"])) {
   //echo "$categories_index <BR>\n";
@@ -134,20 +179,39 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 	echo "Setting nation for DUP ".$row["url"]."<BR>\n";
       }
     }
-    
-    if (isset($_POST["url"]) && (isset($_POST["category_id1"]) || isset($_POST["category_id2"]))) {
+
+
+    if (isset($_POST["url"]) && 
+	(isset($_POST["category_id1"]) || isset($_POST["category_id2"]) || isset($_POST["category_id3"]) || isset($_POST["category_id4"]) )) {
       // Look for the URL of the article that was classified and comes
       // to us in a POST. When we find it, set its categories
       // appropriately, and put it back in the cache
 
       if (strcmp($_POST["url"], $row["url"]) == 0) {
-	if (isset($_POST["category_id1"])) {
-	  $row["category_id1"] = $_POST["category_id1"];
+	$cat1 = getCategoryFromString($_POST["category_id1"]);
+	$cat2 = getCategoryFromString($_POST["category_id2"]);
+	$cat3 = getCategoryFromString($_POST["category_id3"]);
+	$cat4 = getCategoryFromString($_POST["category_id4"]);
+
+	echo "Set category for <b>[".$row["url"]."]</b><BR>\n";
+	if ($cat1 > 0) {
+	  //echo $cat1.",";
+	  $row["category_id1"] = $cat1;
 	}
-	if (isset($_POST["category_id2"])) {
-	  $row["category_id2"] = $_POST["category_id2"];
+	if ($cat2 > 0) {
+	  //echo $cat2.",";
+	  $row["category_id2"] = $cat2;
 	}
-	echo "Setting category for <b>[".$row["url"]."]</b> to : ".$_POST["category_id1"]."<BR>\n";
+	if ($cat3 > 0) {
+	  //echo $cat3.",";
+	  $row["category_id3"] = $cat3;
+	}
+	if ($cat4 > 0) {
+	  //echo $cat4.",";
+	  $row["category_id4"] = $cat4;
+	}
+	//echo "<BR>\n";
+
 	$memcache->set($indexes[$i], $row, false, $cache_life);
       }
       // Add title matching in the if below for simple duplicate detection.
@@ -160,26 +224,52 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 	  isset($row["title"]) &&
 	  strlen($row["title"]) > 3 &&
 	  regexstrcmp($_POST["title"], $row["title"])) {
-	if (isset($_POST["category_id1"])) {
-	  $row["category_id1"] = $_POST["category_id1"];
+	$cat1 = getCategoryFromString($_POST["category_id1"]);
+	$cat2 = getCategoryFromString($_POST["category_id2"]);
+	$cat3 = getCategoryFromString($_POST["category_id3"]);
+	$cat4 = getCategoryFromString($_POST["category_id4"]);
+
+	//echo "Setting category for <b>[".$row["url"]."]</b> to : ";
+	if ($cat1 > 0) {
+	  //echo $cat1.",";
+	  $row["category_id1"] = $cat1;
 	}
-	if (isset($_POST["category_id2"])) {
-	  $row["category_id2"] = $_POST["category_id2"];
+	if ($cat2 > 0) {
+	  //echo $cat2.",";
+	  $row["category_id2"] = $cat2;
 	}
-	echo "Setting category for DUP [".$row["url"]."] to : ".$_POST["category_id1"]."<BR>\n";	
+	if ($cat3 > 0) {
+	  //echo $cat3.",";
+	  $row["category_id3"] = $cat3;
+	}
+	if ($cat4 > 0) {
+	  //echo $cat4.",";
+	  $row["category_id4"] = $cat4;
+	}
+	//echo "<BR>\n";
+
 	$memcache->set($indexes[$i], $row, false, $cache_life);
       }
     }
     
-    if (isset($row['category_id1']) || isset($row['category_id2'])) {
+    if (isset($row['category_id1']) || isset($row['category_id2']) || isset($row['category_id3']) || isset($row['category_id4'])) {
       $num_classified++;
       
-      if (isset($_GET["submit"]) && isset($row['category_id1'])) {
-	insertCategory($row['id'], $row['category_id1'], $con);
+      if (isset($_GET["submit"])) { 
+	if (isset($row['category_id1'])) {
+	  insertCategory($row['id'], $row['category_id1'], 4, $con);
+	}
+	if (isset($row['category_id2'])) {
+	  insertCategory($row['id'], $row['category_id2'], 3, $con);
+	}
+	if (isset($row['category_id3'])) {
+	  insertCategory($row['id'], $row['category_id3'], 2, $con);
+	}
+	if (isset($row['category_id4'])) {
+	  insertCategory($row['id'], $row['category_id4'], 1, $con);
+	}
       }
-      if (isset($_GET["submit"]) && isset($row['category_id2'])) {
-	insertCategory($row['id'], $row['category_id2'], $con);
-      }			
+
     } else {
       $unclassified[count($unclassified)] = $i;		
     }
@@ -228,6 +318,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   $num_cities = $row['num_cities'];
 
   $title = $row['title'];
+  $price = $row['price'];
   $company_id = $row['company_id'];
   $image_url = $row['image_url'];
   $subtitle = $row['subtitle'];
@@ -241,7 +332,8 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     $num_title_dups = 0;
   }
 
-  if (($num_addresses==0 && ($num_cities > 2 || $num_title_dups > 2)) || 
+
+  if (($num_addresses==0 && ($num_cities > 2 || $num_title_dups > 2)) ||
       ($num_addresses==0 && $company_id==42 && !preg_match("/cleaning/i", $row['title'])) || // Plumdistrict
       (isset($row['title']) && preg_match("/Online Deal/", $row['title'])) ||
       (isset($row['url']) && preg_match("/\/nation/", $row['title']))) {
@@ -254,7 +346,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   //$url = str_replace("'", "&#39;", $url);
   echo "[$url]<BR>\n";
   echo "<BR>\n";
-  echo "<form id=\"myform1\" name=\"myform1\" action=\"/tools/classifier_tool.php\" method=\"POST\">";
+  echo "<form id=\"myform1\" name=\"myform1\" action=\"/tools/classifier_tool.php\" method=\"POST\" onsubmit=\"return checkCategoriesValid()\">";
   echo "<input type=hidden name=title value=\"".htmlentities($title)."\">\n";
   echo "<input type=hidden name=company_id value='".$company_id."'>\n";
   echo "<table><tr>\n";
@@ -262,17 +354,17 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "<b>Deal ID: </b> <a href='http://50.57.43.108/tools/deal_info.php?deal_url=$id&submitid=search+by+id' target=blank>$id</a> -  <a href='http://50.57.43.108/tools/address_fixer.php?deal_id=$id' target=_fixer>address fixer</a> -  <a href='http://50.57.43.108/tools/image_fixer.php?deal_id=$id' target=_fixer>image fixer</a> - <a href='http://50.57.43.108/tools/edition_tool.php?deal_id=$id' target=_fixer>edition fixer</a><BR>\n";
   echo "<b>URL: </b> <a href=\"$url\" target=blank>".htmlentities($url)."</a><BR>\n";
   if ($num_addresses >0) {
+    echo "<b>Price</b>: <style=\"font-size:20px\">$ $price</style><BR>\n";
     echo "<b>Number of addresses</b>: $num_addresses<BR>\n";
   } else {
-    echo "<a href='http://50.57.43.108/tools/address_fixer.php?deal_id=$id' target=_fixer><span style='background-color:orange'><b>Number of addresses</b>: <b>$num_addresses</b></span></a><BR>\n";
+    echo "<a href='http://50.57.43.108/tools/address_fixer.php?deal_id=$id' target=_fixer><span style='background-color:red'><b>Number of addresses</b>: <b>$num_addresses</b></span></a><BR>\n";
   }
   if ($num_cities >0) {
     echo "<b>Number of hubs</b>: $num_cities<BR>\n";
   } else {
-    if ($num_addresses==0) { $color = "red"; }
-    else { $color="orange"; }
-    echo "<a href='http://50.57.43.108/tools/edition_tool.php?deal_id=$id' target=_fixer><span style='background-color:$color'><b>Number of hubs</b>: <b>$num_cities</b></span></a><BR>\n";
+    echo "<a href='http://50.57.43.108/tools/edition_tool.php?deal_id=$id' target=_fixer><span style='background-color:red'><b>Number of hubs</b>: <b>$num_cities</b></span></a><BR>\n";
   }
+
   echo "<b>Number of title dups</b>: $num_title_dups<BR><BR>\n";
 
   echo "<b>Title: </b> $title<BR>\n";
@@ -281,6 +373,8 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 
   $s3_image_url = "http://dealupa_images.s3.amazonaws.com/".sha1($image_url);
   echo "<img src='$s3_image_url' width=250px><br>\n";
+
+  //  echo "<img width=250px height:auto src='$image_url'><br>\n";
   $text = preg_replace("/<script[^>]+>/", "", $text);
   echo "<b>Text: </b><BR>\n\n<blockquote>$text\n\n</blockquote>\n";
   echo "<BR><BR><BR><b>Fine print: </b> $fine_print<BR>\n";
@@ -289,47 +383,42 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "<td width='10%'></td>\n";
   
   echo "<td valign=top>\n";
-  echo "Category 1<BR>\n";
+  echo "Categories <span id=\"set-category-warning\" style=\"color:red;display:none\">&nbsp;(Please specify one or more valid categories - see list below)</span><BR>\n";
   
   echo "<div align=\"left\"><br>
-<input type=hidden name=url value=\"".htmlentities($url)."\">
-<input type=\"radio\" id=\"category_id1-1\" name=\"category_id1\" value=\"1\">Food & Drink<br>
-<input type=\"radio\" id=\"category_id1-2\" name=\"category_id1\" value=\"2\">Activities & Events<br>
-<input type=\"radio\" id=\"category_id1-3\" name=\"category_id1\" value=\"3\">Spa & Beauty<br>
-<input type=\"radio\" id=\"category_id1-4\" name=\"category_id1\" value=\"4\">Kids & Parents<br>
-<input type=\"radio\" id=\"category_id1-5\" name=\"category_id1\" value=\"5\">Retail & Services<br>
-<input type=\"radio\" id=\"category_id1-6\" name=\"category_id1\" value=\"6\">Classes & Learning<br>
-<input type=\"radio\" id=\"category_id1-7\" name=\"category_id1\" value=\"7\">Health & Fitness<br>
-<input type=\"radio\" id=\"category_id1-8\" name=\"category_id1\" value=\"8\">Medical & Dental<br>
-<input type=\"radio\" id=\"category_id1-9\" name=\"category_id1\" value=\"9\">Vacations & Hotels<br><br><br>
-<input type=\"checkbox\" id=\"nation\" name=\"is_nation\" $national_checked>National<br>
+<input type=hidden name=url value=\"".htmlentities($url)."\">\n";
 
-</div>\n";
+  echo "1. <INPUT id=\"category_id1\" type=\"text\" name=\"category_id1\" autocomplete=\"array:categories\"><BR>\n";
+  echo "2. <INPUT id=\"category_id2\" type=\"text\" name=\"category_id2\" autocomplete=\"array:categories\"><BR>\n";
+  echo "3. <INPUT id=\"category_id3\" type=\"text\" name=\"category_id3\" autocomplete=\"array:categories\"><BR>\n";
+  echo "4. <INPUT id=\"category_id4\" type=\"text\" name=\"category_id4\" autocomplete=\"array:categories\"><BR>\n";
+  echo "<BR><input type=\"checkbox\" id=\"nation\" name=\"is_nation\" $national_checked>National<br>\n";
+  echo "<BR><input type=\"submit\" value=\"Submit\">\n";
+
+  $categories = getAllCategories($con);
+  echo "<div class=\"wrapper\">\n";
+  echo "<ol>\n";
+  for ($k=0; $k < count($categories); $k++) {
+    $category_id = $k + 1;
+    $category_name = $categories[$k]["name"];
+    echo "\t<li>$category_id - $category_name</li>\n";
+  }
+  echo "</ol>\n";
+  echo "</div>\n";
+
+
+
+
+
+echo "</div>\n";
   echo "</td>\n";
   
-  echo "<td valign=top>\n";
-  echo "Category 2<BR>\n";
-  
-  echo "<div align=\"left\"><br>
-<input type=\"radio\" name=\"category_id2\" value=\"1\">Food & Drink<br>
-<input type=\"radio\" name=\"category_id2\" value=\"2\">Activities & Events<br>
-<input type=\"radio\" name=\"category_id2\" value=\"3\">Spa & Beauty<br>
-<input type=\"radio\" name=\"category_id2\" value=\"4\">Kids & Parents<br>
-<input type=\"radio\" name=\"category_id2\" value=\"5\">Retail & Services<br>
-<input type=\"radio\" name=\"category_id2\" value=\"6\">Classes & Learning<br>
-<input type=\"radio\" name=\"category_id2\" value=\"7\">Health & Fitness<br>
-<input type=\"radio\" name=\"category_id2\" value=\"8\">Medical & Dental<br>
-<input type=\"radio\" name=\"category_id2\" value=\"9\">Vacations & Hotels<br>
-<input type=\"submit\" value=\"Submit\">
-</div>
-</form>\n";
-  echo "</td>\n";
   echo "</tr></table>\n";
 
 
 } else {
-  $sql="SELECT Deals777.id,url,company_id,title,subtitle,text,fine_print,yelp_categories FROM Deals777 LEFT JOIN Categories777 ".
-    "ON Deals777.id=Categories777.deal_id WHERE dup=0 and category_id IS NULL and (discovered != last_updated or title is not null or text is not null)";
+  $sql="SELECT Deals.id,url,company_id,title,subtitle,price,text,fine_print,yelp_categories FROM Deals LEFT JOIN Categories ".
+    "ON Deals.id=Categories.deal_id WHERE dup=0 and category_id IS NULL and (discovered != last_updated or title is not null or text is not null)";
   
   echo $sql."<BR>\n";
   $result = mysql_query($sql, $con);
@@ -345,9 +434,12 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   $first = 1;
   while ($row = @mysql_fetch_assoc($result)) {
     $id = $row['id'];
+    $company_id= $row['company_id'];
     $url = $row['url'];
+    $title = $row['title'];
+    $subtitle = $row['subtitle'];
     
-    $image_sql = "SELECT image_url FROM Images777 where deal_id=$id limit 1";
+    $image_sql = "SELECT image_url FROM Images where deal_id=$id limit 1";
 
     $image_result = mysql_query($image_sql, $con);
     if (!$image_result) {
@@ -359,7 +451,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     }
 
 
-    $address_sql = "SELECT id FROM Addresses777 where deal_id=$id";
+    $address_sql = "SELECT id FROM Addresses where deal_id=$id";
 
     $address_result = mysql_query($address_sql, $con);
     if (!$address_result) {
@@ -368,7 +460,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     $row["num_addresses"] = mysql_num_rows($address_result);
 
 
-    $city_sql = "SELECT id FROM Cities777 where deal_id=$id";
+    $city_sql = "SELECT id FROM Cities where deal_id=$id";
 
     $city_result = mysql_query($city_sql, $con);
     if (!$city_result) {
@@ -376,14 +468,14 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     }
     $row["num_cities"] = mysql_num_rows($city_result);
     
-    echo $id.": ".$url, "<BR>\n";
-    $index = "category777:".$id;
+    echo $id." (".$company_id."): ".$title." ".$subtitle."<BR>\n";
+    $index = "category:".$id;
     $memcache->set($index, $row, false, $cache_life);
 
     array_push($categories_index, $index);
   }
   
-  $memcache->set('categories_index777', $categories_index, false, $cache_life);
+  $memcache->set('categories_index', $categories_index, false, $cache_life);
 }
 
 
@@ -406,11 +498,11 @@ function regexstrcmp($str1, $str2) {
   }
 }
 
-function insertCategory($deal_id, $category_id, $con) {
+function insertCategory($deal_id, $category_id, $rank, $con) {
   $category_sql =
-    "INSERT into Categories777 (deal_id, category_id,rank) values ('".
+    "INSERT into Categories (deal_id, category_id,rank) values ('".
     mysql_real_escape_string($deal_id)."',  ".
-    $category_id.", 3) ON DUPLICATE KEY UPDATE id=id";
+    $category_id.", $rank) ON DUPLICATE KEY UPDATE id=id";
   $result = mysql_query($category_sql, $con);
 	
   if (!$result) {
@@ -420,7 +512,7 @@ function insertCategory($deal_id, $category_id, $con) {
 
 
   $update_sql =
-    "UPDATE Deals777 set last_updated=UTC_TIMESTAMP() where id=$deal_id";
+    "UPDATE Deals set last_updated=UTC_TIMESTAMP() where id=$deal_id";
 
   $result = mysql_query($update_sql, $con);
 	
@@ -433,7 +525,7 @@ function insertCategory($deal_id, $category_id, $con) {
 function insertNational($deal_id, $con) {
   // The city_id 2 represents national.
   $national_sql =
-    "INSERT into Cities777 (deal_id, city_id) values ('".
+    "INSERT into Cities (deal_id, city_id) values ('".
     mysql_real_escape_string($deal_id)."', 2) ON DUPLICATE KEY UPDATE id=id";
   $result = mysql_query($national_sql, $con);
 	
@@ -444,7 +536,7 @@ function insertNational($deal_id, $con) {
 
 
   $update_sql =
-    "UPDATE Deals777 set last_updated=UTC_TIMESTAMP() where id=$deal_id";
+    "UPDATE Deals set last_updated=UTC_TIMESTAMP() where id=$deal_id";
 
   $result = mysql_query($update_sql, $con);
 	
@@ -453,6 +545,36 @@ function insertNational($deal_id, $con) {
   }
   echo "[$update_sql]<BR>\n";
 }
+
+function getAllCategories($con) {
+  $sql =
+    "select id, name, description from CategoryInfo";
+
+  $result = mysql_query($sql, $con);
+	
+  if (!$result) {
+    die('Error: ' . mysql_error());
+  }
+
+  $categories = array();
+  while ($row = @mysql_fetch_assoc($result)) {
+    array_push($categories, $row);
+  }
+  return $categories;
+}
+
+function getCategoryFromString($str) {
+  if (!isset($str)) { return 0; }
+  if (preg_match("/([0-9]+)/", $str, $m)) {
+    //echo $m[0]."<BR>\n";
+    return $m[0];
+  } else {
+    //echo "NO MATCH<BR>\n";
+    return 0;
+  }
+
+}
+
 
 
 ?>

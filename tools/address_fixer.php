@@ -171,18 +171,18 @@ $address_ids = array();
 if (isset($_GET["deal_id"]) && strlen($_GET["deal_id"]) > 0) {
   $deal_id=$_GET["deal_id"];
   
-  $result = doQuery("select id from Addresses777 where deal_id=$deal_id", $con);
+  $result = doQuery("select id from Addresses where deal_id=$deal_id", $con);
 
   while ($row = @mysql_fetch_assoc($result)) {
     array_push($address_ids, $row["id"]);
   }
  
-  $result = doQuery("select url from Deals777 where id=$deal_id", $con);
+  $result = doQuery("select url from Deals where id=$deal_id", $con);
   while ($row = @mysql_fetch_assoc($result)) {
     $deal_url = $row['url'];
   }
 } else {
-  $result = doQuery("select url,TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), discovered))/3600 as age, Addresses777.id, deal_id, raw_address from Addresses777 left join Deals777 on Addresses777.deal_id=Deals777.id where raw_address is not null and latitude is null and TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), discovered))>3600 order by age", $con);
+  $result = doQuery("select url,TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), discovered))/3600 as age, Addresses.id, deal_id, raw_address from Addresses left join Deals on Addresses.deal_id=Deals.id where raw_address is not null and latitude is null and TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), discovered))>3600 order by age", $con);
   
   $num_orphaned = mysql_num_rows($result);
 
@@ -233,7 +233,7 @@ if (isset($_GET["deal_id"]) && count($address_ids) > 0) {
     $id = $address_ids[$i];
     $result = doQuery("select raw_address, street, city, state, zipcode, ".
 		      "country, latitude, longitude from ".
-		      "Addresses777 where id=$id", $con);
+		      "Addresses where id=$id", $con);
    
     while ($row = @mysql_fetch_assoc($result)) {
       $raw_address = $row['raw_address'];
@@ -291,7 +291,7 @@ if (isset($_GET["deal_id"]) && strlen($_GET["deal_id"]) > 0) {
 
 
 function addAddress($deal_id, $raw_address, $con) {
-  $sql = "insert into Addresses777 (deal_id, raw_address) values ".
+  $sql = "insert into Addresses (deal_id, raw_address) values ".
     "($deal_id, '$raw_address')";
   echo $sql."<BR>\n";
   doQuery($sql, $con);
@@ -300,7 +300,7 @@ function addAddress($deal_id, $raw_address, $con) {
 }
 
 function removeAddress($deal_id, $address_id, $con) {
-  $sql = "delete from Addresses777 where id=$address_id limit 1";
+  $sql = "delete from Addresses where id=$address_id limit 1";
   echo $sql."<BR>\n";
   doQuery($sql, $con);
   updateDeal($deal_id, $con);
@@ -338,7 +338,7 @@ function updateAddress($deal_id,
     $update_vals = $update_vals.",zipcode='$zipcode'";
   }
 
-  $sql = "update Addresses777 set $update_vals where id=$address_id";
+  $sql = "update Addresses set $update_vals where id=$address_id";
   echo "$sql<BR>\n";
   doQuery($sql, $con);
   updateDeal($deal_id, $con);
@@ -358,7 +358,7 @@ function updateAddress($deal_id,
 */
 
 function updateDeal($deal_id, $con) {
-  $sql = "update Deals777 set last_updated=UTC_TIMESTAMP() where id=$deal_id";
+  $sql = "update Deals set last_updated=UTC_TIMESTAMP() where id=$deal_id";
   echo $sql."<BR>\n";
   doQuery($sql, $con);
 }

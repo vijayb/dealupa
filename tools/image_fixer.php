@@ -92,18 +92,18 @@ $image_ids = array();
 if (isset($_GET["deal_id"]) && strlen($_GET["deal_id"]) > 0) {
   $deal_id=$_GET["deal_id"];
   
-  $result = doQuery("select id from Images777 where deal_id=$deal_id", $con);
+  $result = doQuery("select id from Images where deal_id=$deal_id", $con);
 
   while ($row = @mysql_fetch_assoc($result)) {
     array_push($image_ids, $row["id"]);
   }
  
-  $result = doQuery("select url from Deals777 where id=$deal_id", $con);
+  $result = doQuery("select url from Deals where id=$deal_id", $con);
   if ($row = @mysql_fetch_assoc($result)) {
     $deal_url = $row['url'];
   }
 } else {
-  $result = doQuery("select Deals777.id as deal_id,url,TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), discovered))/3600 as age from Deals777 left join Images777 on Images777.deal_id=Deals777.id where Images777.id is null and TIME_TO_SEC(TIMEDIFF(last_updated, discovered))>1 order by age", $con);
+  $result = doQuery("select Deals.id as deal_id,url,TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), discovered))/3600 as age from Deals left join Images on Images.deal_id=Deals.id where Images.id is null and TIME_TO_SEC(TIMEDIFF(last_updated, discovered))>1 order by age", $con);
   
   $num_orphaned = mysql_num_rows($result);
 
@@ -143,7 +143,7 @@ if (isset($_GET["deal_id"]) && count($image_ids) > 0) {
     "</tr>\n";
   for ($i=0; $i < count($image_ids); $i++) {
     $id = $image_ids[$i];
-    $result = doQuery("select image_url from Images777 where id=$id", $con);
+    $result = doQuery("select image_url from Images where id=$id", $con);
    
     while ($row = @mysql_fetch_assoc($result)) {
       $image_url = $row['image_url'];
@@ -182,7 +182,7 @@ if (isset($_GET["deal_id"]) && strlen($_GET["deal_id"]) > 0) {
 
 
 function addImage($deal_id, $image_url, $con) {
-  $sql = "insert into Images777 (deal_id, image_url) values ".
+  $sql = "insert into Images (deal_id, image_url) values ".
     "($deal_id, '$image_url')";
   echo $sql."<BR>\n";
   doQuery($sql, $con);
@@ -191,10 +191,16 @@ function addImage($deal_id, $image_url, $con) {
 }
 
 function resetImageWork($deal_id, $deals_con, $wq_con) {
-  $sql = "select url from Deals777 where id=$deal_id limit 1";
+  $sql = "select url,company_id from Deals where id=$deal_id limit 1";
   $result = doQuery($sql, $deals_con);
   if ($row = @mysql_fetch_assoc($result)) {
     $url = $row['url'];
+    $company_id = $row['company_id'];
+
+    $sql = "insert into WorkQueue (work, type, company_id, frequency, output_server, output_database,created) values ('".mysql_real_escape_string($url)."', 9, $company_id, 0, '50.57.43.108', 'Deals', UTC_TIMESTAMP()) on duplicate key update id=id";
+    doQuery($sql, $wq_con);
+    echo "[$sql]<BR>\n";
+
     $sql = "update WorkQueue set started=null, completed=null, status=null, status_message=null where type=9 and completed is not null ".
       "and strcmp(work, '".mysql_real_escape_string($url)."')=0";
     doQuery($sql, $wq_con);
@@ -208,7 +214,7 @@ function resetImageWork($deal_id, $deals_con, $wq_con) {
 
 
 function removeImage($deal_id, $image_id, $con) {
-  $sql = "delete from Images777 where id=$image_id limit 1";
+  $sql = "delete from Images where id=$image_id limit 1";
   echo $sql."<BR>\n";
   doQuery($sql, $con);
   updateDeal($deal_id, $con);
@@ -216,7 +222,7 @@ function removeImage($deal_id, $image_id, $con) {
 
 
 function updateDeal($deal_id, $con) {
-  $sql = "update Deals777 set last_updated=UTC_TIMESTAMP() where id=$deal_id";
+  $sql = "update Deals set last_updated=UTC_TIMESTAMP() where id=$deal_id";
   echo $sql."<BR>\n";
   doQuery($sql, $con);
 }

@@ -115,14 +115,14 @@ if (isset($deal_id) && strlen($deal_id) > 0) {
   outputDealInfo($deal_id, $con);
 
   if (isset($_GET["set_nation"])) {
-    $sql = "insert into Cities777 (deal_id, city_id) values (".
+    $sql = "insert into Cities (deal_id, city_id) values (".
       $deal_id.", 2) on duplicate key update id=id";
   } else if (isset($_GET["unset_nation"])) {
-    $sql = "DELETE from Cities777 where deal_id=".$deal_id." and ".
+    $sql = "DELETE from Cities where deal_id=".$deal_id." and ".
       "city_id=2";
   } else if (isset($_GET["set_edition"]) && isset($_GET["edition"]) &&
 	     $_GET["edition"] != 0) {
-    $sql = "insert into Cities777 (deal_id, city_id) values (".
+    $sql = "insert into Cities (deal_id, city_id) values (".
       $deal_id.", ".$_GET["edition"].") on duplicate key update id=id";
   }
 
@@ -134,7 +134,7 @@ if (isset($deal_id) && strlen($deal_id) > 0) {
       die('Error: ' . mysql_error());
     }
 
-    $sql = "update Deals777 set last_updated=UTC_TIMESTAMP() where id=".
+    $sql = "update Deals set last_updated=UTC_TIMESTAMP() where id=".
       $deal_id;
     echo "$sql\n";
     $result = mysql_query($sql, $con);
@@ -148,7 +148,7 @@ if (isset($deal_id) && strlen($deal_id) > 0) {
 
 
 } else {
-  $result = doQuery("select Deals777.id as deal_id,url,TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), discovered))/3600 as age from Deals777 left join Cities777 on Cities777.deal_id=Deals777.id where Cities777.id is null and TIME_TO_SEC(TIMEDIFF(last_updated, discovered))>1 order by age", $con);
+  $result = doQuery("select Deals.id as deal_id,url,TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), discovered))/3600 as age from Deals left join Cities on Cities.deal_id=Deals.id where Cities.id is null and TIME_TO_SEC(TIMEDIFF(last_updated, discovered))>1 order by age", $con);
 
   $num_orphaned = mysql_num_rows($result);
 
@@ -191,11 +191,11 @@ function doQuery($query, $con) {
 }
 
 function outputDealInfo($deal_id, $con) {
-  $result = doQuery("select url from Deals777 where id=$deal_id", $con);
+  $result = doQuery("select url from Deals where id=$deal_id", $con);
   if ($row = @mysql_fetch_assoc($result)) {
     echo "<center>Deal ID: <a href=\"http://50.57.43.108/tools/deal_info.php?deal_url=$deal_id&submitid=search+by+id\" target=_panel>$deal_id</a> : <a href=\"".$row["url"]."\" target=_blank>".$row["url"]."</a></center><BR>\n";
   }
-  $result = doQuery("select raw_address from Addresses777 where deal_id=$deal_id", $con);
+  $result = doQuery("select raw_address from Addresses where deal_id=$deal_id", $con);
   $count = 1;
   while ($row = @mysql_fetch_assoc($result)) {
     echo "Address $count: ".$row["raw_address"]."<BR>\n";
@@ -205,7 +205,7 @@ function outputDealInfo($deal_id, $con) {
 }
 
 function outputEditions($deal_id, $cities, $con) {
-  $sql = "SELECT city_id FROM Cities777 where deal_id=$deal_id";
+  $sql = "SELECT city_id FROM Cities where deal_id=$deal_id";
   $result = mysql_query($sql, $con);
   if (!$result) {
     die('Error 7: ' .mysql_error());
