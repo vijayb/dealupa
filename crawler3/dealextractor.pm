@@ -48,6 +48,8 @@
     use crowdsavingsextractor;
     use plumdistrictextractor;
     use mamapediaextractor;
+    use dailycandyextractor;
+
     
     my %company_to_extractor_map;
 
@@ -90,6 +92,7 @@
     $company_to_extractor_map{41} = \&crowdsavingsextractor::extract;
     $company_to_extractor_map{42} = \&plumdistrictextractor::extract;
     $company_to_extractor_map{43} = \&mamapediaextractor::extract;
+    $company_to_extractor_map{44} = \&dailycandyextractor::extract;
 
 
     sub extractDeal {

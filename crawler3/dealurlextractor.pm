@@ -52,6 +52,7 @@
     $company_to_extractor_map{40} = \&CBSLocalURLExtractor;
     $company_to_extractor_map{41} = \&CrowdSavingsURLExtractor;
     $company_to_extractor_map{43} = \&MamapediaURLExtractor;
+    $company_to_extractor_map{44} = \&DailyCandyURLExtractor;
 
     sub extractDealURLs {
         if ($#_ != 2) {
@@ -136,13 +137,12 @@
 	my @links = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
 		    $_[0]->attr('href') =~ /^\// &&
-		    $_[0]->as_text() =~ /view\s*deal/i &&
-		    defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') =~ /button\s*buy-now/});
+		    $_[0]->as_text() =~ /view\s*deal/i});
 	
 
 	foreach my $link (@links) {
 	    my $url = "http://www.livingsocial.com".$link->attr('href');
+	    print "[$url]\n";
 	    addToDealUrls($_[0], $url);
 	}
     }
@@ -877,6 +877,22 @@
 		addToDealUrls($_[0], "http://deals.mamapedia.com".$a[0]->attr('href'));
 	    }
 	}
+    }
+
+
+    sub DailyCandyURLExtractor {
+        if (!$#_ == 2) { die "Incorrect usage of DailyCandyURLExtractor.\n"; }
+        my $hub_properties = $_[1];
+        my $tree_ref = $_[2];
+        
+        my @deal_urls = ${$tree_ref}->look_down(
+            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+		    $_[0]->attr('href') =~ /^http/ && 
+		    $_[0]->attr('href') =~ /\/deal\/[0-9]+\//});
+
+        foreach my $deal_url (@deal_urls) {
+            addToDealUrls($_[0], $deal_url->attr('href'));
+        }
     }
 
 
