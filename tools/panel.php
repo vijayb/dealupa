@@ -27,12 +27,15 @@
 <li><a href="http://50.57.136.167/tools/work_info.php" target=_panel>Work Information</a>
 
 <li><a href="http://50.57.43.108/tools/deal_info.php" target=_panel>Deal Information</a>
+
+<li><a href="http://50.57.136.167/tools/hub_crawl_stats.php" target=_panel>Crawl Information</a>
 </ul>
 
 <h2>Tools</h2>
 
 <ul>
 <li><a href="http://50.57.43.108/tools/classifier_tool.php" target=_panel>Classifier tool</a>
+<li><a href="http://50.57.43.108/tools/regex_classifier_tool.php" target=_panel>REGEX Classifier tool</a>
 <li><a href="http://50.57.43.108/tools/edition_tool.php" target=_panel>Edition setting tool</a>
 <li><a href="http://50.57.43.108/tools/classifier_fixer.php" target=_panel>Classification fixer</a>
 <li><a href="http://50.57.43.108/tools/address_fixer.php" target=_panel>Address fixer</a>

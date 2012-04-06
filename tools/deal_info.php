@@ -345,16 +345,7 @@ if (isset($deal_id)) {
   echo "</table>\n";
 }
 
-$categories["0"] = "Uncategorized";
-$categories["1"] = "Food & Drink";
-$categories["2"] = "Activities & Events";
-$categories["3"] = "Spa & Beauty";
-$categories["4"] = "Kids & Parents";
-$categories["5"] = "Shopping & Services";
-$categories["6"] = "Classes & Learning";
-$categories["7"] = "Fitness & Health";
-$categories["8"] = "Medical & Dental";
-$categories["9"] = "Hotels & Vacations";
+$categories = getAllCategories($con);
 
 
 if (isset($deal_id)) {
@@ -381,7 +372,7 @@ if (isset($deal_id)) {
     $rank = mysql_result($result, $i, "rank");
     
     echo "     <tr>\n";
-    echo "        <td>$categories[$category_id] ($category_id)</td><td>$rank</td>\n";
+    echo "        <td>".$categories[($category_id-1)]["name"]." ($category_id)</td><td>$rank</td>\n";
     echo "     </tr>\n";
 
   }
@@ -525,6 +516,25 @@ function doQuery($query, $con) {
   return $result;
 
 }
+
+
+function getAllCategories($con) {
+  $sql =
+    "select id, name, description from CategoryInfo";
+
+  $result = mysql_query($sql, $con);
+        
+  if (!$result) {
+    die('Error: ' . mysql_error());
+  }
+
+  $categories = array();
+  while ($row = @mysql_fetch_assoc($result)) {
+    array_push($categories, $row);
+  }
+  return $categories;
+}
+
 
 
 ?>
