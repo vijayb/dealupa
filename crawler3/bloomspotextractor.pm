@@ -78,6 +78,10 @@
 		$value =~ s/,//g;
 		$deal->price($price);
 		$deal->value($value);
+	    } elsif ($price =~ /\$([0-9,]+)/) {
+		$price = $1;
+		$price =~ s/,//g;
+		$deal->price($price);
 	    }
 	}
 
