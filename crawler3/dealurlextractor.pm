@@ -860,7 +860,9 @@
 	    /addthis:url=\"(http:\/\/www.crowd[^\"\?]+)/) {
 	    my $clean_url = $1;
 	    $clean_url =~ s/\s//g;
-	    addToDealUrls($_[0], $clean_url);
+	    if ($clean_url !~ /checkout\/?$/) {
+		addToDealUrls($_[0], $clean_url);
+	    }
 	}
 
     }
