@@ -840,19 +840,24 @@
         my $tree_ref = $_[2];
         
         my @deals = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('onclick')) &&
-		    $_[0]->attr('onclick') =~ /href=[\'\"]http:\/\/www.crowdsavings/});
+            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+		    $_[0]->attr('href') =~
+		    /^http[s]?:\/\/www.crowdsavings.com\//});
 
 	foreach my $deal (@deals) {
-	    if ($deal->attr('onclick') =~ /href=[\'\"]([^\'\"]+)/) {
-		my $clean_url = $1;
-		$clean_url =~ s/\s//g; # wtf they have spaces in their URLs!
+	    my $clean_url = $deal->attr('href');
+	    $clean_url =~ s/\s//g; # wtf they have spaces in their URLs!
+	    
+	    if ($clean_url =~ /\/[^\/]*[0-9]+\-.*$/ &&
+		$clean_url !~ /checkout\/?$/) {
+		#print "[$clean_url]\n";
 		addToDealUrls($_[0], $clean_url);
 	    }
 	}
 
 
-	if (${$tree_ref}->as_HTML() =~ /addthis:url=\"(http:\/\/www.crowd[^\"\?]+)/) {
+	if (${$tree_ref}->as_HTML() =~
+	    /addthis:url=\"(http:\/\/www.crowd[^\"\?]+)/) {
 	    my $clean_url = $1;
 	    $clean_url =~ s/\s//g;
 	    addToDealUrls($_[0], $clean_url);
