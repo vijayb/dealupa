@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS `Deals` (
   `dup` tinyint(1) NOT NULL DEFAULT '0',
   `dup_id` int(10) unsigned DEFAULT NULL,
   `company_id` int(11) NOT NULL,
+  `recommend` tinyint(1) NOT NULL DEFAULT '0',
   `title` varchar(255) DEFAULT NULL,
   `subtitle` varchar(255) DEFAULT NULL,
   `price` float DEFAULT NULL,
