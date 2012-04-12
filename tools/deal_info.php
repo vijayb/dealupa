@@ -86,20 +86,37 @@ if (!$con) {
 
 mysql_select_db("Deals", $con) or die('Error 2' . mysql_error());
 
+foreach ($_POST as $key =>$value) {
+  //echo "$key:$value<BR>\n";
+}
 
-if (isset($_POST["deal_id"]) && isset($_POST["expire"])) {
-  if ($_POST["expire"] == "expire") {
-    $expire_value = 1;
-  } else {
-    $expire_value = 0;
+if (isset($_POST["deal_id"])) {
+  if (isset($_POST["expire"])) {
+    if ($_POST["expire"] == "expire") {
+      $expire_value = 1;
+    } else {
+      $expire_value = 0;
+    }
+
+    expireDeal($_POST["deal_id"], $expire_value, $con);
   }
 
-  expireDeal($_POST["deal_id"], $expire_value, $con);
+  if (isset($_POST["recommend"])) {
+    if ($_POST["recommend"] == "recommend") {
+      $recommend_value = 1;
+    } else {
+      $recommend_value = 0;
+    }
+
+    recommendDeal($_POST["deal_id"], $recommend_value, $con);
+  }
+
+
 
 }
 
 if (isset($_GET["deal_url"])) {
-  if (isset($_GET["submitid"])) {
+  if (isset($_GET["submitid"]) && !preg_match("/url/", $_GET["submitid"])) {
     $criteria = "id=".$_GET["deal_url"];
   } else {
     $url_hash = sha1($_GET["deal_url"]);
@@ -107,7 +124,7 @@ if (isset($_GET["deal_url"])) {
   }
 
 
-  $sql = "SELECT id, url, affiliate_url, discovered, last_updated, UNIX_TIMESTAMP(discovered) as discovered_seconds, UNIX_TIMESTAMP(last_updated) as last_updated_seconds, num_updates, dup, dup_id, company_id, title, subtitle, price, value, num_purchased, yelp_url, yelp_rating, yelp_review_count, fb_likes, fb_shares, text, fine_print, expired, upcoming, deadline, expires, UNIX_TIMESTAMP(deadline) as deadline_epoch, name, website, phone FROM Deals where $criteria";
+  $sql = "SELECT id, url, affiliate_url, discovered, last_updated, UNIX_TIMESTAMP(discovered) as discovered_seconds, UNIX_TIMESTAMP(last_updated) as last_updated_seconds, num_updates, dup, dup_id, company_id, recommend, title, subtitle, price, value, num_purchased, yelp_url, yelp_rating, yelp_review_count, fb_likes, fb_shares, text, fine_print, expired, upcoming, deadline, expires, UNIX_TIMESTAMP(deadline) as deadline_epoch, name, website, phone FROM Deals where $criteria";
 
   $result = mysql_query($sql);
   if (!$result) {
@@ -133,6 +150,7 @@ if (isset($result) && mysql_num_rows($result) == 1) {
   $dup = mysql_result($result, 0, "dup");
   $dup_id = mysql_result($result, 0, "dup_id");
   $company_id = mysql_result($result, 0, "company_id");
+  $recommend = mysql_result($result, 0, "recommend");
   $title = mysql_result($result, 0, "title");
   $subtitle = mysql_result($result, 0, "subtitle");
   $price = mysql_result($result, 0, "price");
@@ -160,7 +178,7 @@ if (isset($result) && mysql_num_rows($result) == 1) {
   } else {
     $submitparam= $_GET['submiturl'];
   }
-  $deal_info_url="/tools/deal_info.php?deal_url=".$_GET['deal_url'].
+  $deal_info_url="/tools/deal_info.php?deal_url=".urlencode($_GET['deal_url']).
     "&submitid=".$submitparam;
   echo "<form action='$deal_info_url' method=post align=center>\n";
   echo "<table>\n";
@@ -195,6 +213,16 @@ if (isset($result) && mysql_num_rows($result) == 1) {
   }
 
   echo "  <tr><td><b>Company id:</b></td><td>$companies[$company_id] ($company_id)</td></tr>\n";
+  echo "  <tr><td><b>Dealupa Recommends:</b></td><td>$yesno[$recommend]&nbsp;&nbsp;";
+  if ($recommend) {
+    $recommend_switch='unrecommend';
+  } else {
+    $recommend_switch='recommend';
+  }
+
+  echo "<input type=submit name='recommend' value='$recommend_switch' />";
+
+
   echo "  <tr><td><b>Title:</b></td><td>$title</td></tr>\n";
   echo "  <tr><td><b>Subtitle:</b></td><td>$subtitle</td></tr>\n";
   echo "  <tr><td><b>Price:</b></td><td>$price</td></tr>\n";
@@ -480,6 +508,13 @@ function getData($deal_id, $con) {
 
 function expireDeal($deal_id, $expired_value, $con) {
   $sql = "update Deals set expired=$expired_value where id=$deal_id";
+  echo $sql."<BR>\n";
+  doQuery($sql, $con);
+  updateDeal($deal_id, $con);
+}
+
+function recommendDeal($deal_id, $recommend_value, $con) {
+  $sql = "update Deals set recommend=$recommend_value where id=$deal_id";
   echo $sql."<BR>\n";
   doQuery($sql, $con);
   updateDeal($deal_id, $con);

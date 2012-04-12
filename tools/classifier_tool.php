@@ -158,10 +158,20 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "<b>",count($indexes), "</b> deals in cache <BR>\n";
   $num_classified = 0;
   $num_national = 0;
+  $num_recommended = 0;
   $unclassified = array();
   for ($i=0; $i< count($indexes); $i++) {
     $row = $memcache->get($indexes[$i]);
     
+
+    if (isset($_POST["dealupa_recommends"])) {
+      if (isset($_POST["url"]) && strcmp($_POST["url"], $row["url"]) == 0) {
+	$row["recommend"] = 1;
+	$memcache->set($indexes[$i], $row, false, $cache_life);
+	echo "Setting Dealupa Recommends for <b>".$row["url"]."</b><BR>\n";
+      }
+    }
+
     if (isset($_POST["is_nation"])) {
       if (isset($_POST["url"]) && strcmp($_POST["url"], $row["url"]) == 0) {
 	$row["is_nation"] = 1;
@@ -268,10 +278,20 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 	if (isset($row['category_id4'])) {
 	  insertCategory($row['id'], $row['category_id4'], 1, $con);
 	}
+
+	if (isset($row['recommend'])) {
+	  insertRecommend($row['id'], $con);
+	}
+
       }
 
     } else {
       $unclassified[count($unclassified)] = $i;		
+    }
+
+
+    if (isset($row["recommend"])) {
+      $num_recommended++;
     }
 
     if (isset($row["is_nation"])) {
@@ -308,7 +328,8 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   
   // }
   echo "Of which <b>",$num_classified,"</b> are classified<BR>\n";
-  echo "And  <b>",$num_national,"</b> are national<BR>\n";
+  echo "And <b>",$num_national,"</b> are national<BR>\n";
+  echo "And <b>",$num_recommended,"</b> are Dealupa Recommends<BR>\n";
   
   $chosen_deal = $unclassified[rand(0, count($unclassified)-1)];
   $row = $memcache->get($indexes[$chosen_deal]);
@@ -392,7 +413,8 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "2. <INPUT id=\"category_id2\" type=\"text\" name=\"category_id2\" autocomplete=\"array:categories\"><BR>\n";
   echo "3. <INPUT id=\"category_id3\" type=\"text\" name=\"category_id3\" autocomplete=\"array:categories\"><BR>\n";
   echo "4. <INPUT id=\"category_id4\" type=\"text\" name=\"category_id4\" autocomplete=\"array:categories\"><BR>\n";
-  echo "<BR><input type=\"checkbox\" id=\"nation\" name=\"is_nation\" $national_checked>National<br>\n";
+  echo "<BR><input type=\"checkbox\" id=\"nation\" name=\"is_nation\" $national_checked>National\n";
+  echo "<BR><input type=\"checkbox\" id=\"recommend\" name=\"dealupa_recommends\">Dealupa Recommends<BR>\n";
   echo "<BR><input type=\"submit\" value=\"Submit\">\n";
 
   $categories = getAllCategories($con);
@@ -537,6 +559,19 @@ function insertNational($deal_id, $con) {
 
   $update_sql =
     "UPDATE Deals set last_updated=UTC_TIMESTAMP() where id=$deal_id";
+
+  $result = mysql_query($update_sql, $con);
+	
+  if (!$result) {
+    die('Error: ' . mysql_error());
+  }
+  echo "[$update_sql]<BR>\n";
+}
+
+
+function insertRecommend($deal_id, $con) {
+  $update_sql =
+    "UPDATE Deals set recommend=1, last_updated=UTC_TIMESTAMP() where id=$deal_id";
 
   $result = mysql_query($update_sql, $con);
 	

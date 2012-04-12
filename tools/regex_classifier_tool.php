@@ -203,6 +203,12 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 	$row["is_nation"] = 1;
 
 	$memcache->set($id, $row, false, $cache_life);
+      } else if (preg_match("/^recommend_/", $key) && preg_match("/([0-9]+)/", $key, $match)) {
+	$id = "category:".$match[0];
+	$row = $memcache->get($id);
+	$row["recommend"] = 1;
+
+	$memcache->set($id, $row, false, $cache_life);
       }
 
     }
@@ -285,6 +291,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 	echo "<input type=\"checkbox\" name=\"deal_id_".$row["id"]."\" checked=yes> &nbsp;\n";
 	echo "<b>ID</b>: <a href=\"http://50.57.43.108/tools/deal_info.php?deal_url=".$row["id"]."&submitid=search+by+id\" target=_regex_classifier>".$row["id"]."</a> (<a href=\"http://50.57.43.108/tools/classifier_fixer.php?deal_id=".$row["id"]."\" target=_fixer>classify</a>)<BR>\n";
 	echo "<input type=\"checkbox\" name=\"nation_".$row["id"]."\" $national_checked> &nbsp; <b>National</b><BR>\n";
+	echo "<input type=\"checkbox\" name=\"recommend_".$row["id"]."\"> &nbsp; <b>Dealupa Recommends</b><BR>\n";
 
 	if ($num_addresses >0) {
 	  echo "<b><a href='http://50.57.43.108/tools/address_fixer.php?deal_id=$id' target=_fixer>Number of addresses</a></b>: $num_addresses<BR>\n";
