@@ -67,11 +67,20 @@
 	    $deal->price($price);
 	}
 
-	if (defined($deal->title()) &&
-	    $deal->title() =~ /([0-9,\.]+)\s*(value|worth)/i) {
-	    my $value = $1;
-	    $value =~ s/,//g;
-	    $deal->value($value);
+	if (defined($deal->title())) {
+	    if ($deal->title() =~ /([0-9,\.]+)\s*(value|worth)/i) {
+		my $value = $1;
+		$value =~ s/,//g;
+		$deal->value($value);
+	    } elsif ($deal->title() =~ /\$([0-9,\.]+)[^\$]*\$([0-9,\.]+)/) {
+		my $price = $1;
+		$price =~ s/,//g;
+		$deal->price($price);
+
+		my $value = $2;
+		$value =~ s/,//g;
+		$deal->value($value);
+	    }
 	}
 
 

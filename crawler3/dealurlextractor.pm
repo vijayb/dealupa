@@ -738,14 +738,12 @@
         my $tree_ref = $_[2];
         
         my @deal_urls = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
-		    defined($_[0]->attr('content')) &&
-		    $_[0]->attr('content') =~ /^http/ &&
-		    $_[0]->attr('property') eq "og:url"});
+            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+		    $_[0]->attr('href') =~
+		    /http[s]?:\/\/deals.entertainment.com\/daily_deals\/[0-9]+$/});
 
         foreach my $deal (@deal_urls) {
-	    my $clean_url = $deal->attr('content');
-	    $clean_url =~ s/\?[^\?].*$//;
+	    my $clean_url = $deal->attr('href');
 	    addToDealUrls($_[0], $clean_url);
         }
     }

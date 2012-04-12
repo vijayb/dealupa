@@ -49,27 +49,23 @@
 	$tree->eof();
 
 
-	my @title = $tree->look_down(
-	    sub{$_[0]->tag() eq 'h1' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "value_prop")});
+	my @title = $tree->look_down(sub{$_[0]->tag() eq 'h1'});
 	if (@title) {
 	    $deal->title($title[0]->as_text());
 	}
 
 
 	my @price = $tree->look_down(
-	    sub{defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "daily_deal_price")});
+	    sub{$_[0]->tag() eq "div" && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "buy_tag")});
 	if (@price && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
 	    my $price = $1;
 	    $price =~ s/,//g;
 	    $deal->price($price);
 	}
 	
-
 	my @value = $tree->look_down(
-	    sub{$_[0]->tag eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /dash-value-box\s*value/)});
+	    sub{$_[0]->tag eq 'td' && $_[0]->as_text() =~ /value/i});
 	if (@value && $value[0]->as_text() =~ /\$([0-9,\.]+)/) {
 	    my $value = $1;
 	    $value =~ s/,//g;
@@ -80,25 +76,31 @@
 
 	my @text = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "description")});
+		    ($_[0]->attr('id') eq "about_deal")});
 
 	if (@text) {
 	    my $clean_text = $text[0]->as_HTML();
-	    $clean_text =~ s/<div\s*class=[\'\"]share-buttons[\'\"]>.*?<\/div>//;
-	    $clean_text =~ s/<h3\s*class=[\'\"]terms-headline[\'\"]>.*?<\/ul>//;
+	    $clean_text =~ s/<h4>[^<]*<\/h4>//;
 	    $clean_text =~ s/<\/?div[^>]*>//g;
 	    $deal->text($clean_text);
+	}
 
-	    if ($text[0]->as_HTML() =~
-		/(<h3\s*class=[\'\"]terms-headline[\'\"]>.*?<\/ul>)/) {
-		$deal->fine_print($1);
-	    }
+	my @fine_print = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /^fine_print/)});
+
+	if (@fine_print) {
+	    my $clean_fine_print = $fine_print[0]->as_HTML();
+	    $clean_fine_print =~ s/<h4>[^<]*<\/h4>//;
+	    $clean_fine_print =~ s/<\/?div[^>]*>//g;
+	    $clean_fine_print =~ s/<a[^>]*>[^<]*<\/a>//g;
+	    $deal->fine_print($clean_fine_print);
 	}
 
 
 	my @image_container = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "deal_photo")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "deal_photo")});
 
 	if (@image_container) {
 	    my @image = $image_container[0]->look_down(
@@ -134,7 +136,7 @@
 			$_[0]->attr('id') eq "time_left_to_buy"});
 
 	    if (@deadline && $deadline[0]->as_text() =~
-		/([0-9]{1,3})[^0-9]([0-9]{1,2})[^0-9]([0-9]{1,2})/) {
+		/([0-9]{1,4})[^0-9]([0-9]{1,2})[^0-9]([0-9]{1,2})/) {
 		my $hours = $1;
 		my $minutes = $2;
 		my $seconds = $3;
@@ -167,10 +169,13 @@
 		    $deal->expires($expires);
 		}
 	    } elsif ($deal->fine_print() =~ 
-		     /([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4})/) {
+		     /expir[^0-9]*([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{2,4})/i) {
 		my $month = $1;
 		my $day = $2;
 		my $year = $3;
+		if ($year < 2000) {
+		    $year += 2000;
+		}
 		
 		my $expires = sprintf("%d-%02d-%02d 01:01:01",$year,
 				      $month, $day);
@@ -187,7 +192,7 @@
 	if (@biz_info) {
 	    # Name
 	    my @name = $biz_info[0]->look_down(
-		sub{$_[0]->tag() =~ /h3/i});
+		sub{$_[0]->tag() =~ /strong/i});
 	    if (@name) {
 		$deal->name($name[0]->as_text());
 	    }
