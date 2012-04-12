@@ -154,7 +154,7 @@ for ($i=0;$i < mysql_num_rows($result); $i++) {
 
   echo "     <tr>\n";
   echo "        <td>$id</td>\n";
-  echo "        <td><a href='/tools/work_info.php?work=$work' target=_work_info>$work</a> (<a href='$work' target=_blank>web</a>) (<a href='http://50.57.43.108/tools/deal_info.php?submiturl&deal_url=".htmlentities($work)."' target=_deal_info>db</a>)</td>\n";
+  echo "        <td><a href='/tools/work_info.php?work=$work' target=_work_info>$work</a> (<a href='$work' target=_blank>web</a>) (<a href='http://50.57.43.108/tools/deal_info.php?submiturl&deal_url=".urlencode($work)."' target=_deal_info>db</a>)</td>\n";
   echo "        <td><a href='/tools/work_info.php?type=$type' target=_work_info>$types[$type]</a></td>\n";
   echo "        <td><a href='/tools/work_info.php?company_id=$company_id' target=_work_info>$companies[$company_id] ($company_id)</a></td>\n";
 
