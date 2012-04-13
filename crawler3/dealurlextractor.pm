@@ -142,8 +142,8 @@
 
 	foreach my $link (@links) {
 	    my $url = "http://www.livingsocial.com".$link->attr('href');
-	    print "[$url]\n";
 	    addToDealUrls($_[0], $url);
+	    addToDealUrls($_[0], "http://www.livingsocial.com/deals/305612");
 	}
     }
 
@@ -285,7 +285,6 @@
 	foreach my $deal (@deal_urls) {
 	    if ($deal->attr('href') =~ /^http:\/\/www.bloomspot/&&
 		$deal->as_HTML() =~ /list_cta.png/) {
-		#print $deal->attr('href'),"\n";
 		addToDealUrls($_[0], $deal->attr('href'));
 	    }
 	}
@@ -558,12 +557,14 @@
         my $tree_ref = $_[2];
         
         my @deal_urls = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('class')) &&
+            sub{$_[0]->tag() eq 'a' &&
 		    defined($_[0]->attr('href')) &&
-		    $_[0]->attr('class') eq "btn-see-deal"});
+		    $_[0]->attr('href') =~ /^\/deal/ &&
+		    $_[0]->as_text() =~ /view\soffer/i});
 
 	foreach my $deal_url (@deal_urls) {
-	    my $clean_url = $deal_url->attr('href');
+	    my $clean_url = 
+		"http://schwaggle.active.com".$deal_url->attr('href');
 	    # Schwaggle postpends the city to the url. E.g.,:
 	    # http:// ... deal url ... /seattle
 	    # We get rid of the end so we don't have to crawl
@@ -649,7 +650,6 @@
 			$_[0]->attr('href') =~ /\/travel\/[^\/]+\/.*/});
 	    
 	    if (@deal_url) {
-		print "http://www.dealfind.com".$deal_url[0]->attr('href')."\n";
 		addToDealUrls($_[0],
 			      "http://www.dealfind.com".$deal_url[0]->attr('href'));
 	    }
@@ -848,7 +848,6 @@
 	    
 	    if ($clean_url =~ /\/[^\/]*[0-9]+\-.*$/ &&
 		$clean_url !~ /checkout\/?$/) {
-		#print "[$clean_url]\n";
 		addToDealUrls($_[0], $clean_url);
 	    }
 	}

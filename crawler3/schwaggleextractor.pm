@@ -36,18 +36,25 @@
 	$tree->parse(decode_utf8 $$deal_content_ref);
 	$tree->eof();
 
+	my @title = $tree->look_down(
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    ($_[0]->attr('property') eq "og:title")});
 
-	my @title = $tree->look_down(sub{$_[0]->tag() eq 'title'});
 	if (@title) {
-	    my $clean_title = $title[0]->as_text();
-	    $clean_title =~ s/\s*by\s*Active.com//;
-	    $deal->title($clean_title);
+	    $deal->title($title[0]->attr('content'));
 	}
 
+	my @subtitle = $tree->look_down(
+	    sub{defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "offer-subtitle")});
+	if (@subtitle) {
+	    $deal->subtitle($subtitle[0]->as_text());
+	}
 
 	my @price = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "price-box")});
+		    ($_[0]->attr('class') eq "price")});
 	if (@price && $price[0]->as_text() =~ /([0-9,]+)/) {
 	    my $price = $1;
 	    $price =~ s/,//g;
@@ -55,8 +62,8 @@
 	}
 
 	my @value = $tree->look_down(
-	    sub{$_[0]->tag() eq 'strong' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "value")});
+	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "retail")});
 	if (@value && $value[0]->as_text() =~ /([0-9,]+)/) {
 	    my $value = $1;
 	    $value =~ s/,//g;
@@ -65,7 +72,7 @@
 
         my @text = $tree->look_down(
             sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-                    ($_[0]->attr('class') eq "box-alt")});
+                    ($_[0]->attr('class') =~ /module\s*offer-description/)});
 
         if (@text) {
             my $clean_text = $text[0]->as_HTML();
@@ -78,42 +85,50 @@
 
         my @fine_print = $tree->look_down(
             sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-                    ($_[0]->attr('class') eq "column")});
+                    ($_[0]->attr('class') =~ /module\s*fine-print/)});
 
         foreach my $fine_print (@fine_print) {
-            if ($fine_print->as_HTML() =~ /fine\s*print/i) {
-                $fine_print = $fine_print->as_HTML();
-                $fine_print =~ s/<\/?div[^>]*>//g;
-                $deal->fine_print($fine_print);
-            }
+	    $fine_print = $fine_print->as_HTML();
+	    $fine_print =~ s/<\/?div[^>]*>//g;
+	    $deal->fine_print($fine_print);
         }
 
 
 	my @num_purchased = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "bought")});
+	    sub{defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "quantity")});
 
-	if (@num_purchased && $num_purchased[0]->as_text() =~ /([0-9,]+)/) {
+	if (@num_purchased &&
+	    $num_purchased[0]->as_text() =~ /([0-9,]+)\s*bought/i) {
 	    my $num_purchased = $1;
 	    $num_purchased =~ s/,//g;
 	    $deal->num_purchased($num_purchased);
 	}
 
-	my @image = $tree->look_down(
+	my @images = $tree->look_down(
 	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
 		    defined($_[0]->attr('content')) &&
 		    ($_[0]->attr('property') eq "og:image")});
 
-	if (@image) {
-	    $deal->image_urls($image[0]->attr('content'));
+	foreach my $image (@images) {
+	    $deal->image_urls($image->attr('content'));
 	}
 
 
 	my @expired = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "availability"});
+	    sub{defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "quantity"});
 
 	if (@expired && $expired[0]->as_text() =~ /expired/i) {
+	    $deal->expired(1);
+	}
+
+
+	@expired = $tree->look_down(
+	    sub{defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "btn-buy"});
+
+	if (@expired && $expired[0]->as_text() =~ /sold\s*out/i) {
 	    $deal->expired(1);
 	}
 
@@ -121,22 +136,22 @@
 
 	if (!defined($deal->expired()) && !$deal->expired()) {
 	    my @deadline = $tree->look_down(
-		sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') eq "timerSource")});
+		sub{$_[0]->tag() eq "div" && defined($_[0]->attr('class')) &&
+			$_[0]->attr('class') =~ /^gcs-js-end-time-string/});
 
-	    if (@deadline &&
-		$deadline[0]->as_text() =~
-		/([A-Z][a-z]+)\s*([0-9]{2}),\s*([0-9]{4})\s*([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})/)
-	    {
+	    if (@deadline && $deadline[0]->as_text() =~
+		/([A-Za-z]+)\s*([0-9]{2})[^0-9]*([0-9]{4})\s*([0-9]{2}):([0-9]{2})/) {
 		my $month = $1;
 		my $day = $2;
 		my $year = $3;
 		my $hour = $4;
 		my $minute = $5;
+		
 		if (defined($month_map{$month})) {
 		    my $deadline = sprintf("%d-%02d-%02d %02d:%02d:01",
 					   $year, $month_map{$month}, $day,
 					   $hour, $minute);
+		    
 		    $deal->deadline($deadline);
 		}
 	    }
@@ -162,7 +177,7 @@
 	
 	my @biz_info = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "map-holder"});
+		    $_[0]->attr('class') =~ /vendor\sinformation/i});
 
 	if (@biz_info) {
 	    # Name
@@ -182,26 +197,33 @@
 		}
 	    }
 
-	    # Address/phone
+	    # Address
 	    my @addresses = $biz_info[0]->look_down(
-		sub{$_[0]->tag() eq "address"});
+		sub{$_[0]->tag() eq "address" &&
+			defined($_[0]->attr("class")) &&
+			$_[0]->attr("class") eq "physical"});
 	    foreach my $address (@addresses) {
 		my $address = $address->as_HTML();
 		
-		$address =~ s/<a[^>]*>[^<]*<\/a>//g;
+		$address =~ 
+		    s/<div\s*class=[\'\"]address-name[\'\"]\s*>[^<]*<\/div>//g;
 		$address =~ s/<[^>]*>/ /g;
 		$address =~ s/\|//g;
-		
-		my $phone;
-		if ($address =~ /(.*[A-Z]{2}\s*,*[0-9]{5})(.*)/) {
-		    $deal->addresses($1);
-		    $phone = $2;
-		} elsif ($address =~ /(.*,\s*)([A-Z]{2})(.*)/ &&
-			 genericextractor::isState($2)) {
-		    $deal->addresses($1.$2);
-		    $phone = $3;
-		}
-		
+		$address =~ s/^\s*//;
+		$address =~ s/\s*$//;
+		$address =~ s/\s+/ /g;
+
+		$deal->addresses($address);
+	    }
+
+	    # Phone
+	    my @phone = $biz_info[0]->look_down(
+		sub{defined($_[0]->attr("class")) &&
+			$_[0]->attr("class") eq "phone"});
+	    
+	    if (@phone) {
+		my $phone = $phone[0]->as_text();
+	    
 		if (defined($phone)) {
 		    $phone =~ s/\s+//g;
 		    my $tmpphone = $phone;
@@ -212,8 +234,11 @@
 		    }
 		}
 	    }
+
 	}
 
+
+	
 
 
 	$tree->delete();
