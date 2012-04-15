@@ -143,7 +143,6 @@
 	foreach my $link (@links) {
 	    my $url = "http://www.livingsocial.com".$link->attr('href');
 	    addToDealUrls($_[0], $url);
-	    addToDealUrls($_[0], "http://www.livingsocial.com/deals/305612");
 	}
     }
 
