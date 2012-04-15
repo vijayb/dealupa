@@ -128,12 +128,39 @@ mysql_select_db("Deals", $con) or die(mysql_error());
 // MySQL connection
 
 foreach ($_POST as $key => $value) {
-  //echo "[$key] [$value]<BR>\n";
+  echo "[$key] [$value]<BR>\n";
 }
 
 $memcache = new Memcache;
 $success = $memcache->connect('localhost', 11211);
 $indexes = $memcache->get("categories_index");
+
+
+//////////////////////////////// PUT THE REGULAR EXPRESSION INFORMATION HERE ///////////////////
+
+$regular_expressions["good_for_kids"] = "(your child)|(your son)|(your daughter)|(your little one)|(your kid)|(your tyke)|(your princess)|( play )";
+$cat1_auto_fill["good_for_kids"] = 6;
+$regular_expressions["healthy_living"] = "(yoga)|(fitness.*class)|(boot.*camp)|(personal.*train)|(vitamin.*supplement)|(pilates)|(kickbox)|(crossfit)|( 5k )|( 10k )|(gym.*member)|(training.*session)|(krav maga)|(workout)|(spin.*class)|(fitness)|(nutrition)|(kettlebell)";
+$neg_regular_expressions["healthy_living"] = "(dance.*studio)|(danc.*class)|(salsa.*class)|(zumba)|(massage)|(chiroprac)|(acupunc)";
+$cat1_auto_fill["healthy_living"] = 15;
+$regular_expressions["photographic"] = "(photography workshop)|(photo.*class)";
+$cat1_auto_fill["photographic"] = 37;
+$cat2_auto_fill["photographic"] = 8;
+
+$regular_expressions["foodie1"] = "(-course.*for (2|two))|(tasting.*for (2|two))|(fine dining.*for (2|two))";
+$cat1_auto_fill["foodie1"] = 4;
+$cat2_auto_fill["foodie1"] = 27;
+
+$regular_expressions["foodie2"] = "(fine dining)|(tasting)";
+$neg_regular_expressions["foodie2"] = "(2)|(two)";
+$cat1_auto_fill["foodie2"] = 4;
+
+$regular_expressions["squeaky_clean"] = "(window.*clean)|(carpet.*clean)|(room.*clean)|( houseclean)|(spring clean)|(house clean)|(floor.*clean)|(home.*clean)|(professional.*clean)";
+$neg_regular_expressions["squeaky_clean"] = "(gutter)|(auto)|( car )|(duct)|(chimney)|(duct)";
+$cat1_auto_fill["squeaky_clean"] = 33;
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 echo "<script>\n";
 $categories = getAllCategories($con);
@@ -149,7 +176,7 @@ echo "</script>\n";
 
 echo "</head>\n";
 echo "<body>\n";
-
+echo "<h1 align=center>Regex classifier tool</h2>\n";
 
 if (!isset($_POST["doc_section"])) {
   $_POST["doc_section"] = 0;
@@ -220,6 +247,48 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 
   $regex_value = "";
   $neg_regex_value = "";
+  $and_regex_value = "";
+  $cat1_value = "";
+  $cat2_value = "";
+  $cat3_value = "";
+  $cat4_value = "";
+
+
+  if (isset($_POST["auto_fill"]) && isset($regular_expressions[$_POST["auto_fill"]])) {
+    $_POST["regex"] = $regular_expressions[$_POST["auto_fill"]];
+    if (isset($and_regular_expressions[$_POST["auto_fill"]])) {
+      $_POST["andregex"] = $and_regular_expressions[$_POST["auto_fill"]];
+    } else {
+      $_POST["andregex"] = "";
+    }
+
+    if (isset($neg_regular_expressions[$_POST["auto_fill"]])) {
+      $_POST["negregex"] = $neg_regular_expressions[$_POST["auto_fill"]];
+    } else {
+      $_POST["negregex"] = "";
+    }
+
+
+    if (isset($cat1_auto_fill[$_POST["auto_fill"]])) {
+      $cat_index = $cat1_auto_fill[$_POST["auto_fill"]];
+      $cat1_value = "value='".$categories[$cat_index - 1]["name"]." ($cat_index)'";
+    }
+    if (isset($cat2_auto_fill[$_POST["auto_fill"]])) {
+      $cat_index = $cat2_auto_fill[$_POST["auto_fill"]];
+      $cat2_value = "value='".$categories[$cat_index - 1]["name"]." ($cat_index)'";
+    }
+    if (isset($cat3_auto_fill[$_POST["auto_fill"]])) {
+      $cat_index = $cat3_auto_fill[$_POST["auto_fill"]];
+      $cat3_value = "value='".$categories[$cat_index - 1]["name"]." ($cat_index)'";
+    }
+    if (isset($cat4_auto_fill[$_POST["auto_fill"]])) {
+      $cat_index = $cat4_auto_fill[$_POST["auto_fill"]];
+      $cat4_value = "value='".$categories[$cat_index - 1]["name"]." ($cat_index)'";
+    }
+
+
+  }
+
 
   if (isset($_POST["regex"]) && strlen($_POST["regex"]) > 0) {
     //echo $_POST["doc_section"]."<BR>\n";
@@ -233,9 +302,18 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     $_POST["negregex"] = "";
   }
 
+
+  if (isset($_POST["andregex"]) && strlen($_POST["andregex"]) > 0) {
+    //echo $_POST["doc_section"]."<BR>\n";
+    $and_regex_value = "value=\"".$_POST["andregex"]."\"";
+  } else {
+    $_POST["andregex"] = "";
+  }
+
   echo "<form action='/tools/regex_classifier_tool.php' method=post align=center>\n";
-  echo "Regex: <input type='text' name='regex' $regex_value size=70 />\n";
-  echo "&nbsp; Neg-regex: <input type='text' name='negregex' $neg_regex_value size=40 />\n";
+  echo "Regex: <input type='text' name='regex' $regex_value size=70 /><BR>\n";
+  echo "And-Regex: <input type='text' name='andregex' $and_regex_value size=70 /><BR>\n";
+  echo "&nbsp; Neg-regex: <input type='text' name='negregex' $neg_regex_value size=40 /><BR>\n";
 
   echo "<select name=doc_section>\n";
   for ($i=0; $i< count($options); $i++) {
@@ -246,18 +324,33 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     echo " />".$options[$i]."</option>\n";
   }
   echo "</select>\n";
+
+
+  echo "<select name=auto_fill>\n";
+  echo "\t<option value='none'>Select auto_fill option</option>\n";
+  foreach ($regular_expressions as $regex_name => $regex_value) {
+    echo "\t<option value='$regex_name' ";
+    if (isset($_POST["auto_fill"]) && $_POST["auto_fill"] == $regex_name) {
+      echo "selected=true";
+    }
+    echo " />".$regex_name."</option>\n";
+  }
+  echo "</select>\n";
+
+
   echo "<input name='regex_search' type=submit value='Apply regex' />\n";
 
+  
 
   if (isset($_POST["regex"]) && strlen($_POST["regex"]) > 0) {
 
     echo "<BR>\n";
     echo "<div style=\"float:right\"><br>\n";
     echo "Categories <span id=\"set-category-warning\" style=\"color:red;display:none\">&nbsp;(Please specify one or more valid categories - see list below)</span><BR>\n";
-    echo "1. <INPUT id=\"category_id1\" type=\"text\" name=\"category_id1\" autocomplete=\"array:categories\"><BR>\n";
-    echo "2. <INPUT id=\"category_id2\" type=\"text\" name=\"category_id2\" autocomplete=\"array:categories\"><BR>\n";
-    echo "3. <INPUT id=\"category_id3\" type=\"text\" name=\"category_id3\" autocomplete=\"array:categories\"><BR>\n";
-    echo "4. <INPUT id=\"category_id4\" type=\"text\" name=\"category_id4\" autocomplete=\"array:categories\"><BR>\n";
+    echo "1. <INPUT id=\"category_id1\" $cat1_value type=\"text\" name=\"category_id1\" autocomplete=\"array:categories\"><BR>\n";
+    echo "2. <INPUT id=\"category_id2\" $cat2_value type=\"text\" name=\"category_id2\" autocomplete=\"array:categories\"><BR>\n";
+    echo "3. <INPUT id=\"category_id3\" $cat3_value type=\"text\" name=\"category_id3\" autocomplete=\"array:categories\"><BR>\n";
+    echo "4. <INPUT id=\"category_id4\" $cat4_value type=\"text\" name=\"category_id4\" autocomplete=\"array:categories\"><BR>\n";
     echo "<BR><input type=\"submit\" name=\"submit_categories\" value=\"Submit\">\n";
     echo "</div>\n";
 
@@ -284,7 +377,8 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 	$national_checked = "";
       }
       
-      if (isset($_POST["regex"]) && strlen($_POST["regex"]) > 0 && matchesRegex($row, $_POST["regex"], $_POST["negregex"], $_POST["doc_section"])) {
+      if (isset($_POST["regex"]) && strlen($_POST["regex"]) > 0 &&
+	  matchesRegex($row, $_POST["regex"], $_POST["andregex"], $_POST["negregex"], $_POST["doc_section"])) {
 	echo "\t<tr>\n";
 	echo "\t\t<td width=600>\n";
 	echo "<a href='http://50.57.43.108/tools/image_fixer.php?deal_id=$id' target=_fixer><img src=\"".$row["image_url"]."\" width=150px align=right></a>\n";
@@ -330,7 +424,8 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     $company_id = $row["company_id"];
     $id = $row['id'];
 
-    if (!(isset($_POST["regex"]) && strlen($_POST["regex"]) > 0 && matchesRegex($row, $_POST["regex"], $_POST["negregex"], $_POST["doc_section"]))) {
+    if (!(isset($_POST["regex"]) && strlen($_POST["regex"]) > 0 &&
+	  matchesRegex($row, $_POST["regex"], $_POST["andregex"], $_POST["negregex"], $_POST["doc_section"]))) {
       echo "\t<tr>\n";
       echo "\t\t<td width=600>\n";
       echo "<a href='http://50.57.43.108/tools/image_fixer.php?deal_id=$id' target=_fixer><img src=\"".$row["image_url"]."\" width=150px align=right></a><BR>\n";
@@ -435,7 +530,7 @@ function regexstrcmp($str1, $str2) {
 }
 
 
-function matchesRegex($row, $regex, $neg_regex, $doc_section) {
+function matchesRegex($row, $regex, $and_regex, $neg_regex, $doc_section) {
   $section = "";
   if ($doc_section == 0) {
     $section = $row["title"]." ".$row["subtitle"];
@@ -447,7 +542,9 @@ function matchesRegex($row, $regex, $neg_regex, $doc_section) {
     $section = $row["url"]." ".$row["title"]." ".$row["subtitle"];
   }
 
-  if (preg_match("/".$regex."/i", $section) && ($neg_regex == "" || !preg_match("/".$neg_regex."/i", $section))) {
+  if (preg_match("/".$regex."/i", $section) &&
+      ($and_regex == "" || preg_match("/".$and_regex."/i", $section)) &&
+      ($neg_regex == "" || !preg_match("/".$neg_regex."/i", $section))) {
     return 1;
   }
 

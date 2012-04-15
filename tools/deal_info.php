@@ -384,11 +384,8 @@ if (isset($deal_id)) {
   }
 
   echo "<p>\n";
-  if (mysql_num_rows($result) > 0) {
-    $fix_category_link = "(<a href='http://50.57.43.108/tools/classifier_fixer.php?deal_id=$deal_id' target=_dealfixer>fix errors</a>)";
-  } else {
-    $fix_category_link = "";
-  }
+  $fix_category_link = "(<a href='http://50.57.43.108/tools/classifier_fixer.php?deal_id=$deal_id' target=_dealfixer>Add categories or fix errors</a>)";
+
   echo "<h3 align=center>Categories $fix_category_link</h3>\n";
   echo "<table>\n";
   echo "     <tr>\n";
