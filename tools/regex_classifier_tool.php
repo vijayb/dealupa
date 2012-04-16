@@ -25,6 +25,8 @@ div.wrapper
 
 </style>
 
+
+
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
@@ -70,10 +72,12 @@ $(document).ready(function() {
 	    $('input[name=is_nation]').attr('checked', true);
 	  }
 	}
+    });
+
+
+	$("#matched_count").html($("#regex_match_count").html());
 
 	
-
-    });  
   });	
 
   /*
@@ -138,42 +142,224 @@ $indexes = $memcache->get("categories_index");
 
 //////////////////////////////// PUT THE REGULAR EXPRESSION INFORMATION HERE ///////////////////
 
-$regular_expressions["good_for_kids"] = "(your child)|(your son)|(your daughter)|(your little one)|(your kid)|(your tyke)|(your princess)|( play )";
-$cat1_auto_fill["good_for_kids"] = 6;
-$regular_expressions["healthy_living"] = "(yoga)|(fitness.*class)|(boot.*camp)|(personal.*train)|(vitamin.*supplement)|(pilates)|(kickbox)|(crossfit)|( 5k )|( 10k )|(gym.*member)|(training.*session)|(krav maga)|(workout)|(spin.*class)|(fitness)|(nutrition)|(kettlebell)";
-$neg_regular_expressions["healthy_living"] = "(dance.*studio)|(danc.*class)|(salsa.*class)|(zumba)|(massage)|(chiroprac)|(acupunc)";
-$cat1_auto_fill["healthy_living"] = 15;
-$regular_expressions["photographic"] = "(photography workshop)|(photo.*class)";
-$cat1_auto_fill["photographic"] = 37;
-$cat2_auto_fill["photographic"] = 8;
+/*	Uncategorized	*/						$constant_expressions[0] = 'Uncategorized';
+/*	Casual Dining	*/						$constant_expressions[1] = "(an fare)|(food and drink)|(cuisine)|(worth.*food.*drink)|(steak)|(seafood)|(cafe)|(dinner)|(lunch)|(brunch)";
+/*	Quick Bites	*/							$constant_expressions[2] = "(sandwich)|(burgers)|(wings)|(pizza)|(\Wdeli\W)|(sports bar)|(bar and grill)|(pub fare)|(food truck)|(bagel)";
+/*	Sweet Tooth	*/							$constant_expressions[3] = "(chocolate)|(chocolates)|(cupcake)|(ice cream)|(froyo)|(frozen yogurt)|(brownie)|(baked good)|(cake)|(donut)";
+/*	Foodie	*/								$constant_expressions[4] = "(upscale)|(french)|(fine dining)|(tasting)|(prix.fixe)";
+/*	Groceries and Spices	*/				$constant_expressions[5] = 'Groceries and Spices';
+/*	Good for Kids	*/						$constant_expressions[6] = "(your child)|(your son)|(your daughter)|(your little one)|(your kid)|(your tyke)|(your princess)|(tutoring)|(\Wage.*older)|(\Wage.*and up)|(\Wage.*to)|(amusement park)|(bounce)";
+/*	Moms and Babies	*/						$constant_expressions[7] = 'Moms and Babies';
+/*	Always Learning	*/						$constant_expressions[8] = "(\Wclass\W)|(\Wclasses\W)|(lessons)|(\Wcourse\W)";
+/*	Threads	*/								$constant_expressions[9] = 'Threads';
+/*	Well Groomed	*/						$constant_expressions[10] = "(teeth.*white)";
+/*	Forever Beautiful	*/					$constant_expressions[11] = "(facial)|(peel)|(\Wtan\W)|(tans)|(tanning)(micropeel)|( spider.*vein)|(skin.*tighten)|(permanent makeup)|(eyelash)|(microdermabrasion)|(stretch.*mark)|( makeup )|(botox)|(skin care)";
+/*	Pampered	*/							$constant_expressions[12] = "(swedish massage)|(minute massage)|(deep.*massage)|(therapeutic.*massage)|(floatation therapy)|(hydromassage)|(massage)";
+/*	Body Art	*/							$constant_expressions[13] = 'Body Art';
+/*	Trim and Terrific	*/					$constant_expressions[14] = 'Trim and Terrific';
+/*	Healthy Living	*/						$constant_expressions[15] = "(yoga)|(fitness.*class)|(boot.*camp)|(personal.*train)|(vitamin.*supplement)|(pilates)|(kickbox)|(crossfit)|( 5k )|( 10k )|(gym.*member)|(training.*session)|(krav maga)|(workout)|(spin.*class)|(fitness)|(nutrition)|(kettlebell)";
+/*	Alternative Healing	*/					$constant_expressions[16] = "(acupunc)|(hypnotherapy)|(palm.*read)|(tarot.*card)|(chiroprac.*exam)|(chiroprac)|(hydro)|(cleanse)|(acupressure)";
+/*	Seeing Clearly	*/						$constant_expressions[17] = "(lasik)|(eyewear)|(prescription.*glass)|(optical)|(eyeglasses)|(eye exam)";
+/*	Medical and Dental	*/					$constant_expressions[18] = "(dentistry)|(dental)|(medical checkup)|(invisalign)|(orthodont)";
+/*	Nightlife	*/							$constant_expressions[19] = 'Nightlife';
+/*	Fun Activities	*/						$constant_expressions[20] = "(scavenger.*hunt)|(billiards)|(skating)|(walking tour)|(segway.*tour)|(skate.*rental)|(bowl)|(laser tag)|(rock.*climb)";
+/*	Dancing Feet	*/						$constant_expressions[21] = "(dance.*studio)|(danc.*class)|(salsa.*class)|(danc.*workshop)|(tango)";
+/*	Will Call	*/							$constant_expressions[22] = "(tickets to)|(ticket.*show)|( theater )|(symphony)|(performance)";
+/*	Cultural Pursuits	*/					$constant_expressions[23] = 'Cultural Pursuits';
+/*	The Outdoors	*/						$constant_expressions[24] = 'The Outdoors';
+/*	Sporting Life	*/						$constant_expressions[25] = "(ticket.*game)|(golf)|(game)";
+/*	Adrenaline	*/							$constant_expressions[26] = 'Adrenaline';
+/*	Date Night	*/							$constant_expressions[27] = "(for 2)|(for two)|(romantic)";
+/*	Once in a Lifetime	*/					$constant_expressions[28] = 'Once in a Lifetime';
+/*	The Finer Things	*/					$constant_expressions[29] = 'The Finer Things';
+/*	Automotive	*/							$constant_expressions[30] = "(oil.*change)|(auto.*mechanic)|( detailing )|(auto.*detail)|(car.*window)|(glass.*tint)|(car wash)|(windshield.*replac)|(windshield.*repair)|(transmission)|(car.*start)|(autocare)|(tire.*rota)|(vehicle)|( car )|( brake)|(automotive)|(garage)";
+/*	Home and Garden	*/						$constant_expressions[31] = "(furniture)|(home decor)|(home.*furnish)|(fixtures)|(ceiling.*fan)|(framing)|(canvas.*print)|(mattress)|(flooring)|(design consult)|(interior design)|(organiz.*((serv)|(consult)))|(plants)|(home d.*cor)|(rugs)|(kitchen cabinet)|(design serv)|(home.*garden)|(garden)|(decal)|(interior.*design)|(home.*design)|(remodel)|( lighting )|(shutters)";
+/*	Handyman	*/							$constant_expressions[32] = "(lawn.*mow)|(handyman)|( weed )|(mowing)|(air.condition)|(lawn.*fertil)|(duct.*clean)|( installation )|(pool.*cleaning)|( vent.*clean)|(gutter.*clean)|( mowing )|(landscap.*servic)|(power.*wash)|(paint.*room)|(pest control)|(window.*clean)|(window.*install)|(hardware)|(pool.*((maint)|(serv)))|(plumbing)|(electric)|(pest.*control)|(tune.up)|(chimney)|(inspection)|(repair)|(hvac)";
+/*	Squeaky Clean	*/						$constant_expressions[33] = "(window.*clean)|(carpet.*clean)|(room.*clean)|( houseclean)|(spring clean)|(house clean)|(floor.*clean)|(home.*clean)";
+/*	General Services	*/					$constant_expressions[34] = "(moving serv)|(resume.*service)|(dry cleaning)|(dry.cleaning)|(airport.*park)|(junk.*remov)|(laundry)|(conver.*dvd)|(dvd.*conver)";
+/*	Gadgets and Gear	*/					$constant_expressions[35] = "(headphones)|(ipod)|(iphone)|(ipad)|(itunes)|(android)|(sd card)|([0-9]+GB)|([0-9]+TB)|(microphone)";
+/*	Bookish	*/								$constant_expressions[36] = "(subscription)";
+/*	Photographic	*/						$constant_expressions[37] = "(photo.*booth)|(photo.*shoot)|(photo.*session)";
+/*	Crafty	*/								$constant_expressions[38] = "(art supplies)";
+/*	Pet Lover	*/							$constant_expressions[39] = "(\Wpet\W)|(\Wdog\W)|(doggie)|(\Wvet\W)";
+/*	Gift Ideas	*/							$constant_expressions[40] = 'Gift Ideas';
+/*	Giving Back	*/							$constant_expressions[41] = 'Giving Back';
+/*	Around the World	*/					$constant_expressions[42] = 'Around the World';
+/*	Road Trip	*/							$constant_expressions[43] = "(night.*stay)|(\Winn\W)|(bed.*breakfast)|(lodge)";
+/*	Good for Girls	*/						$constant_expressions[44] = 'Good for Girls';
+/*	Good for Guys	*/						$constant_expressions[45] = "(\Wmen's\W)|(\Wmen\W)";
+/*  Pampered + Good for Girls */			$constant_expressions[46] = "(mani.pedi)|(manicure)|(pedicure)";
+/*	Well-Groomed + Good for Girls */		$constant_expressions[47] = "(hair services)|(blow dry)|(laser.*hair.*removal)|(keratin)|(partial.*highlight)|(highlights)|(bikini wax)|(brazil.*wax)|(hair extensions)|(hair styling)|(salon serv)|(haircut)";
+/*	Threads + Good for Girls */				$constant_expressions[48] = "(jewelry)|(clothing)|(lingerie)|(women.*shoes)|(bracelet)|(blouse)|(earring)";
+/*	Trim and Terrific + Good for Girls */	$constant_expressions[49] = "(weight.*loss)|(body.*contour)|(velashape)|(lipo.*injec)|(b.12)|(liposuction)|(body.*wrap)|(zerona)|(slimming treatment)|(liposculpture)";
+/*	The Outdoors + Fun Activities */		$constant_expressions[50] = "(paddle.*board)|(kayak)|( fishing)|(horse.*ride)|(horseback)|(bike.*rent)|(bicycle.*rent)|(surf.*rent)|(boat.*rent)|(whale.*watch)";
+/*	Adrenaline + The Outdoors + Fun Act */	$constant_expressions[51] = "(rafting)|( ziplin)|(zip lin)|(jet ski)|(adrenal)";
+/*	The Outdoors + Always Learning */		$constant_expressions[52] = "(scuba)";
+/*	Adrenaline + Once in a Lifetime */		$constant_expressions[53] = "(skydiv)";
+/*	Healthy Living + Dancing Feet */		$constant_expressions[54] = "(zumba)|(dance.*fitness)|(fitness.*dance)";
 
-$regular_expressions["foodie1"] = "(-course.*for (2|two))|(tasting.*for (2|two))|(fine dining.*for (2|two))";
-$cat1_auto_fill["foodie1"] = 4;
-$cat2_auto_fill["foodie1"] = 27;
 
-$regular_expressions["foodie2"] = "(fine dining)|(tasting)";
-$neg_regular_expressions["foodie2"] = "(2)|(two)";
-$cat1_auto_fill["foodie2"] = 4;
 
-$regular_expressions["squeaky_clean"] = "(window.*clean)|(carpet.*clean)|(room.*clean)|( houseclean)|(spring clean)|(house clean)|(floor.*clean)|(home.*clean)|(professional.*clean)";
-$neg_regular_expressions["squeaky_clean"] = "(gutter)|(auto)|( car )|(duct)|(chimney)|(duct)";
-$cat1_auto_fill["squeaky_clean"] = 33;
+$regular_expressions["pampered___good_for_girls"] = $constant_expressions[46];
+$neg_regular_expressions["pampered___good_for_girls"] = $constant_expressions[11] . "|" . $constant_expressions[47];
+$cat1_auto_fill["pampered___good_for_girls"] = 12;
+$cat2_auto_fill["pampered___good_for_girls"] = 44;
 
-$regular_expressions["pampered"] = "(swedish massage)|(minute massage)|(deep.*massage)|(therapeutic.*massage)|(floatation therapy)|(hydromassage)|(massage)";
-$neg_regular_expressions["pampered"] = "(facial)|( peel)|(tanning)|( tan )|( micropeel )|( spider.*vein)|(skin.*tighten)|(permanent makeup)|(eyelash)|(microdermabrasion)|(stretch.*mark)|( makeup )|(botox)|(skin care)|(x-ray)|(acupunc)|(manicure)|(pedicure)|(nails)|(laser.*hair.*removal)|( keratin )|(partial.*highlight)|( highlights)|( bikini wax)|(brazil.*wax)|(hair extensions)|(hair styling)|(salon serv)|(haircut)|(blowout)|(waxing)|(eyebrow)|(prenatal)";
+$regular_expressions["well_groomed___good_for_girls"] = $constant_expressions[47];
+$neg_regular_expressions["well_groomed___good_for_girls"] = $constant_expressions[11] . "|" . $constant_expressions[12] . "|" . $constant_expressions[46] . "|" . $constant_expressions[45];
+$cat1_auto_fill["well_groomed___good_for_girls"] = 10;
+$cat2_auto_fill["well_groomed___good_for_girls"] = 44;
+
+$regular_expressions["well_groomed"] = $constant_expressions[10];
+$neg_regular_expressions["well_groomed"] = $constant_expressions[18];
+$cat1_auto_fill["well_groomed"] = 10;
+
+$regular_expressions["threads___good_for_girls"] = $constant_expressions[48];
+$neg_regular_expressions["threads___good_for_girls"] = $constant_expressions[8] . "|" . $constant_expressions[45];
+$cat1_auto_fill["threads___good_for_girls"] = 9;
+$cat2_auto_fill["threads___good_for_girls"] = 44;
+
+$regular_expressions["trim_and_terrific___good_for_girls"] = $constant_expressions[49];
+$neg_regular_expressions["trim_and_terrific___good_for_girls"] = $constant_expressions[45];
+$cat1_auto_fill["trim_and_terrific___good_for_girls"] = 14;
+$cat2_auto_fill["trim_and_terrific___good_for_girls"] = 44;
+
+$regular_expressions["forever_beautiful"] = $constant_expressions[11];
+$neg_regular_expressions["forever_beautiful"] = $constant_expressions[47] . "|" . $constant_expressions[12] . "|" . $constant_expressions[46] . "|" . $constant_expressions[45];
+$cat1_auto_fill["forever_beautiful"] = 11;
+
+$regular_expressions["forever_beautiful___pampered"] = "(?=.*(" . $constant_expressions[11] ."))" . "(?=.*(" . $constant_expressions[12] ."))";
+$neg_regular_expressions["forever_beautiful___pampered"] = $constant_expressions[47] . "|" . $constant_expressions[45];
+$cat1_auto_fill["forever_beautiful___pampered"] = 11;
+$cat2_auto_fill["forever_beautiful___pampered"] = 12;
+
+$regular_expressions["forever_beautiful___well_groomed"] = "(?=.*(" . $constant_expressions[11] ."))" . "(?=.*(" . $constant_expressions[47] ."))";
+$neg_regular_expressions["forever_beautiful___well_groomed"] = $constant_expressions[46] . "|" . $constant_expressions[12] . "|" . $constant_expressions[45];
+$cat1_auto_fill["forever_beautiful___well_groomed"] = 11;
+$cat2_auto_fill["forever_beautiful___well_groomed"] = 10;
+
+$regular_expressions["pampered___well_groomed___good_for_girls"] = "(?=.*(" . $constant_expressions[12] ."))" . "(?=.*(" . $constant_expressions[47] ."))";
+$neg_regular_expressions["pampered___well_groomed___good_for_girls"] = $constant_expressions[11] . "|" . $constant_expressions[45];
+$cat1_auto_fill["pampered___well_groomed___good_for_girls"] = 11;
+$cat2_auto_fill["pampered___well_groomed___good_for_girls"] = 10;
+$cat3_auto_fill["pampered___well_groomed___good_for_girls"] = 44;
+
+$regular_expressions["pampered"] = $constant_expressions[12];
+$neg_regular_expressions["pampered"] = $constant_expressions[47] . "|" . $constant_expressions[11];
 $cat1_auto_fill["pampered"] = 12;
 
-$regular_expressions["home_and_garden"] ="(furniture)|(home decor)|(home.*furnish)|(fixtures)|(ceiling.*fan)|(framing)|(canvas.*print)|(mattress)|(flooring)|(design consult)|(interior design)|(organiz.*((serv)|(consult)))|(plants)|(home d.*cor)|(rugs)|(kitchen cabinet)|(design serv)|(home.*garden)|(garden)|(decal)|(interior.*design)|(home.*design)|(remodel)|( lighting )|(shutters)";
+$regular_expressions["casual_dining___date_night"] = "(?=.*(" . $constant_expressions[1] ."))" . "(?=.*(" . $constant_expressions[27] ."))";
+$cat1_auto_fill["casual_dining___date_night"] = 1;
+$cat2_auto_fill["casual_dining___date_night"] = 27;
+
+$regular_expressions["quick_bites___date_night"] = "(?=.*(" . $constant_expressions[2] ."))" . "(?=.*(" . $constant_expressions[27] ."))";
+$cat1_auto_fill["quick_bites___date_night"] = 2;
+$cat2_auto_fill["quick_bites___date_night"] = 27;
+
+$regular_expressions["foodie___date_night"] = "(?=.*(" . $constant_expressions[4] ."))" . "(?=.*(" . $constant_expressions[27] ."))";
+$cat1_auto_fill["foodie___date_night"] = 4;
+$cat2_auto_fill["foodie___date_night"] = 27;
+
+$regular_expressions["road_trip___date_night"] = "(?=.*(" . $constant_expressions[43] ."))" . "(?=.*(" . $constant_expressions[27] ."))" . "(?=.*(night))";
+$cat1_auto_fill["road_trip___date_night"] = 43;
+$cat2_auto_fill["road_trip___date_night"] = 27;
+
+$regular_expressions["casual_dining"] = $constant_expressions[1];
+$neg_regular_expressions["casual_dining"] = $constant_expressions[27] . "|" . $constant_expressions[2] . "|" . $constant_expressions[4];
+$cat1_auto_fill["casual_dining"] = 1;
+
+$regular_expressions["quick_bites"] = $constant_expressions[2];
+$neg_regular_expressions["quick_bites"] = $constant_expressions[27] . "|" . $constant_expressions[4];
+$cat1_auto_fill["quick_bites"] = 2;
+
+$regular_expressions["sweet_tooth"] = $constant_expressions[3];
+$neg_regular_expressions["sweet_tooth"] = $constant_expressions[27];
+$cat1_auto_fill["sweet_tooth"] = 3;
+
+$regular_expressions["foodie"] = $constant_expressions[4];
+$cat1_auto_fill["foodie"] = 4;
+
+$regular_expressions["road_trip"] = $constant_expressions[43];
+$cat1_auto_fill["road_trip"] = 43;
+
+$regular_expressions["the_outdoors___fun_activities___the_outdoors"] = $constant_expressions[51];
+$cat1_auto_fill["the_outdoors___fun_activities___the_outdoors"] = 24;
+$cat2_auto_fill["the_outdoors___fun_activities___the_outdoors"] = 20;
+$cat3_auto_fill["the_outdoors___fun_activities___the_outdoors"] = 26;
+
+$regular_expressions["the_outdoors___always_learning"] = $constant_expressions[52];
+$cat1_auto_fill["the_outdoors___always_learning"] = 52;
+
+$regular_expressions["the_outdoors___always_learning"] = $constant_expressions[53];
+$cat1_auto_fill["the_outdoors___always_learning"] = 53;
+
+$regular_expressions["good_for_kids"] = $constant_expressions[6];
+$cat1_auto_fill["good_for_kids"] = 6;
+
+$regular_expressions["well_groomed"] = $constant_expressions[10];
+$cat1_auto_fill["well_groomed"] = 10;
+
+$regular_expressions["healthy_living"] = $constant_expressions[15];
+$neg_regular_expressions["healthy_living"] = $constant_expressions[21] . "|" . $constant_expressions[6] . "|" . $constant_expressions[12];
+$cat1_auto_fill["healthy_living"] = 15;
+
+$regular_expressions["healthy_living___dancing_feet"] = $constant_expressions[54];
+$cat1_auto_fill["healthy_living___dancing_feet"] = 15;
+$cat2_auto_fill["healthy_living___dancing_feet"] = 21;
+
+$regular_expressions["alternative_healing"] = $constant_expressions[16];
+$cat1_auto_fill["alternative_healing"] = 16;
+
+$regular_expressions["seeing_clearly"] = $constant_expressions[17];
+$cat1_auto_fill["seeing_clearly"] = 17;
+
+$regular_expressions["medical_and_dental"] = $constant_expressions[18];
+$cat1_auto_fill["medical_and_dental"] = 18;
+
+$regular_expressions["fun_activities"] = $constant_expressions[20];
+$cat1_auto_fill["fun_activities"] = 20;
+
+$regular_expressions["dancing_feet"] = $constant_expressions[21];
+$cat1_auto_fill["dancing_feet"] = 21;
+
+$regular_expressions["will_call"] = $constant_expressions[22];
+$cat1_auto_fill["will_call"] = 22;
+
+$regular_expressions["sporting_life"] = $constant_expressions[25];
+$cat1_auto_fill["sporting_life"] = 25;
+
+$regular_expressions["automotive"] = $constant_expressions[30];
+$cat1_auto_fill["automotive"] = 30;
+
+$regular_expressions["home_and_garden"] = $constant_expressions[31];
 $cat1_auto_fill["home_and_garden"] = 31;
 
-$regular_expressions["flowers"] = "(flowers)";
-$cat1_auto_fill["flowers"] = 40;
-$cat2_auto_fill["flowers"] = 27;
+$regular_expressions["handyman"] = $constant_expressions[32];
+$cat1_auto_fill["handyman"] = 32;
 
-$regular_expressions["pampered2"] = "(mani.*pedi)|( manicure )|( pedicure )";
-$neg_regular_expressions["pampered2"] = "(swedish massage)|(minute massage)|(deep.*massage)|(therapeutic.*massage)|(floatation therapy)|(hydromassage)|(massage)|(facial)|( peel)|(tanning)|( tan )|( micropeel )|( spider.*vein)|(skin.*tighten)|(permanent makeup)|(eyelash)|(microdermabrasion)|(stretch.*mark)|( makeup )|(botox)|(skin care)|(blowout)|(haircut)|(laser.*hair.*removal)|( keratin )|(partial.*highlight)|( highlights)|( bikini wax)|(brazil.*wax)|(hair extensions)|(hair styling)|(salon serv)|(haircut)";
-$cat1_auto_fill["pampered2"] = 12;
-$cat2_auto_fill["pampered2"] = 44;
+$regular_expressions["squeaky_clean"] = $constant_expressions[33];
+$cat1_auto_fill["squeaky_clean"] = 33;
+
+$regular_expressions["general_services"] = $constant_expressions[34];
+$cat1_auto_fill["general_services"] = 34;
+
+$regular_expressions["gadgets_and_gear"] = $constant_expressions[35];
+$cat1_auto_fill["gadgets_and_gear"] = 35;
+
+$regular_expressions["bookish"] = $constant_expressions[36];
+$cat1_auto_fill["bookish"] = 36;
+
+$regular_expressions["photographic"] = $constant_expressions[37];
+$cat1_auto_fill["photographic"] = 37;
+
+$regular_expressions["crafty"] = $constant_expressions[38];
+$cat1_auto_fill["crafty"] = 38;
+
+$regular_expressions["pet_lover"] = $constant_expressions[39];
+$cat1_auto_fill["pet_lover"] = 39;
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -193,7 +379,7 @@ echo "</script>\n";
 echo "</head>\n";
 echo "<body>\n";
 echo "<h1 align=center>Regex classifier tool</h2>\n";
-
+echo "<span id='matched_count'></span>";
 if (!isset($_POST["doc_section"])) {
   $_POST["doc_section"] = 0;
 }
@@ -372,6 +558,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 
     echo "<BR><BR>\n";
     echo "<table border=1>\n";
+    $matches_regex_count = 0;
     for ($i=0; $i< count($indexes); $i++) {
       $row = $memcache->get($indexes[$i]);
       
@@ -395,6 +582,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
       
       if (isset($_POST["regex"]) && strlen($_POST["regex"]) > 0 &&
 	  matchesRegex($row, $_POST["regex"], $_POST["andregex"], $_POST["negregex"], $_POST["doc_section"])) {
+	$matches_regex_count++;
 	echo "\t<tr>\n";
 	echo "\t\t<td width=600>\n";
 	echo "<a href='http://50.57.43.108/tools/image_fixer.php?deal_id=$id' target=_fixer><img src=\"".$row["image_url"]."\" width=150px align=right></a>\n";
@@ -423,6 +611,8 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
       }
     }
     echo "</table>\n";
+    echo "<h1><span id=regex_match_count>$matches_regex_count</span> number of deals match the regular expression</h1>\n";
+	
   }
 
   echo "<BR><hr style=\"border:5px solid #000;\" /><BR>\n";
