@@ -128,7 +128,7 @@ mysql_select_db("Deals", $con) or die(mysql_error());
 // MySQL connection
 
 foreach ($_POST as $key => $value) {
-  echo "[$key] [$value]<BR>\n";
+  //echo "[$key] [$value]<BR>\n";
 }
 
 $memcache = new Memcache;
@@ -158,6 +158,22 @@ $cat1_auto_fill["foodie2"] = 4;
 $regular_expressions["squeaky_clean"] = "(window.*clean)|(carpet.*clean)|(room.*clean)|( houseclean)|(spring clean)|(house clean)|(floor.*clean)|(home.*clean)|(professional.*clean)";
 $neg_regular_expressions["squeaky_clean"] = "(gutter)|(auto)|( car )|(duct)|(chimney)|(duct)";
 $cat1_auto_fill["squeaky_clean"] = 33;
+
+$regular_expressions["pampered"] = "(swedish massage)|(minute massage)|(deep.*massage)|(therapeutic.*massage)|(floatation therapy)|(hydromassage)|(massage)";
+$neg_regular_expressions["pampered"] = "(facial)|( peel)|(tanning)|( tan )|( micropeel )|( spider.*vein)|(skin.*tighten)|(permanent makeup)|(eyelash)|(microdermabrasion)|(stretch.*mark)|( makeup )|(botox)|(skin care)|(x-ray)|(acupunc)|(manicure)|(pedicure)|(nails)|(laser.*hair.*removal)|( keratin )|(partial.*highlight)|( highlights)|( bikini wax)|(brazil.*wax)|(hair extensions)|(hair styling)|(salon serv)|(haircut)|(blowout)|(waxing)|(eyebrow)|(prenatal)";
+$cat1_auto_fill["pampered"] = 12;
+
+$regular_expressions["home_and_garden"] ="(furniture)|(home decor)|(home.*furnish)|(fixtures)|(ceiling.*fan)|(framing)|(canvas.*print)|(mattress)|(flooring)|(design consult)|(interior design)|(organiz.*((serv)|(consult)))|(plants)|(home d.*cor)|(rugs)|(kitchen cabinet)|(design serv)|(home.*garden)|(garden)|(decal)|(interior.*design)|(home.*design)|(remodel)|( lighting )|(shutters)";
+$cat1_auto_fill["home_and_garden"] = 31;
+
+$regular_expressions["flowers"] = "(flowers)";
+$cat1_auto_fill["flowers"] = 40;
+$cat2_auto_fill["flowers"] = 27;
+
+$regular_expressions["pampered2"] = "(mani.*pedi)|( manicure )|( pedicure )";
+$neg_regular_expressions["pampered2"] = "(swedish massage)|(minute massage)|(deep.*massage)|(therapeutic.*massage)|(floatation therapy)|(hydromassage)|(massage)|(facial)|( peel)|(tanning)|( tan )|( micropeel )|( spider.*vein)|(skin.*tighten)|(permanent makeup)|(eyelash)|(microdermabrasion)|(stretch.*mark)|( makeup )|(botox)|(skin care)|(blowout)|(haircut)|(laser.*hair.*removal)|( keratin )|(partial.*highlight)|( highlights)|( bikini wax)|(brazil.*wax)|(hair extensions)|(hair styling)|(salon serv)|(haircut)";
+$cat1_auto_fill["pampered2"] = 12;
+$cat2_auto_fill["pampered2"] = 44;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
