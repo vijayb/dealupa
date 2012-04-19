@@ -245,8 +245,11 @@
 	}
 
 
-	if (defined($deal->fine_print()) &&
-	    $deal->fine_print() =~
+	my @expires = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "expiration-notice")});
+
+	if (@expires && $expires[0]->as_text() =~
 	    /promotional\svalue\sexpires\son\s([A-Z][a-z]+)\s+([0-9]{1,2}),\s+([0-9]{4})/i) {
 	    my $month = $1;
 	    my $day = $2;
@@ -294,43 +297,35 @@
 	}
 
 
-	my @address_container = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /alpha\slocation/)});
+	my @addresses = $tree->look_down(
+	    sub{$_[0]->tag() eq "div" && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "address-location-info")});
 	
-	if (!@address_container) {
-	    @address_container = $tree->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') eq "deal-location")});
-	}
-
-	if (@address_container) {
-	    my @addresses = $address_container[0]->look_down(
+	foreach my $address (@addresses) {
+	    my @theaddress = $address->look_down(
 		sub{defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') eq "address")});
-	    
-	    foreach my $address (@addresses) {
-		if ($address->as_HTML() =~ /(<span.*?<span[^>]*>)/) {
-		    my $clean_address = $1;
-		    $clean_address =~ s/<[^>]*>/ /g;
-		    $clean_address =~ s/\s+/ /g;
-		    $clean_address =~ s/^\s*//;
-		    $clean_address =~ s/\s*$//;
+			($_[0]->attr('class') eq "street_1")});
+
+	    if (@theaddress) {
+		my $clean_address = $theaddress[0]->as_text();
+		$clean_address =~ s/\s+/ /g;
+		$clean_address =~ s/^\s*//;
+		$clean_address =~ s/\s*$//;
+		if (length($clean_address) > 7) {
 		    $deal->addresses($clean_address);
 		}
-		
-		my @phone = $address->look_down(
-		    sub{defined($_[0]->attr('class')) &&
-			    ($_[0]->attr('class') eq "phone")});
-
-		if (@phone) {
-		    my $clean_phone = $phone[0]->as_text();
-		    $clean_phone =~ s/\s*\|//;
-		    $deal->phone($clean_phone);
-		}
+	    }
+	    
+	    my @phone = $address->look_down(
+		sub{defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "phone")});
+	    
+	    if (@phone) {
+		my $clean_phone = $phone[0]->as_text();
+		$clean_phone =~ s/\s*\|//;
+		$deal->phone($clean_phone);
 	    }
 	}
-
 
 	$tree->delete();
     }
