@@ -25,7 +25,7 @@ use constant {
     WORK_TYPE => 8,
     IMAGE_CRAWLER_WORK_TYPE => 9,
     RESTAURANT_COMPANY_ID => 31,
-    MAX_DEALS_TO_ADD => 3000,
+    MAX_DEALS_TO_ADD => 3500,
     RESTAURANT_CACHE_DIRECTORY => "./restaurant_cache/",	
     FEED_RECRAWL_AGE => 18000, # 10 hours
     CJ_USERNAME => "3500744",
@@ -112,7 +112,7 @@ sub doWork {
     $tree->delete();
 
     
-    ############## SORT THEN INSERT DEALS INTO DB WITH HIGH ENOUGH SCORES #############
+    ###### SORT THEN INSERT DEALS INTO DB WITH HIGH ENOUGH SCORES ########
     print "Inserting deals with high enough score...\n";
     my $add_total=0;
     my $new_deals=0;
@@ -128,9 +128,16 @@ sub doWork {
 	    my $lng = $$merchant{"longitude"};
 
 	    my $score = score($merchant);
+	    my @editions = editionbounds::getEditions($lat, $lng);
 
-	    if ($score > 4.07 && editionbounds::inLiveEdition($lat, $lng)) {
-		$new_deals += insertDeal($merchant, $output_dbh,
+	    if (($score > 4.07 && editionbounds::inLiveEdition($lat, $lng)) ||
+		(!editionbounds::inLiveEdition($lat, $lng) && 
+		 (($yelp_rating >= 3.5 && $yelp_count > 35) ||
+		  ($yelp_rating >= 4 && $yelp_count > 20) ||
+		  ($yelp_rating >= 4.5 && $yelp_count > 10)))) {
+		$new_deals += insertDeal($merchant, 
+					 \@editions,
+					 $output_dbh,
 					 ${$work_ref}{"output_server"},
 					 ${$work_ref}{"output_database"});
 		print ".";
@@ -141,16 +148,19 @@ sub doWork {
 	}
     }
 
-    print "\n$add_total were be added to database of which $new_deals were new\n";
+    print "\n$add_total were be added to database of which $new_deals ".
+	"were new\n";
 
     $$status_ref = 0;
     $$status_message_ref =
-	"$add_total deals were added to the database of which $new_deals were new";
+	"$add_total deals were added to the database of which $new_deals ".
+	"were new";
 }
 
 
 sub insertDeal {
     my $merchant_ref = shift;
+    my $editions_ref = shift;
     my $dbh = shift;
     my $output_server = shift;
     my $output_database = shift;
@@ -188,12 +198,17 @@ sub insertDeal {
 	if (!&dealsdbutils::inTable($dbh, $deal_id, "Categories")) {
 	    insertCategory($merchant_ref, $dbh, $deal_id);
 	}
+
+	if (!&dealsdbutils::inTable($dbh, $deal_id, "Cities")) {
+	    insertCities($editions_ref, $dbh, $deal_id);
+	}
     }
+
     
     # The following fields aren't in the Deals table so we should remove them
     # before inserting the other information in the table:
-    my @remove_fields = ("merchant_id", "raw_address","street","city","state",
-			  "zipcode","latitude","longitude", "image_url");
+    my @remove_fields = ("merchant_id", "raw_address","street","city", "state",
+			 "zipcode","latitude","longitude","image_url");
     foreach my $remove_field (@remove_fields) {
 	delete($$merchant_ref{$remove_field});
     }
@@ -287,6 +302,26 @@ sub insertCategory {
     my $sth = $dbh->prepare($sql);
     $sth->execute();
 }
+
+
+sub insertCities {
+    my $editions_ref = shift;
+    my $dbh = shift;
+    my $deal_id = shift;
+     
+    my $values = "";
+    for (my $i=0; $i <= $#{$editions_ref}; $i++) {
+	$values = $values."($deal_id, ".$$editions_ref[$i]."),";
+    }
+    $values =~ s/,$//;
+
+    my $sql = "insert into Cities (deal_id, city_id) ".
+	"values $values on duplicate key update id=id";
+    my $sth = $dbh->prepare($sql);
+    $sth->execute();
+}
+
+
 
 
 sub score {
