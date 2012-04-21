@@ -190,8 +190,13 @@
 		$address_phone =~ s/<strong>[^>]+>//gi;
 		$address_phone =~ s/<a[^<]+<[^>]*>//gi;
 		
+		my $phone;
 		if ($address_phone =~ /phone:([^<]+)/) {
-		    my $phone = $1;
+		    $phone = $1;
+		} elsif ($address_phone =~ />\s*([0-9\(\)\-\.\s]{9,17})/) {
+		    $phone = $1;
+		}
+		if (defined($phone)) {
 		    $phone =~ s/\s//g;
 		    my $tmpphone = $phone;
 		    $tmpphone =~ s/[^0-9]//g;
@@ -200,6 +205,8 @@
 			$deal->phone($phone);
 		    }
 		}
+		
+		$address_phone =~ s/>\s*([0-9\(\)\-\.\s]{9,17})/>/;
 		$address_phone =~ s/phone[^<]*//i;
 		$address_phone =~ s/<[^>]*>//g;
 		

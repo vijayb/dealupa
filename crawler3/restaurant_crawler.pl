@@ -90,7 +90,8 @@ sub doWork {
 
 	if (defined($merchant_info{$merchant_id})) {
 	    my $merchant = $merchant_info{$merchant_id};
-	    if (!defined($$merchant{"price"}) || !defined($$merchant{"value"}) || 
+	    if (!defined($$merchant{"price"}) ||
+		!defined($$merchant{"value"}) || 
 		(1.0*$$merchant{"value"})/(1.0*$$merchant{"price"}) <
 		(1.0*$value)/(1.0*$price))
 	    {
@@ -98,8 +99,8 @@ sub doWork {
 		$$merchant{"value"} = $value;
 	    }
 
-	    my $discount =
-		100.0*($$merchant{"value"} - $$merchant{"price"})/$$merchant{"value"};
+	    my $discount = 100.0*($$merchant{"value"} - $$merchant{"price"})
+		/ $$merchant{"value"};
 	    
 	    $$merchant{"title"} = $$merchant{"name"};
 	    $$merchant{"subtitle"} = sprintf("Eat for %.0f%% off!", $discount);
@@ -166,8 +167,6 @@ sub insertDeal {
     my $output_database = shift;
 
     my $is_deal_new = 0;
-
-
     my $deal_id = &dealsdbutils::getDealId($dbh, $$merchant_ref{"url"});
     
     if ($deal_id == 0) {

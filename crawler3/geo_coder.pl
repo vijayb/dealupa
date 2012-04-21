@@ -9,6 +9,7 @@ use strict;
 use warnings;
 use workqueue;
 use dealsdbutils;
+use editionbounds;
 
 use Geo::Coder::Googlev3;
 my $geocoder = Geo::Coder::Googlev3->new;
@@ -109,6 +110,17 @@ sub doWork {
 	    $location->{geometry}->{location}->{lng};
         
 
+	if (defined($address_components{"latitude"}) &&
+	    defined($address_components{"longitude"})) {
+	    my @editions =
+		editionbounds::getEditions($address_components{"latitude"}, 
+					   $address_components{"longitude"});
+
+	    if ($#editions != -1) {
+		insertCities(\@editions, $output_dbh, $deal_id);
+	    }
+	}
+
         if (scalar(keys(%address_components)) > 0) {
             if (insertGeoInformation($output_dbh, $deal_id, $address_id,
 				     \%address_components,
@@ -181,4 +193,22 @@ sub insertGeoInformation {
     
     
     return 1;
+}
+
+
+sub insertCities {
+    my $editions_ref = shift;
+    my $dbh = shift;
+    my $deal_id = shift;
+     
+    my $values = "";
+    for (my $i=0; $i <= $#{$editions_ref}; $i++) {
+	$values = $values."($deal_id, ".$$editions_ref[$i]."),";
+    }
+    $values =~ s/,$//;
+
+    my $sql = "insert into Cities (deal_id, city_id) ".
+	"values $values on duplicate key update id=id";
+    my $sth = $dbh->prepare($sql);
+    $sth->execute();
 }
