@@ -50,6 +50,7 @@
     use mamapediaextractor;
     use dailycandyextractor;
     use dealchickenextractor;
+    use weforiaextractor;
 
     
     my %company_to_extractor_map;
@@ -95,6 +96,7 @@
     $company_to_extractor_map{43} = \&mamapediaextractor::extract;
     $company_to_extractor_map{44} = \&dailycandyextractor::extract;
     $company_to_extractor_map{45} = \&dealchickenextractor::extract;
+    $company_to_extractor_map{46} = \&weforiaextractor::extract;
 
 
     sub extractDeal {

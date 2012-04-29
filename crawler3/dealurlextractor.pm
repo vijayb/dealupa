@@ -54,6 +54,7 @@
     $company_to_extractor_map{43} = \&MamapediaURLExtractor;
     $company_to_extractor_map{44} = \&DailyCandyURLExtractor;
     $company_to_extractor_map{45} = \&DealChickenURLExtractor;
+    $company_to_extractor_map{46} = \&WeforiaURLExtractor;
 
     sub extractDealURLs {
         if ($#_ != 2) {
@@ -446,7 +447,6 @@
         foreach my $deal (@deal_urls) {
 	    if ($deal->attr('href') =~ /(^#!details\/[^\/]+\/[^;]+);/) {
 		my $deal_url = "https://www.google.com/offers/home".$1;
-		#print "[".$deal_url,"]\n";
 		addToDealUrls($_[0], $deal_url);
 	    }
         }
@@ -924,7 +924,6 @@
 
         if (@deal_url) {
             my $url = $deal_url[0]->attr('content');
-	    print "[$url]\n";
             addToDealUrls($_[0], $url);
         }
 
@@ -936,8 +935,33 @@
 		    $_[0]->as_text() =~ /view\s*deal/i});
 	
         foreach my $deal_url (@deal_urls) {
-	    print $deal_url->attr('href'), "\n";
             addToDealUrls($_[0], $deal_url->attr('href'));
+        }
+    }
+
+
+
+    sub WeforiaURLExtractor {
+        if (!$#_ == 2) { die "Incorrect usage of WeforiaURLExtractor.\n"; }
+        my $hub_properties = $_[1];
+        my $tree_ref = $_[2];
+        
+        my @deal_containers = ${$tree_ref}->look_down(
+            sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') =~ /^dealInfoSection/ && 
+		    $_[0]->as_text() =~ /time\sleft/i});
+
+        foreach my $deal_container (@deal_containers) {
+	    my @deal = $deal_container->look_down(
+		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+			$_[0]->attr('href') =~ /^\/deal/ && 
+			defined($_[0]->attr('class')) &&
+			$_[0]->attr('class') eq "viewDealBtn"});
+	    
+	    if (@deal) {
+		my $url = "http://www.weforia.com".$deal[0]->attr('href');
+		addToDealUrls($_[0], $url);
+	    }
         }
     }
 
