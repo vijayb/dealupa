@@ -53,6 +53,7 @@
     $company_to_extractor_map{41} = \&CrowdSavingsURLExtractor;
     $company_to_extractor_map{43} = \&MamapediaURLExtractor;
     $company_to_extractor_map{44} = \&DailyCandyURLExtractor;
+    $company_to_extractor_map{45} = \&DealChickenURLExtractor;
 
     sub extractDealURLs {
         if ($#_ != 2) {
@@ -435,10 +436,20 @@
         my $hub_properties = $_[1];
         my $tree_ref = $_[2];
         
-	if (defined($hub_properties->redirect_url())) {
-	    my $deal_url = $hub_properties->redirect_url();
-	    addToDealUrls($_[0], $deal_url);
-	}
+
+	my @deal_urls = ${$tree_ref}->look_down(
+            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+		    defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "gwt-Anchor" &&
+		    $_[0]->attr('href') =~ /^#!details/});
+
+        foreach my $deal (@deal_urls) {
+	    if ($deal->attr('href') =~ /(^#!details\/[^\/]+\/[^;]+);/) {
+		my $deal_url = "https://www.google.com/offers/home".$1;
+		#print "[".$deal_url,"]\n";
+		addToDealUrls($_[0], $deal_url);
+	    }
+        }
     }
 
 
@@ -894,6 +905,38 @@
 		    $_[0]->attr('href') =~ /\/deal\/[0-9]+\//});
 
         foreach my $deal_url (@deal_urls) {
+            addToDealUrls($_[0], $deal_url->attr('href'));
+        }
+    }
+
+
+    sub DealChickenURLExtractor {
+        if (!$#_ == 2) { die "Incorrect usage of DealChickenURLExtractor.\n"; }
+        my $hub_properties = $_[1];
+        my $tree_ref = $_[2];
+
+
+	my @deal_url = ${$tree_ref}->look_down(
+            sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    $_[0]->attr('content') =~ /^http/ &&
+		    ($_[0]->attr('property') eq "og:url")});
+
+        if (@deal_url) {
+            my $url = $deal_url[0]->attr('content');
+	    print "[$url]\n";
+            addToDealUrls($_[0], $url);
+        }
+
+
+	my @deal_urls = ${$tree_ref}->look_down(
+            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+		    $_[0]->attr('href') =~ /^http/ && 
+		    $_[0]->attr('href') =~ /\/[0-9]+$/ &&
+		    $_[0]->as_text() =~ /view\s*deal/i});
+	
+        foreach my $deal_url (@deal_urls) {
+	    print $deal_url->attr('href'), "\n";
             addToDealUrls($_[0], $deal_url->attr('href'));
         }
     }
