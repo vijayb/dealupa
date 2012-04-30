@@ -37,7 +37,8 @@ sub doWork {
 	"Companies.use_cookie, Hubs.post_form, ".
 	"Companies.page_crawl_frequency, ".
 	"Companies.output_server, ".
-	"Companies.output_database, Companies.use_password from ".
+	"Companies.output_database, Companies.use_password, ".
+	"Companies.use_phantom_on_hub from ".
 	"Hubs, Companies where ".
 	"Hubs.company_id=Companies.id and strcmp(Hubs.url,?)=0";
     #print "[$sql][".${$work_ref}{"work"}."]\n";
@@ -60,7 +61,8 @@ sub doWork {
         if (defined($hub_info[4])) {
             $hub->post_form($hub_info[4]);
         }
-        
+	$hub->use_phantom($hub_info[9]);
+
         my @hub_cities;
 	getHubCities($workqueue_dbh, \@hub_cities, $hub->url(),
 		     $status_ref, $status_message_ref) || return;
@@ -75,6 +77,8 @@ sub doWork {
             $response = downloader::getURLWithCookie($hub->url());            
         } elsif ($hub->use_password()) {
 	    $response = downloader::getURLWithPassword($hub->url(), $hub->company_id());
+	} elsif ($hub->use_phantom()) {
+	    $response = downloader::getHubWithPhantom($hub->url(), $hub->company_id());
 	} else {
             $response = downloader::getURL($hub->url());
         }

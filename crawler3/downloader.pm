@@ -96,6 +96,24 @@
     }
 
 
+
+    sub getHubWithPhantom {
+	unless ($#_ == 1) { 
+	    die "Incorrect usage of getHubWithPhantom in downloader.\n"; 
+	}
+
+	my $url = shift;
+	my $company_id = shift;
+	my $response = HTTP::Response->new(200);
+
+	my $phantom_script = "gethub_".$company_id.".js";
+	my $content =
+	    `DISPLAY=:23 /home/vijay/phantomjs/bin/phantomjs $phantom_script '$url'`;
+	$response->content($content);
+	return $response;
+    }
+
+
     sub getURLAsCJFeed {
 	unless (@_) {
 	    die "Incorrect usage of getURLAsCJFeed in downloader.\n"; 

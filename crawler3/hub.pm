@@ -58,6 +58,12 @@
         return $self->{use_password};
     }
 
+    sub use_phantom {
+        my $self = shift;
+        if (@_) { $self->{use_phantom} = shift; }
+        return $self->{use_phantom};
+    }
+
 
     sub post_form {
         my $self = shift;

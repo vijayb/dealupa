@@ -314,14 +314,11 @@
         
         my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-                defined($_[0]->attr('class')) && 
-                $_[0]->attr('class') eq "deal_title"});
+		    $_[0]->attr('href') =~ /^\//});
 
-        if (@deal_urls) {
-            if ($deal_urls[0]->attr('href') =~ /^(\/.*)/) {
-                addToDealUrls($_[0], "http://local.amazon.com".
-                              $deal_urls[0]->attr('href'));
-            }
+        foreach my $deal_url (@deal_urls) {
+	    my $clean_url = "http://local.amazon.com".$deal_url->attr('href');
+	    addToDealUrls($_[0], $clean_url);
         }
     }
 
