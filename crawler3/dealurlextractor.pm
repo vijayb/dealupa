@@ -768,9 +768,9 @@
         foreach my $deal_container (@deal_urls) {
 	    my @href = $deal_container->look_down(
 		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-			$_[0]->attr('href') =~ /^deal/});
+			$_[0]->attr('href') =~ /^\/deal/});
 	    if (@href) {
-		my $clean_url = "http://rewards.thrillist.com/".$href[0]->attr('href');
+		my $clean_url = "http://rewards.thrillist.com".$href[0]->attr('href');
 		addToDealUrls($_[0], $clean_url);
 	    }
 
