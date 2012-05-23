@@ -437,8 +437,6 @@
 
 	my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "gwt-Anchor" &&
 		    $_[0]->attr('href') =~ /^#!details/});
 
         foreach my $deal (@deal_urls) {
