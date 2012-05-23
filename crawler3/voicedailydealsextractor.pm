@@ -11,6 +11,7 @@
     use genericextractor;
     use HTML::TreeBuilder;
     use Encode;
+    use URI::Escape;
 
     sub extract {
 	my $tree = HTML::TreeBuilder->new;
@@ -20,6 +21,8 @@
 	$tree->parse(decode_utf8 $$deal_content_ref);
 	$tree->eof();
 
+	$deal->affiliate_url("http://www.anrdoezrs.net/click-5498612-11024443?url=".
+			     uri_escape($deal->url()));
 
 	my @title = $tree->look_down(
 	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&

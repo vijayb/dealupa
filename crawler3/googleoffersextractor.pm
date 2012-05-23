@@ -35,15 +35,9 @@
 	$tree->eof();
 
 
-	my @title = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "mgoh-voucher-head"});
+	my @title = $tree->look_down(sub{$_[0]->tag() eq 'h1'});
 	if (@title) {
-	    @title = $title[0]->look_down(sub{$_[0]->tag() eq 'h1'});
-
-	    if (@title) {
-		$deal->title($title[0]->as_text());
-	    }
+	    $deal->title($title[0]->as_text());
 	}
 
 	my @subtitle = $tree->look_down(
@@ -55,10 +49,7 @@
 	}
 
 
-	my @price = $tree->look_down(
-	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "gwt-debug-state-button-content")});
-	if (@price && $price[0]->as_text() =~ /([0-9,]+)/) {
+	if ($tree->as_text() =~ /buy\snow[^\$]{1,10}\$([0-9,]+)/i) {
 	    my $price = $1;
 	    $price =~ s/,//g;
 	    $deal->price($price);
@@ -70,8 +61,16 @@
 	    $deal->value($value);
 	}
 
+	if (defined($deal->price()) &&
+	    $tree->as_text() =~ /discount[^0-9]{1,10}([0-9]{1,3})/i) {
+	    my $percent = $1/100.0;
+	    my $value = sprintf("%.0f", $deal->price()/(1.0-$percent));
+	    $deal->value($value);
+	}
+
 	if (!defined($deal->price()) || !defined($deal->value())) {
-	    if ($deal->title() =~ /\$([0-9,]+)[^\$]+\$([0-9,]+)/) {
+	    if (defined($deal->title()) &&
+		$deal->title() =~ /\$([0-9,]+)[^\$]+\$([0-9,]+)/) {
 		my $price = $1;
 		my $value = $2;
 		$price =~ s/,//g;
@@ -97,6 +96,16 @@
 	$text =~ s/<\/?div[^>]*>//g;
 	if (length($text) > 0) {
 	    $deal->text($text);
+	}
+
+	if (!defined($deal->text())) {
+	    my @text = $tree->look_down(
+		sub{$_[0]->tag() =~ /^h[0-9]/i && $_[0]->as_text() =~ /the\sdeal/i});
+	    if (@text) {
+		my $text_tag = $text[0]->parent()->right();
+		$deal->text($text_tag->as_text());
+	    }
+
 	}
 
 	if (!defined($deal->value()) && defined($deal->text()) &&
@@ -140,6 +149,15 @@
 	    if (@image) {
 		$deal->image_urls($image[0]->attr('src'));
 	    }
+	} else {
+	    my @image = $tree->look_down(
+		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
+			defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') !~ /icon/i)});
+	    if (@image) {
+		$deal->image_urls($image[0]->attr('src'));
+	    }
+
 	}
 
 
@@ -156,6 +174,13 @@
 	    my @deadline = $tree->look_down(
 		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
 			($_[0]->attr('class') eq "mgoh-s-time mgoh-status-box")});
+	    if (!@deadline) {
+		my @deadline_span = $tree->look_down(
+		    sub{$_[0]->tag() eq 'span' && $_[0]->as_text() =~ /time\sleft/i});
+		if (@deadline_span) {
+		    push(@deadline, $deadline_span[0]->right());
+		}
+	    }
 
 	    if (@deadline) {
 		my $deadline = $deadline[0]->as_text();
