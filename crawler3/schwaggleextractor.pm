@@ -53,8 +53,8 @@
 	}
 
 	my @price = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "price")});
+	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /^price/)});
 	if (@price && $price[0]->as_text() =~ /([0-9,]+)/) {
 	    my $price = $1;
 	    $price =~ s/,//g;
@@ -62,8 +62,8 @@
 	}
 
 	my @value = $tree->look_down(
-	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "retail")});
+	    sub{defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "value")});
 	if (@value && $value[0]->as_text() =~ /([0-9,]+)/) {
 	    my $value = $1;
 	    $value =~ s/,//g;
@@ -72,7 +72,7 @@
 
         my @text = $tree->look_down(
             sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-                    ($_[0]->attr('class') =~ /module\s*offer-description/)});
+                    ($_[0]->attr('class') =~ /box-alt/)});
 
         if (@text) {
             my $clean_text = $text[0]->as_HTML();
@@ -84,11 +84,10 @@
 
 
         my @fine_print = $tree->look_down(
-            sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-                    ($_[0]->attr('class') =~ /module\s*fine-print/)});
+            sub{$_[0]->tag() =~ /h[0-9]/i && $_[0]->as_text() =~ /the\s*fine\s*print/i});
 
-        foreach my $fine_print (@fine_print) {
-	    $fine_print = $fine_print->as_HTML();
+        if (@fine_print) {
+	    my $fine_print = $fine_print[0]->parent->as_HTML();
 	    $fine_print =~ s/<\/?div[^>]*>//g;
 	    $deal->fine_print($fine_print);
         }
@@ -96,7 +95,7 @@
 
 	my @num_purchased = $tree->look_down(
 	    sub{defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "quantity")});
+		    ($_[0]->attr('class') eq "bought")});
 
 	if (@num_purchased &&
 	    $num_purchased[0]->as_text() =~ /([0-9,]+)\s*bought/i) {
@@ -136,8 +135,8 @@
 
 	if (!defined($deal->expired()) && !$deal->expired()) {
 	    my @deadline = $tree->look_down(
-		sub{$_[0]->tag() eq "div" && defined($_[0]->attr('class')) &&
-			$_[0]->attr('class') =~ /^gcs-js-end-time-string/});
+		sub{$_[0]->tag() eq "span" && defined($_[0]->attr('class')) &&
+			$_[0]->attr('class') =~ /^timerSource/});
 
 	    if (@deadline && $deadline[0]->as_text() =~
 		/([A-Za-z]+)\s*([0-9]{2})[^0-9]*([0-9]{4})\s*([0-9]{2}):([0-9]{2})/) {
@@ -177,7 +176,7 @@
 	
 	my @biz_info = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') =~ /vendor\sinformation/i});
+		    $_[0]->attr('class') =~ /map-holder/i});
 
 	if (@biz_info) {
 	    # Name
@@ -199,43 +198,36 @@
 
 	    # Address
 	    my @addresses = $biz_info[0]->look_down(
-		sub{$_[0]->tag() eq "address" &&
-			defined($_[0]->attr("class")) &&
-			$_[0]->attr("class") eq "physical"});
+		sub{$_[0]->tag() eq "address"});
 	    foreach my $address (@addresses) {
 		my $address = $address->as_HTML();
 		
-		$address =~ 
-		    s/<div\s*class=[\'\"]address-name[\'\"]\s*>[^<]*<\/div>//g;
+		$address =~ s/<a\s.*//;
+		$address =~ s/>([0-9\-\.\(\)\s]{9,20})</></;
 		$address =~ s/<[^>]*>/ /g;
-		$address =~ s/\|//g;
 		$address =~ s/^\s*//;
 		$address =~ s/\s*$//;
-		$address =~ s/\s+/ /g;
 		if (length($address) > 7) {
 		    $deal->addresses($address);
 		}
 	    }
 
+
 	    # Phone
-	    my @phone = $biz_info[0]->look_down(
-		sub{defined($_[0]->attr("class")) &&
-			$_[0]->attr("class") eq "phone"});
-	    
-	    if (@phone) {
-		my $phone = $phone[0]->as_text();
-	    
-		if (defined($phone)) {
-		    $phone =~ s/\s+//g;
-		    my $tmpphone = $phone;
-		    $tmpphone =~ s/[^0-9]//g;
-		    if (length($tmpphone) > 8 &&
-			length($phone) -length($tmpphone) <=4) {
-			$deal->phone($phone);
-		    }
+	    my $phone = $biz_info[0]->as_HTML();
+	    $phone =~ s/\s//g;
+	    if ($phone =~ />([0-9\-\.\(\)\s]{9,20})/) {
+		$phone = $1;
+
+		my $tmpphone = $phone;
+		$tmpphone =~ s/[^0-9]//g;
+		if (length($tmpphone) > 8 &&
+		    length($tmpphone) < 20 &&
+		    length($phone) - length($tmpphone) <=4) {
+		    $phone =~ s/[^0-9]//g;
+		    $deal->phone($phone);
 		}
 	    }
-
 	}
 
 
