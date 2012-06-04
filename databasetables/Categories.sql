@@ -30,7 +30,9 @@ CREATE TABLE IF NOT EXISTS `Categories` (
   `deal_id` int(10) unsigned NOT NULL,
   `category_id` int(11) NOT NULL,
   `rank` int(11) NOT NULL DEFAULT '0',
+  `classifier_id` int(11) NOT NULL DEFAULT '1',
   PRIMARY KEY (`deal_id`,`category_id`),
   UNIQUE KEY `id` (`id`),
-  KEY `deal_id` (`deal_id`)
+  KEY `deal_id` (`deal_id`),
+  KEY `classifier_id` (`classifier_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
