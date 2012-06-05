@@ -105,13 +105,35 @@ function validate(key) {
 </script>
 
 <?php
-  // Make a MySQL Connection                                                                                                                                                                                  
+
+// Make a MySQL Connection
 $con = mysql_connect("localhost", "crawler", "daewoo");
 if (!$con) {
   die('Error: could not connect. ' . mysql_error());
 }
 mysql_select_db("Deals", $con) or die(mysql_error());
 // MySQL connection                                  
+
+$memcache = new Memcache;
+$success = $memcache->connect('localhost', 11211);
+
+if (!$success) {
+  echo "Failed to connect to memcache<BR>\n";
+  exit();
+}
+
+$username = $_SERVER["PHP_AUTH_USER"];
+$classifier_id = getClassifierID($username, $con, $memcache);
+if ($classifier_id == 0) {
+  echo "ERROR: Couldn't find classifier ID for user: [$username]<BR>\n";
+  exit();
+}
+
+
+
+
+
+
 
 echo "<script>\n";
 $categories = getAllCategories($con);
@@ -165,20 +187,21 @@ if (isset($_GET["deal_id"]) && strlen($_GET["deal_id"]) > 0) {
     }
 
     echo "[$cat1][$cat2][$cat3][$cat4]<BR>\n";
+    $time = date('Y-m-d H:i:s', time());
     if ($cat1 > 0) {
-      insertCategory($deal_id, $cat1, 4, $con);
+      insertCategory($deal_id, $cat1, 4, $classifier_id, $time, $con);
     }
     
     if ($cat2 > 0) {
-      insertCategory($deal_id, $cat2, 3, $con);
+      insertCategory($deal_id, $cat2, 3, $classifier_id, $time, $con);
     }
     
     if ($cat3 > 0) {
-      insertCategory($deal_id, $cat3, 2, $con);
+      insertCategory($deal_id, $cat3, 2, $classifier_id, $time, $con);
     }
     
     if ($cat4 > 0) {
-      insertCategory($deal_id, $cat4, 1, $con);
+      insertCategory($deal_id, $cat4, 1, $classifier_id, $time, $con);
     }
 
     updateDeal($deal_id, $con);
@@ -328,11 +351,11 @@ function deleteCategoriesForDeal($deal_id, $con) {
   echo "[$delete_sql]<BR>\n";
 }
 
-function insertCategory($deal_id, $category_id, $rank, $con) {
+function insertCategory($deal_id, $category_id, $rank, $classifier_id, $time, $con) {
   $category_sql =
-    "INSERT into Categories (deal_id, category_id,rank) values ('".
+    "INSERT into Categories (deal_id, category_id,rank,classifier_id,time) values ('".
     mysql_real_escape_string($deal_id)."',  ".
-    $category_id.", $rank) ON DUPLICATE KEY UPDATE id=id";
+    $category_id.", $rank,$classifier_id, '$time') ON DUPLICATE KEY UPDATE id=id";
   $result = mysql_query($category_sql, $con);
         
   if (!$result) {
@@ -351,6 +374,27 @@ function updateDeal($deal_id, $con) {
     die('Error: ' . mysql_error());
   }
   echo "[$update_sql]<BR>\n";
+}
+
+
+function getClassifierID($username, $con, $memcache) {
+  $classifier_id = $memcache->get("username:".$username);
+  if (!isset($classifier_id) || $classifier_id == "") {
+    $sql = "select id from Classifiers where username='$username'";
+    $result = mysql_query($sql, $con);
+    if ($row = @mysql_fetch_assoc($result)) {
+      $classifier_id = $row['id'];
+      $memcache->set("username:".$username, $classifier_id, false, 86400);
+    } else {
+      $classifier_id = 0; // Failed to get an ID                                                                                                               
+    }
+
+    echo "Got classifer id from database, putting in memcache: $classifier_id<BR>\n";
+  } else {
+    echo "Got classifier id from memcache : $classifier_id<BR>\n";
+  }
+
+  return $classifier_id;
 }
 
 

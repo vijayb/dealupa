@@ -70,7 +70,9 @@ $companies["40"] = "CBS Local Offers";
 $companies["41"] = "CrowdSavings";
 $companies["42"] = "PlumDistrict";
 $companies["43"] = "Mamapedia";
-
+$companies["44"] = "DailyCandy";
+$companies["45"] = "DealChicken";
+$companies["46"] = "Weforia";
 
 $yesno["0"] = "No";
 $yesno["1"] = "Yes";
@@ -375,9 +377,15 @@ if (isset($deal_id)) {
 
 $categories = getAllCategories($con);
 
+$classifier["1"] = "Unknown";
+$classifier["2"] = "Vijay";
+$classifier["3"] = "Sanjay";
+$classifier["4"] = "Jino";
+$classifier["5"] = "Mary";
+$classifier["6"] = "Irish";
 
 if (isset($deal_id)) {
-  $sql = "SELECT category_id,rank FROM Categories where deal_id=$deal_id";
+  $sql = "SELECT category_id,rank,classifier_id,time FROM Categories where deal_id=$deal_id";
   $result = mysql_query($sql);
   if (!$result) {
     die('Error 6: ' .mysql_error());
@@ -389,15 +397,18 @@ if (isset($deal_id)) {
   echo "<h3 align=center>Categories $fix_category_link</h3>\n";
   echo "<table>\n";
   echo "     <tr>\n";
-  echo "        <td><b>Category ID</b></td><td>Rank</td>\n";
+  echo "        <td><b>Category ID</b></td><td>Rank</td><td>Classifier</td><td>Time classified</td>\n";
   echo "     </tr>\n";
 
   for ($i=0;$i < mysql_num_rows($result); $i++) {
     $category_id = mysql_result($result, $i, "category_id");
     $rank = mysql_result($result, $i, "rank");
-    
+    $classifier_id = mysql_result($result, $i, "classifier_id");
+    $time = mysql_result($result, $i, "time");
+
+
     echo "     <tr>\n";
-    echo "        <td>".$categories[($category_id-1)]["name"]." ($category_id)</td><td>$rank</td>\n";
+    echo "        <td>".$categories[($category_id-1)]["name"]." ($category_id)</td><td>$rank</td><td>".$classifier[$classifier_id]."</td><td>$time</td>\n";
     echo "     </tr>\n";
 
   }

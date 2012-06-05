@@ -133,6 +133,30 @@ foreach ($_POST as $key => $value) {
 
 $memcache = new Memcache;
 $success = $memcache->connect('localhost', 11211);
+
+if (!$success) {
+  echo "Failed to connect to memcache<BR>\n";
+  exit();
+}
+
+$classifiers["1"] = "Unknown";
+$classifiers["2"] = "Vijay";
+$classifiers["3"] = "Sanjay";
+$classifiers["4"] = "Jino";
+$classifiers["5"] = "Mary";
+$classifiers["6"] = "Irish";
+
+
+$username = $_SERVER["PHP_AUTH_USER"];
+$classifier_id = getClassifierID($username, $con, $memcache);
+if ($classifier_id == 0) {
+  echo "ERROR: Couldn't find classifier ID for user: [$username]<BR>\n";
+  exit();
+} else {
+  echo "You are signed in as: ".$classifiers[$classifier_id]."<BR>\n";
+
+}
+
 $indexes = $memcache->get("categories_index");
 
 echo "<script>\n";
@@ -155,14 +179,18 @@ echo "<body>\n";
 
 if ($success && $indexes != false && !isset($_GET["reload"])) {
   //echo "$categories_index <BR>\n";
-  echo "<b>",count($indexes), "</b> deals in cache <BR>\n";
+  echo "<b><span style='font-size:26px'>",count($indexes), "</span></b> deals in cache <BR>\n";
   $num_classified = 0;
   $num_national = 0;
   $num_recommended = 0;
   $unclassified = array();
   for ($i=0; $i< count($indexes); $i++) {
     $row = $memcache->get($indexes[$i]);
-    
+    if (!isset($row["classifier_id"]) || $row["classifier_id"] == "") {
+      $row["classifier_id"] = $classifier_id;
+      $time = date('Y-m-d H:i:s', time());
+      $row["time"] = $time;
+    }    
 
     if (isset($_POST["dealupa_recommends"])) {
       if (isset($_POST["url"]) && strcmp($_POST["url"], $row["url"]) == 0) {
@@ -267,16 +295,16 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
       
       if (isset($_GET["submit"])) { 
 	if (isset($row['category_id1'])) {
-	  insertCategory($row['id'], $row['category_id1'], 4, $con);
+	  insertCategory($row['id'], $row['category_id1'], 4, $row["classifier_id"], $row["time"], $con);
 	}
 	if (isset($row['category_id2'])) {
-	  insertCategory($row['id'], $row['category_id2'], 3, $con);
+	  insertCategory($row['id'], $row['category_id2'], 3, $row["classifier_id"], $row["time"], $con);
 	}
 	if (isset($row['category_id3'])) {
-	  insertCategory($row['id'], $row['category_id3'], 2, $con);
+	  insertCategory($row['id'], $row['category_id3'], 2, $row["classifier_id"], $row["time"], $con);
 	}
 	if (isset($row['category_id4'])) {
-	  insertCategory($row['id'], $row['category_id4'], 1, $con);
+	  insertCategory($row['id'], $row['category_id4'], 1, $row["classifier_id"], $row["time"], $con);
 	}
 
 	if (isset($row['recommend'])) {
@@ -327,7 +355,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   // echo "Not classified index: ".$unclassified[$j]."<BR>\n";
   
   // }
-  echo "Of which <b>",$num_classified,"</b> are classified<BR>\n";
+  echo "Of which <b><span style='font-size:26px'>",$num_classified,"</span></b> are classified<BR>\n";
   echo "And <b>",$num_national,"</b> are national<BR>\n";
   echo "And <b>",$num_recommended,"</b> are Dealupa Recommends<BR>\n";
   
@@ -509,10 +537,6 @@ function regexstrcmp($str1, $str2) {
   $s1 = preg_replace("/\s+/", " ", $s1);
   $s2 = preg_replace("/\s+/", " ", $s2);
 
-  //echo "$str1:$s1<BR>\n";
-  //echo "$str2:$s2<BR>\n";
-  //die("blah\n");
-
   if (strcmp($s1, $s2)==0) {
     return 1;
   } else {
@@ -520,11 +544,11 @@ function regexstrcmp($str1, $str2) {
   }
 }
 
-function insertCategory($deal_id, $category_id, $rank, $con) {
+function insertCategory($deal_id, $category_id, $rank, $classifier_id, $time, $con) {
   $category_sql =
-    "INSERT into Categories (deal_id, category_id,rank) values ('".
+    "INSERT into Categories (deal_id, category_id,rank, classifier_id, time) values ('".
     mysql_real_escape_string($deal_id)."',  ".
-    $category_id.", $rank) ON DUPLICATE KEY UPDATE id=id";
+    $category_id.", $rank, $classifier_id, '$time') ON DUPLICATE KEY UPDATE id=id";
   $result = mysql_query($category_sql, $con);
 	
   if (!$result) {
@@ -596,6 +620,23 @@ function getAllCategories($con) {
     array_push($categories, $row);
   }
   return $categories;
+}
+
+function getClassifierID($username, $con, $memcache) {
+  $classifier_id = $memcache->get("username:".$username);
+  if (!isset($classifier_id) || $classifier_id == "") {
+    $sql = "select id from Classifiers where username='$username'";
+    $result = mysql_query($sql, $con);
+    if ($row = @mysql_fetch_assoc($result)) {
+      $classifier_id = $row['id'];
+      $memcache->set("username:".$username, $classifier_id, false, 86400);
+    } else {
+      $classifier_id = 0; // Failed to get an ID
+    }
+  } else {
+  }
+
+  return $classifier_id;
 }
 
 function getCategoryFromString($str) {

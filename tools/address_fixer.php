@@ -292,7 +292,7 @@ if (isset($_GET["deal_id"]) && strlen($_GET["deal_id"]) > 0) {
 
 function addAddress($deal_id, $raw_address, $con) {
   $sql = "insert into Addresses (deal_id, raw_address) values ".
-    "($deal_id, '$raw_address')";
+    "($deal_id, \"$raw_address\")";
   echo $sql."<BR>\n";
   doQuery($sql, $con);
   updateDeal($deal_id, $con);
@@ -319,23 +319,23 @@ function updateAddress($deal_id,
 		       $con) {
   $update_vals= "latitude=$latitude,longitude=$longitude";
   if (strlen($raw_address)) {
-    $update_vals = $update_vals.",raw_address='$raw_address'";
+    $update_vals = $update_vals.",raw_address=\"$raw_address\"";
   }
 
   if (strlen($street)) {
-    $update_vals = $update_vals.",street='$street'";
+    $update_vals = $update_vals.",street=\"$street\"";
   }
   if (strlen($city)) {
-    $update_vals = $update_vals.",city='$city'";
+    $update_vals = $update_vals.",city=\"$city\"";
   }
   if (strlen($state)) {
-    $update_vals = $update_vals.",state='$state'";
+    $update_vals = $update_vals.",state=\"$state\"";
   }
   if (strlen($country)) {
-    $update_vals = $update_vals.",country='$country'";
+    $update_vals = $update_vals.",country=\"$country\"";
   }
   if (strlen($zipcode)) {
-    $update_vals = $update_vals.",zipcode='$zipcode'";
+    $update_vals = $update_vals.",zipcode=\"$zipcode\"";
   }
 
   $sql = "update Addresses set $update_vals where id=$address_id";
