@@ -25,7 +25,7 @@ div.wrapper
 
 </style>
 
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
 <SCRIPT language="JavaScript" src="autocomplete.js"></SCRIPT>
@@ -50,7 +50,7 @@ function checkCategoriesValid() {
 }
 
 
- 
+
 $(document).ready(function() {
     $("#category_id1").focus();
     $(document).keyup(function(e) {
@@ -71,10 +71,10 @@ $(document).ready(function() {
 	  }
 	}
 
-	
 
-    });  
-  });	
+
+    });
+  });
 
   /*
 
@@ -85,7 +85,7 @@ $(document).ready(function() {
 	if(code == 65) {
 	  $('input[name=category_id1]:eq(1)').attr('checked', true);
 	}
-	
+
 	if(code == 83) {
 	  $('input[name=category_id1]:eq(2)').attr('checked', true);
 	}
@@ -108,7 +108,7 @@ $(document).ready(function() {
 	  $('input[name=category_id1]:eq(8)').attr('checked', true);
 	  $('input[name=is_nation]').attr('checked', true);
 	}
-	
+
 
  */
 </script>
@@ -152,9 +152,6 @@ $classifier_id = getClassifierID($username, $con, $memcache);
 if ($classifier_id == 0) {
   echo "ERROR: Couldn't find classifier ID for user: [$username]<BR>\n";
   exit();
-} else {
-  echo "You are signed in as: ".$classifiers[$classifier_id]."<BR>\n";
-
 }
 
 $indexes = $memcache->get("categories_index");
@@ -174,6 +171,7 @@ echo "</script>\n";
 echo "</head>\n";
 echo "<body>\n";
 
+echo "You are signed in as: ".$classifiers[$classifier_id]."<BR>\n";
 
 
 
@@ -190,7 +188,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
       $row["classifier_id"] = $classifier_id;
       $time = date('Y-m-d H:i:s', time());
       $row["time"] = $time;
-    }    
+    }
 
     if (isset($_POST["dealupa_recommends"])) {
       if (isset($_POST["url"]) && strcmp($_POST["url"], $row["url"]) == 0) {
@@ -219,7 +217,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     }
 
 
-    if (isset($_POST["url"]) && 
+    if (isset($_POST["url"]) &&
 	(isset($_POST["category_id1"]) || isset($_POST["category_id2"]) || isset($_POST["category_id3"]) || isset($_POST["category_id4"]) )) {
       // Look for the URL of the article that was classified and comes
       // to us in a POST. When we find it, set its categories
@@ -289,11 +287,11 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 	$memcache->set($indexes[$i], $row, false, $cache_life);
       }
     }
-    
+
     if (isset($row['category_id1']) || isset($row['category_id2']) || isset($row['category_id3']) || isset($row['category_id4'])) {
       $num_classified++;
-      
-      if (isset($_GET["submit"])) { 
+
+      if (isset($_GET["submit"])) {
 	if (isset($row['category_id1'])) {
 	  insertCategory($row['id'], $row['category_id1'], 4, $row["classifier_id"], $row["time"], $con);
 	}
@@ -314,7 +312,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
       }
 
     } else {
-      $unclassified[count($unclassified)] = $i;		
+      $unclassified[count($unclassified)] = $i;
     }
 
 
@@ -339,26 +337,27 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     }
 
   }
-  
-  
+
+
   if (isset($_GET["submit"])) {
     echo "<BR><b>Submission complete</b> <a href=\"/tools/classifier_tool.php?reload\">Click here to reload more work</a><BR>\n";
     exit;
   }
-  
+
   if (count($unclassified) ==0) {
     echo "<BR>No more deals left to classify, <a href=\"/tools/classifier_tool.php?submit\"><b>time to submit them!</b></a><BR>\n";
     exit;
   }
-  
+
   // for ($j=0; $j < count($unclassified); $j++) {
   // echo "Not classified index: ".$unclassified[$j]."<BR>\n";
-  
+
   // }
-  echo "Of which <b><span style='font-size:26px'>",$num_classified,"</span></b> are classified<BR>\n";
+  echo "Of which <b><span style='font-size:26px'>",$num_classified,"</span></b> are classified\n";
+  echo "<input type='button' style=\"font-size:20px;\" onclick='window.location.href = \"https://50.57.43.108/tools/classifier_tool.php?submit\";' value='Save my work'><br><br>";
   echo "And <b>",$num_national,"</b> are national<BR>\n";
   echo "And <b>",$num_recommended,"</b> are Dealupa Recommends<BR>\n";
-  
+
   $chosen_deal = $unclassified[rand(0, count($unclassified)-1)];
   $row = $memcache->get($indexes[$chosen_deal]);
   $id = $row['id'];
@@ -430,10 +429,10 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "</td>\n";
 
   echo "<td width='10%'></td>\n";
-  
+
   echo "<td valign=top>\n";
   echo "Categories <span id=\"set-category-warning\" style=\"color:red;display:none\">&nbsp;(Please specify one or more valid categories - see list below)</span><BR>\n";
-  
+
   echo "<div align=\"left\"><br>
 <input type=hidden name=url value=\"".htmlentities($url)."\">\n";
 
@@ -462,21 +461,21 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 
 echo "</div>\n";
   echo "</td>\n";
-  
+
   echo "</tr></table>\n";
 
 
 } else {
   $sql="SELECT Deals.id,url,company_id,title,subtitle,price,text,fine_print,yelp_categories FROM Deals LEFT JOIN Categories ".
     "ON Deals.id=Categories.deal_id WHERE dup=0 and category_id IS NULL and (discovered != last_updated or title is not null or text is not null)";
-  
+
   echo $sql."<BR>\n";
   $result = mysql_query($sql, $con);
-  
+
   if (!$result) {
     die('Error: ' . mysql_error());
   }
-  
+
   $num=mysql_num_rows($result);
   echo "<b>$num deals don't have categories assigned to them</b><p>\n";
   echo "<a href=\"/tools/classifier_tool.php\"><b>Click here to start classifying</b></a><p>\n";
@@ -488,7 +487,7 @@ echo "</div>\n";
     $url = $row['url'];
     $title = $row['title'];
     $subtitle = $row['subtitle'];
-    
+
     $image_sql = "SELECT image_url FROM Images where deal_id=$id limit 1";
 
     $image_result = mysql_query($image_sql, $con);
@@ -517,14 +516,14 @@ echo "</div>\n";
       die('Error: ' . mysql_error());
     }
     $row["num_cities"] = mysql_num_rows($city_result);
-    
+
     echo $id." (".$company_id."): ".$title." ".$subtitle."<BR>\n";
     $index = "category:".$id;
     $memcache->set($index, $row, false, $cache_life);
 
     array_push($categories_index, $index);
   }
-  
+
   $memcache->set('categories_index', $categories_index, false, $cache_life);
 }
 
@@ -550,7 +549,7 @@ function insertCategory($deal_id, $category_id, $rank, $classifier_id, $time, $c
     mysql_real_escape_string($deal_id)."',  ".
     $category_id.", $rank, $classifier_id, '$time') ON DUPLICATE KEY UPDATE id=id";
   $result = mysql_query($category_sql, $con);
-	
+
   if (!$result) {
     die('Error: ' . mysql_error());
   }
@@ -561,7 +560,7 @@ function insertCategory($deal_id, $category_id, $rank, $classifier_id, $time, $c
     "UPDATE Deals set last_updated=UTC_TIMESTAMP() where id=$deal_id";
 
   $result = mysql_query($update_sql, $con);
-	
+
   if (!$result) {
     die('Error: ' . mysql_error());
   }
@@ -574,7 +573,7 @@ function insertNational($deal_id, $con) {
     "INSERT into Cities (deal_id, city_id) values ('".
     mysql_real_escape_string($deal_id)."', 2) ON DUPLICATE KEY UPDATE id=id";
   $result = mysql_query($national_sql, $con);
-	
+
   if (!$result) {
     die('Error: ' . mysql_error());
   }
@@ -585,7 +584,7 @@ function insertNational($deal_id, $con) {
     "UPDATE Deals set last_updated=UTC_TIMESTAMP() where id=$deal_id";
 
   $result = mysql_query($update_sql, $con);
-	
+
   if (!$result) {
     die('Error: ' . mysql_error());
   }
@@ -598,7 +597,7 @@ function insertRecommend($deal_id, $con) {
     "UPDATE Deals set recommend=1, last_updated=UTC_TIMESTAMP() where id=$deal_id";
 
   $result = mysql_query($update_sql, $con);
-	
+
   if (!$result) {
     die('Error: ' . mysql_error());
   }
@@ -610,7 +609,7 @@ function getAllCategories($con) {
     "select id, name, description from CategoryInfo";
 
   $result = mysql_query($sql, $con);
-	
+
   if (!$result) {
     die('Error: ' . mysql_error());
   }

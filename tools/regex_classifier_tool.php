@@ -33,6 +33,8 @@ div.wrapper
 <SCRIPT language="JavaScript" src="autocomplete.js"></SCRIPT>
 <script>
 
+
+
 function toggleCheckbox(number) {
        var $checkbox = $("#checkbox_" + number);
        $checkbox.attr('checked', !$checkbox.is(':checked'));
@@ -885,7 +887,10 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 	$matches_regex_count++;
 	echo "\t<tr onclick='toggleCheckbox(" . $row["id"] . ")'>\n";
 	echo "\t\t<td width=600>\n";
-	echo "<a href='http://50.57.43.108/tools/image_fixer.php?deal_id=$id' target=_fixer><img src=\"".$row["image_url"]."\" width=150px align=right></a>\n";
+
+	$image_url = "http://dealupa_images.s3.amazonaws.com/" . sha1($row["image_url"]) . "_small";
+
+	echo "<a href='http://50.57.43.108/tools/image_fixer.php?deal_id=$id' target=_fixer><img src=\"".$image_url."\" width=150px align=right></a>\n";
 	echo "<input type=\"checkbox\" id=\"checkbox_".$row["id"]."\"  name=\"deal_id_".$row["id"]."\" checked=checked> &nbsp;\n";
 	echo "<b>ID</b>: <a href=\"http://50.57.43.108/tools/deal_info.php?deal_url=".$row["id"]."&submitid=search+by+id\" target=_regex_classifier>".$row["id"]."</a> (<a href=\"http://50.57.43.108/tools/classifier_fixer.php?deal_id=".$row["id"]."\" target=_fixer>classify</a>)<BR>\n";
 	echo "<input type=\"checkbox\" name=\"nation_".$row["id"]."\" $national_checked> &nbsp; <b>National</b><BR>\n";
@@ -935,7 +940,8 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 	  matchesRegex($row, $_POST["regex"], $_POST["andregex"], $_POST["negregex"], $_POST["doc_section"]))) {
       echo "\t<tr>\n";
       echo "\t\t<td width=600>\n";
-      echo "<a href='http://50.57.43.108/tools/image_fixer.php?deal_id=$id' target=_fixer><img src=\"".$row["image_url"]."\" width=150px align=right></a><BR>\n";
+	  $image_url = "http://dealupa_images.s3.amazonaws.com/" . sha1($row["image_url"]) . "_small";
+      echo "<a href='http://50.57.43.108/tools/image_fixer.php?deal_id=$id' target=_fixer><img src=\"".$image_url."\" width=150px align=right></a><BR>\n";
       echo "<b>ID</b>: <a href=\"http://50.57.43.108/tools/deal_info.php?deal_url=".$row["id"]."&submitid=search+by+id\" target=_regex_classifier>".$row["id"]."</a> (<a href=\"http://50.57.43.108/tools/classifier_fixer.php?deal_id=".$row["id"]."\" target=_fixer>classify</a>)<BR>\n";
 
       echo "<b><a href=\"http://50.57.43.108/tools/address_fixer.php?deal_id=".$row["id"]."\" target=_fixer>Number of addresses</a></b>: $num_addresses<BR>\n";
@@ -1069,7 +1075,7 @@ function getClassifierID($username, $con, $memcache) {
       $classifier_id = $row['id'];
       $memcache->set("username:".$username, $classifier_id, false, 86400);
     } else {
-      $classifier_id = 0; // Failed to get an ID                                                                                                               
+      $classifier_id = 0; // Failed to get an ID
     }
 
     echo "Got classifer id from database, putting in memcache: $classifier_id<BR>\n";
