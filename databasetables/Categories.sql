@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS `Categories` (
   `category_id` int(11) NOT NULL,
   `rank` int(11) NOT NULL DEFAULT '0',
   `classifier_id` int(11) NOT NULL DEFAULT '1',
+  `time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`deal_id`,`category_id`),
   UNIQUE KEY `id` (`id`),
   KEY `deal_id` (`deal_id`),
