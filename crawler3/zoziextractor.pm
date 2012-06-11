@@ -83,17 +83,18 @@
 
 
 	my @text = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /long_description/)});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "description")});
 	if (@text) {
 	    my $text = $text[0]->as_HTML();
+	    $text =~ s/<h3>[^<]*<\/h3>//;
 	    $text =~ s/<\/?div[^>]*>//g;
 	    $deal->text($text);
 	}
 
 	my @fine_print = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "special_terms")});
+		    ($_[0]->attr('id') eq "terms")});
 	if (@fine_print) {
 	    my $fine_print = $fine_print[0]->as_HTML();
 	    $fine_print =~ s/<\/?div[^>]*>//g;
@@ -138,10 +139,7 @@
 
 
 	if (!defined($deal->expired()) && !$deal->expired()) {
-	    my @deadline = $tree->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') =~ /experience_end_date/)});
-	    if (@deadline && $deadline[0]->as_text() =~ /^([0-9]{10})/) {
+	    if ($tree->as_HTML() =~ /until:\s*new\s*Date\(([0-9]{10})/i) {
 		my $time = $1;
 		my ($year, $month, $day, $hour, $minute);
 		($year, $month, $day, $hour, $minute) =
@@ -220,24 +218,22 @@
 
 
 	my @info = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /supplier-info/i)});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "where")});
 	if (@info) {
-	    my @name = $info[0]->look_down(sub{$_[0]->tag() =~ /h[0-9]/i});
-	    
-	    if (@name) {
-		my $name = $name[0]->as_text();
-		$name =~ s/\s*\(provider\)\s*//ig;
-		$deal->name($name);
-	    }
-
 	    my @website = $info[0]->look_down(
 		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    ($_[0]->attr('href') !~ /maps.google/i)});
+			defined($_[0]->attr('class')) &&
+			$_[0]->attr('class') eq "website" &&
+			($_[0]->attr('href') !~ /maps.google/i)});
 
 	    if (@website) {
 		my $website = $website[0]->attr('href');
 		$deal->website($website);
+
+		my $name = $website[0]->as_text();
+		$name =~ s/\s*\(provider\)//i;
+		$deal->name($name);
 	    }
 
 	    if ($info[0]->as_HTML =~ /maps.google.com\/\?q=loc:([^\'\"]+)/) {
