@@ -31,7 +31,7 @@
 	my $tree = HTML::TreeBuilder->new;
 	my $deal = shift;
 	my $deal_content_ref = shift;
-	
+	$tree->ignore_unknown(0);
 	$tree->parse(decode_utf8 $$deal_content_ref);
 	$tree->eof();
 
@@ -39,6 +39,7 @@
 	my @title_div = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "deal-title")});
+
 	if (@title_div) {
 	    my @title = $title_div[0]->look_down(
 		sub{$_[0]->tag() =~ /h[0-9]/});
@@ -51,6 +52,13 @@
 
 	    if (@subtitle) {
 		$deal->subtitle($subtitle[0]->as_text());
+	    }
+	} else {
+	    my @title = $tree->look_down(
+		sub{$_[0]->tag() =~ /^h[0-9]/i && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "summary")});
+	    if (@title) {
+		$deal->title($title[0]->as_text());
 	    }
 	}
 
@@ -81,6 +89,23 @@
 	    }
 	}
 
+	# If we didn't extract price/value this might be one of LS's
+	# event deals, which has a different format.
+	if (!defined($deal->price())) {
+	    my @pricevalue = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "price")});
+	    if (@pricevalue &&
+		$pricevalue[0]->as_text() =~ /\$([0-9,\.]+)[^\$]*\$([0-9,\.]+)/) {
+		my $value = $1;
+		my $price = $2;
+		$deal->price($price);
+		$deal->value($value);
+	    }
+
+	}
+
+
 	my @num_purchased = $tree->look_down(
 	    sub{defined($_[0]->attr('id')) &&
 		    ($_[0]->attr('id') eq "deal-purchase-count")});
@@ -97,6 +122,16 @@
 	    my $num_purchased = $1;
 	    $num_purchased =~ s/,//g;
 	    $deal->num_purchased($num_purchased);
+	}
+
+        # For event deals:
+	if (!defined($deal->num_purchased()) ) {
+	    @num_purchased = $tree->look_down(
+		sub{defined($_[0]->attr('data-purchased')) &&
+			$_[0]->attr('data-purchased') =~ /^[0-9]+$/});
+	    if (@num_purchased) {
+		$deal->num_purchased($num_purchased[0]->attr('data-purchased'));
+	    }
 	}
 
 	
@@ -204,8 +239,23 @@
 			$_[0]->attr('content') =~ /^http/});
 	    if (@image) {
 		$deal->image_urls($image[0]->attr('content'));
+	    } else {
+		my @image_container = $tree->look_down(
+		    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			    ($_[0]->attr('class') eq "deal-primary")});
+		if (@image_container) {
+		    @image = $image_container[0]->look_down(
+			sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
+				$_[0]->attr('src') =~ /^http/});
+
+		    if (@image) {
+			$deal->image_urls($image[0]->attr('src'));
+		    }
+		}
 	    }
 	}
+
+
 	
 
 	my @text = $tree->look_down(
@@ -223,6 +273,12 @@
 			($_[0]->attr('class') =~ /^description/)});
 	}
 
+	if (!@text) {
+	    @text = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "deal-description")});
+	}
+
 	if (@text) {
 	    my $clean_text = $text[0]->as_HTML();
 	    $clean_text =~ s/<\/?div[^>]*>//g;
@@ -234,7 +290,8 @@
 
 
 	my @fine_print = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+	    sub{($_[0]->tag() eq 'div' || $_[0]->tag() eq 'section') && 
+		    defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "fine-print")});
 	if (@fine_print) {
 	    my $clean_fine_print = $fine_print[0]->as_HTML();
@@ -269,6 +326,17 @@
 		    ($_[0]->attr('property') eq "og:merchant")});
 	if (@name) {
 	    $deal->name($name[0]->attr('content'));
+	} else {
+	    # for event deals:
+	    @name = $tree->look_down(
+		sub{$_[0]->tag() eq 'h2' && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "location")});
+	    if (@name && $name[0]->as_text() =~ /^([\sA-Za-z0-9]+)/) {
+		my $name = $1;
+		$name =~ s/^\s*//;
+		$name =~ s/\s*$//;
+		$deal->name($name);
+	    }
 	}
 
 	# Website
@@ -325,6 +393,27 @@
 		$clean_phone =~ s/\s*\|//;
 		$deal->phone($clean_phone);
 	    }
+	}
+
+	if (!@addresses) {
+	    @addresses = $tree->look_down(sub{$_[0]->tag() eq "address"});
+	    foreach my $address (@addresses) {
+		my @phone = $address->look_down(
+		    sub{defined($_[0]->attr('class')) &&
+			    ($_[0]->attr('class') eq "tel")});
+		if (@phone) {
+		    $deal->phone($phone[0]->as_text());
+		}
+
+		$address = $address->as_HTML();
+		$address =~ s/<span class=\"tel.*//;
+		$address =~ s/<a\s.*//;
+		$address =~ s/<[^>]*>/ /g;
+		$deal->addresses($address);
+	    }
+
+
+
 	}
 
 	$tree->delete();
