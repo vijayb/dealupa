@@ -56,7 +56,9 @@ $companies["40"] = "CBS Local Offers";
 $companies["41"] = "CrowdSavings";
 $companies["42"] = "PlumDistrict";
 $companies["43"] = "Mamapedia";
-
+$companies["44"] = "DailyCandy";
+$companies["45"] = "DealChicken";
+$companies["46"] = "Weforia";
 
 if (isset($_GET["company_id"])) {
   $sql = "SELECT id, work, status_message from WorkQueue where status_message is not null and type=2 and company_id=".$_GET["company_id"];

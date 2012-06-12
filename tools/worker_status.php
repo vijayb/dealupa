@@ -1,6 +1,21 @@
 <html>
 <head>
 <link rel="stylesheet" href="blueprint/screen.css" type="text/css" media="screen, projection">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+
+<script>
+   function select_zombies() {
+   console.log("hello");
+   $("tr.tablerow").each(function() {
+       $this = $(this);
+       var value = $this.find(".heartbeat").text();
+       console.log("value:"+value);
+       if (value > 5000) {
+	 $this.find("input.checkbox").attr("checked",true);
+       }
+     });
+ }
+</script>
 
 </head>
 <body>
@@ -79,7 +94,7 @@ $types["9"] = "Image crawler";
 $types["10"] = "Geo fixer";
 $types["101"] = "Cache reloader";
 $types["102"] = "Solr rebuilder";
-$types["103"] = "Email sender";
+$types["103"] = "Remove bouncing emails";
 $types["201"] = "Work reaper";
 $types["202"] = "Worker restarter";
 
@@ -92,7 +107,7 @@ $machines["50.57.36.164"] = "crawler4";
 echo "<h2 align=center>Worker Status</h2>\n";
 echo "<h4 align=center>".mysql_num_rows($result)." jobs</h3>\n";
 echo "<p>\n";
-echo "<form action='/tools/worker_status.php' method=post>";
+echo "<form action='/tools/worker_status.php' method=post>\n";
 echo "<table>\n";
 echo "     <tr>\n";
 echo "        <td><b>IP</b></td>\n";
@@ -119,7 +134,7 @@ for ($i=0;$i < mysql_num_rows($result); $i++) {
     $uptime = round($uptime / 3600,3);
 
 
-    echo "     <tr>\n";
+    echo "     <tr class='tablerow'>\n";
     echo "        <td>$machines[$ip] ($ip)</td>\n";
     echo "        <td>$pid</td>\n";
     if ($status) {
@@ -135,11 +150,11 @@ for ($i=0;$i < mysql_num_rows($result); $i++) {
     } else {
       $color = "green";
     }
-    echo "        <td><span style='color:$color'>$last_heartbeat</span></td>\n";
+    echo "        <td><span style='color:$color' class='heartbeat'>$last_heartbeat</span></td>\n";
     if ($force_shutdown) {
       echo "        <td><span style='color:red'>Shutdown requested</span><input type='hidden' name='clear_zombies:$ip:$pid'  /></td>\n";
     } else {
-      echo "        <td><input type='checkbox' name='force_shutdown:$ip:$pid'  /></td>\n";
+      echo "        <td><input type='checkbox' name='force_shutdown:$ip:$pid' class='checkbox' /></td>\n";
     }
     echo "     </tr>\n";
 }
@@ -175,6 +190,17 @@ echo "        <td></td>\n";
 echo "        <td></td>\n";
 echo "        <td></td>\n";
 echo "        <td><input type=submit name='clear_zombies' value='Clear zombie jobs' onclick=\"javascript:return confirm('Are you sure? Only do this if you have already requested a shutdown and believe you have zombie jobs')\" /></td>\n";
+echo "     </tr>\n";
+
+echo "     <tr>\n";
+echo "        <td> </td>\n";
+echo "        <td></td>\n";
+echo "        <td></td>\n";
+echo "        <td></td>\n";
+echo "        <td></td>\n";
+echo "        <td></td>\n";
+echo "        <td></td>\n";
+echo "        <td><input type=button name='select_the_zombies' value='Select probable zombies' onclick=\"select_zombies()\" /></td>\n";
 echo "     </tr>\n";
 
 echo "</table>\n";

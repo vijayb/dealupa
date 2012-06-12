@@ -113,6 +113,9 @@ $companies["40"] = "CBS Local Offers";
 $companies["41"] = "CrowdSavings";
 $companies["42"] = "PlumDistrict";
 $companies["43"] = "Mamapedia";
+$companies["44"] = "DailyCandy";
+$companies["45"] = "DealChicken";
+$companies["46"] = "Weforia";
 
 
 

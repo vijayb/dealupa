@@ -3,6 +3,18 @@
 <head>
 
 <style>
+span.dropt {border-bottom: thin dotted; background: #ffeedd;}
+span.dropt:hover {text-decoration: none; background: #ffffff; z-index: 6; }
+span.dropt span {position: absolute; left: -9999px;
+margin: 20px 0 0 0px; padding: 3px 3px 3px 3px;
+  border-style:solid; border-color:black; border-width:1px; z-index: 6;}
+span.dropt:hover span {left: 2%; background: #ffffff;} 
+span.dropt span {position: absolute; left: -9999px;
+margin: 4px 0 0 0px; padding: 3px 3px 3px 3px; 
+  border-style:solid; border-color:black; border-width:1px;}
+span.dropt:hover span {margin: 20px 0 0 170px; background: #ffffff; z-index:6;} 
+
+
 ol
 {
 width: 45em;  /* room for 3 columns */
@@ -30,6 +42,24 @@ div.wrapper
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
 <SCRIPT language="JavaScript" src="autocomplete.js"></SCRIPT>
 <script>
+
+function reloadDeals() {
+
+    $("#loading").show().delay(100);
+	var urlString = "https://50.57.43.108/tools/classifier_tool.php?reload";
+
+    var width = $(window).width();
+
+	jQuery.ajax({
+		type: "GET",
+		url: urlString,
+		success: function (data) {
+            window.location.href = "https://50.57.43.108/tools/classifier_tool.php";
+		},
+		async: true
+	});
+
+}
 
 function checkCategoriesValid() {
   var re = /[0-9]+/;
@@ -170,6 +200,8 @@ echo "</script>\n";
 
 echo "</head>\n";
 echo "<body>\n";
+
+echo "<div id='loading' style='display:none; background-color:red; color:white; font-size:28px;'><img src='loading.gif'>Loading...please wait</div>";
 
 echo "You are signed in as: ".$classifiers[$classifier_id]."<BR>\n";
 
@@ -340,7 +372,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 
 
   if (isset($_GET["submit"])) {
-    echo "<BR><b>Submission complete</b> <a href=\"/tools/classifier_tool.php?reload\">Click here to reload more work</a><BR>\n";
+    echo "<BR><b><span style='color:green'>Submission complete</span></b> <a href=\"javascript:void(0);\" onclick=\"reloadDeals();\">Click here to reload more work</a> - <b>May take 30+ seconds; please wait<BR>\n";
     exit;
   }
 
@@ -353,7 +385,11 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   // echo "Not classified index: ".$unclassified[$j]."<BR>\n";
 
   // }
-  echo "Of which <b><span style='font-size:26px'>",$num_classified,"</span></b> are classified\n";
+  $font_color = "";
+  if ($num_classified > 50) {
+    $font_color="color:red";
+  }
+  echo "Of which <b><span style='font-size:26px;$font_color'>",$num_classified,"</span></b> are classified\n";
   echo "<input type='button' style=\"font-size:20px;\" onclick='window.location.href = \"https://50.57.43.108/tools/classifier_tool.php?submit\";' value='Save my work'><br><br>";
   echo "And <b>",$num_national,"</b> are national<BR>\n";
   echo "And <b>",$num_recommended,"</b> are Dealupa Recommends<BR>\n";
@@ -442,7 +478,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "4. <INPUT id=\"category_id4\" type=\"text\" name=\"category_id4\" autocomplete=\"array:categories\"><BR>\n";
   echo "<BR><input type=\"checkbox\" id=\"nation\" name=\"is_nation\" $national_checked>National\n";
   echo "<BR><input type=\"checkbox\" id=\"recommend\" name=\"dealupa_recommends\">Dealupa Recommends<BR>\n";
-  echo "<BR><input type=\"submit\" value=\"Submit\">\n";
+  echo "<BR><input type=\"submit\" value=\"Submit\">&nbsp&nbsp<input type=\"button\" value=\"Skip this deal\" onclick=\"location.reload();\">\n";
 
   $categories = getAllCategories($con);
   echo "<div class=\"wrapper\">\n";
@@ -450,7 +486,8 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   for ($k=0; $k < count($categories); $k++) {
     $category_id = $k + 1;
     $category_name = $categories[$k]["name"];
-    echo "\t<li>$category_id - $category_name</li>\n";
+    $category_description = $categories[$k]["description"];
+    echo "\t<li>$category_id - <span class=\"dropt\">$category_name<span style=\"width:500px;\">$category_description</span></span></li>\n";
   }
   echo "</ol>\n";
   echo "</div>\n";
@@ -553,7 +590,7 @@ function insertCategory($deal_id, $category_id, $rank, $classifier_id, $time, $c
   if (!$result) {
     die('Error: ' . mysql_error());
   }
-  echo "[$category_sql]<BR>\n";
+  //echo "[$category_sql]<BR>\n";
 
 
   $update_sql =
@@ -564,7 +601,7 @@ function insertCategory($deal_id, $category_id, $rank, $classifier_id, $time, $c
   if (!$result) {
     die('Error: ' . mysql_error());
   }
-  echo "[$update_sql]<BR>\n";
+  //echo "[$update_sql]<BR>\n";
 }
 
 function insertNational($deal_id, $con) {
@@ -577,7 +614,7 @@ function insertNational($deal_id, $con) {
   if (!$result) {
     die('Error: ' . mysql_error());
   }
-  echo "[$national_sql]<BR>\n";
+  //echo "[$national_sql]<BR>\n";
 
 
   $update_sql =
@@ -588,7 +625,7 @@ function insertNational($deal_id, $con) {
   if (!$result) {
     die('Error: ' . mysql_error());
   }
-  echo "[$update_sql]<BR>\n";
+  //echo "[$update_sql]<BR>\n";
 }
 
 
@@ -601,7 +638,7 @@ function insertRecommend($deal_id, $con) {
   if (!$result) {
     die('Error: ' . mysql_error());
   }
-  echo "[$update_sql]<BR>\n";
+  //echo "[$update_sql]<BR>\n";
 }
 
 function getAllCategories($con) {

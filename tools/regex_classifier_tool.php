@@ -891,7 +891,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
 	$image_url = "http://dealupa_images.s3.amazonaws.com/" . sha1($row["image_url"]) . "_small";
 
 	echo "<a href='http://50.57.43.108/tools/image_fixer.php?deal_id=$id' target=_fixer><img src=\"".$image_url."\" width=150px align=right></a>\n";
-	echo "<input type=\"checkbox\" id=\"checkbox_".$row["id"]."\"  name=\"deal_id_".$row["id"]."\" checked=checked> &nbsp;\n";
+	echo "<input type=\"checkbox\" id=\"checkbox_".$row["id"]."\"  name=\"deal_id_".$row["id"]."\" achecked=checked> &nbsp;\n";
 	echo "<b>ID</b>: <a href=\"http://50.57.43.108/tools/deal_info.php?deal_url=".$row["id"]."&submitid=search+by+id\" target=_regex_classifier>".$row["id"]."</a> (<a href=\"http://50.57.43.108/tools/classifier_fixer.php?deal_id=".$row["id"]."\" target=_fixer>classify</a>)<BR>\n";
 	echo "<input type=\"checkbox\" name=\"nation_".$row["id"]."\" $national_checked> &nbsp; <b>National</b><BR>\n";
 	echo "<input type=\"checkbox\" name=\"recommend_".$row["id"]."\"> &nbsp; <b>Dealupa Recommends</b><BR>\n";
