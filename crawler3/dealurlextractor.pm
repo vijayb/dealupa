@@ -266,8 +266,10 @@
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
 		    defined($_[0]->attr('id')) &&
 		    $_[0]->attr('id') =~ /learn_more/ &&
-		    ($_[0]->attr('href') =~ 
-		     /^\/experiences\/.*\/[0-9]+$/)});
+		    (($_[0]->attr('href') =~ 
+		      /^\/experiences\/.*\/[0-9]+$/) ||
+		     ($_[0]->attr('href') =~ 
+		      /^\/getaways\/.*\/[0-9]+$/))});
         foreach my $deal (@deal_urls) {
             addToDealUrls($_[0], "http://www.zozi.com".
 			  $deal->attr('href'));
