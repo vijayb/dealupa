@@ -30,7 +30,7 @@
 	my $tree = HTML::TreeBuilder->new;
 	my $deal = shift;
 	my $deal_content_ref = shift;
-	
+	$tree->ignore_unknown(0);
 	$tree->parse(decode_utf8 $$deal_content_ref);
 	$tree->eof();
 
@@ -136,34 +136,20 @@
 	    $deal->num_purchased($num_purchased);
 	}
 	
-	my @image_container = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "mgoh-image-container")});
+	my @image = $tree->look_down(
+	    sub{$_[0]->tag() eq 'link' && defined($_[0]->attr('rel')) &&
+		    defined($_[0]->attr('href')) &&
+		    $_[0]->attr('href') =~ /^http/ &&
+		    ($_[0]->attr('rel') eq "image_src")});
 	
-	if (@image_container) {
-	    my @image = $image_container[0]->look_down(
-		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('class')) &&
-			defined($_[0]->attr('src')) &&
-			($_[0]->attr('class') eq "gwt-Image")});
-	    
-	    if (@image) {
-		$deal->image_urls($image[0]->attr('src'));
-	    }
-	} else {
-	    my @image = $tree->look_down(
-		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
-			defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') !~ /icon/i)});
-	    if (@image) {
-		$deal->image_urls($image[0]->attr('src'));
-	    }
-
+	if (@image) {
+	    $deal->image_urls($image[0]->attr('href'));
 	}
 
 
 	my @expired = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /mgoh-s-time mgoh-status-box/)});
+		    ($_[0]->attr('class') =~ /mgoh-s-time/)});
 	if (@expired && $expired[0]->attr('class') =~ /soldout/i) {
 	    $deal->expired(1);
 	}
