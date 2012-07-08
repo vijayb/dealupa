@@ -47,8 +47,8 @@
 
 
 	my @price = $tree->look_down(
-	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "db_price")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "dealPrice")});
 	if (@price && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
 		my $price = $1;
 		$price =~ s/,//g;
@@ -56,8 +56,8 @@
 	}
 
 	my @value = $tree->look_down(
-	    sub{defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "price clearfix"});
+	    sub{defined($_[0]->attr('id')) &&
+		    $_[0]->attr('id') eq "pricePanel"});
 	if (@value && $value[0]->as_text() =~ /\$([0-9,\.]+)/) {
 	    my $value = $1;
 	    $value =~ s/,//g;
@@ -67,8 +67,8 @@
 
 
 	my @text = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "dealText")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "dealAbout")});
 
 	if (@text) {
 	    my $clean_text = $text[0]->as_HTML();
@@ -80,7 +80,7 @@
 
 	my @fine_print = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /^whywhat/)});
+		    ($_[0]->attr('class') eq "whatKnow")});
 
 	if (!@fine_print) {
 	    @fine_print = $tree->look_down(
@@ -96,11 +96,11 @@
 
 
        my @num_purchased = $tree->look_down(
-            sub{defined($_[0]->attr('class')) &&
-                    ($_[0]->attr('class') eq "purchased")});
+            sub{defined($_[0]->attr('id')) &&
+                    ($_[0]->attr('id') eq "purchases")});
 
         if (@num_purchased &&
-            $num_purchased[0]->as_text() =~ /([0-9,]+)\s*purchased/i) {
+            $num_purchased[0]->as_text() =~ /([0-9,]+)/i) {
             my $num_purchased = $1;
             $num_purchased =~ s/,//g;
             $deal->num_purchased($num_purchased);
