@@ -39,27 +39,36 @@
 	$tree->parse(decode_utf8 $$deal_content_ref);
 	$tree->eof();
 
-
 	my @title = $tree->look_down(
-	    sub{$_[0]->tag() eq 'h1' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "value_proposition")});
+		sub{$_[0]->tag() eq 'meta' &&
+			defined($_[0]->attr('property')) &&
+			defined($_[0]->attr('content')) &&
+			($_[0]->attr('property') eq "og:title")});
+	
 	if (@title) {
-	    $deal->title($title[0]->as_text());
+	    $deal->title($title[0]->attr('content'));
 	}
 
+	my @subtitle = $tree->look_down(
+	    sub{defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "offer-subtitle")});
+
+	if (@subtitle) {
+	    $deal->subtitle($subtitle[0]->as_text());
+	}
 
 	my @price = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "deal_price")});
-	if (@price && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "price")});
+	if (@price && $price[0]->as_text() =~ /\$\s*([0-9,\.]+)/) {
 	    my $price = $1;
 	    $price =~ s/,//g;
 	    $deal->price($price);
 	}
 
 	my @value = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "savings")});
+	    sub{defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "original-price")});
 	if (@value && $value[0]->as_text() =~ /\$([0-9,\.]+)/) {
 	    my $value = $1;
 	    $value =~ s/,//g;
@@ -67,24 +76,20 @@
 	}
 
 
-
 	my @text = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "content")});
+		sub{$_[0]->tag() eq 'meta' &&
+			defined($_[0]->attr('property')) &&
+			defined($_[0]->attr('content')) &&
+			($_[0]->attr('property') eq "og:description")});
 	
-	foreach my $text (@text) {
-	    if ($text->as_HTML() =~ /<h2>About/i) {
-		my $clean_text = $text->as_HTML();
-		$clean_text =~ s/<\/?div[^>]*>//g;
-		$deal->text($clean_text);
-		last;
-	    }
+	if (@text) {
+	    $deal->text($text[0]->attr('content'));
 	}
 
 
 	my @fine_print = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "fine_print")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /fine-print/)});
 
 	if (@fine_print) {
 	    my $fine_print = $fine_print[0]->as_HTML();
@@ -104,13 +109,16 @@
 	}
 
 
-	my @image = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    $_[0]->attr('id') eq "deal_photo"});
-	
-	if (@image && $image[0]->as_HTML() =~ /src=[\'\"]([^\'\"]+)/) {
-	    $deal->image_urls($1);
+	my @images = $tree->look_down(
+		sub{$_[0]->tag() eq 'meta' &&
+			defined($_[0]->attr('property')) &&
+			defined($_[0]->attr('content')) &&
+			$_[0]->attr('content') =~ /^http/ &&
+			($_[0]->attr('property') eq "og:image")});
+	foreach my $image (@images) {
+	    $deal->image_urls($image->attr('content'));
 	}
+	
 
 	if ($tree->as_HTML() =~ /<span>deal\s+over<\/span>/i) {
 	    $deal->expired(1);
@@ -118,30 +126,25 @@
 
 
 
+	my @expired = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "sold-out-overlay"});
+	if (@expired) {
+	    $deal->expired(1);
+	}
+
+
 	if (!defined($deal->expired()) && !$deal->expired()) {
 	    my @deadline = $tree->look_down(
 		sub{$_[0]->tag() eq 'meta' &&
-			defined($_[0]->attr('property')) &&
+			defined($_[0]->attr('name')) &&
 			defined($_[0]->attr('content')) &&
-			($_[0]->attr('property') eq "og:url")});
+			($_[0]->attr('name') =~ /expire_date/)});
 
 	    if (@deadline &&
-		$deadline[0]->attr('content') =~ /(\/daily_deals\/[0-9]+)/) {
-		my $url = "http://www.getmyperks.com$1.json";
-		my $deadline_json = get $url;
-		if (defined($deadline_json) &&
-		    $deadline_json =~
-		    /ending_time_in_milliseconds[\'\"]?:?([0-9]{10})/) {
-		    my $gmt_deadline = $1;
-		    my ($year, $month, $day, $hour, $minute);
-		    ($year, $month, $day, $hour, $minute) =
-			(gmtime($gmt_deadline))[5,4,3,2,1];
-		
-		    my $deadline = sprintf("%d-%02d-%02d %02d:%02d:01",
-					   1900+$year, $month+1, $day,
-					   $hour, $minute);
-		    $deal->deadline($deadline);
-		}
+		$deadline[0]->attr('content') =~ 
+		/([0-9]{4}-[0-9]{2}-[0-9]{2}\s+[0-9]{2}:[0-9]{2}:[0-9]{2})/) {
+		$deal->deadline($1);
 	    }
 	}
 
@@ -163,8 +166,8 @@
 	
 	
 	my @biz_info = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    $_[0]->attr('id') eq "deal_details"});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') =~ /module\s*map/});
 
 	if (@biz_info) {
 	    # Name:
@@ -174,45 +177,42 @@
 	    
 	    # Website:
 	    my @website = $biz_info[0]->look_down(
-		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href'))});
+		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+			defined($_[0]->attr('rel')) && $_[0]->attr('rel') eq "external"});
 	    
 	    if (@website) {
 		$deal->website($website[0]->attr('href'));
 	    }
 	    
+
+	    # Phone:
+	    my @phone = $biz_info[0]->look_down(
+		sub{defined($_[0]->attr('class')) && $_[0]->attr('class') eq "phone"});
+	    if (@phone) {
+		my $phone = $phone[0]->as_text();
+		$phone =~ s/\s//g;
+		my $tmpphone = $phone;
+		$tmpphone =~ s/[^0-9]//g;
+		if (length($tmpphone) > 8 &&
+		    length($phone) -length($tmpphone) <=4) {
+		    $deal->phone($phone);
+		}
+	    }
+
+
 	    # Addresses and phone:
 	    my @addresses = $biz_info[0]->look_down(
-		sub{$_[0]->tag() eq 'p' && defined($_[0]->attr('class')) &&
-			$_[0]->attr('class') eq "location"});
+		sub{defined($_[0]->attr('class')) &&
+			$_[0]->attr('class') eq "physical"});
 	    
-	    foreach my $address_phone_tag (@addresses) {
-		my $address_phone = $address_phone_tag->as_HTML();
-		$address_phone =~ s/<strong>[^>]+>//gi;
-		$address_phone =~ s/<a[^<]+<[^>]*>//gi;
-		
-		my $phone;
-		if ($address_phone =~ /phone:([^<]+)/) {
-		    $phone = $1;
-		} elsif ($address_phone =~ />\s*([0-9\(\)\-\.\s]{9,17})/) {
-		    $phone = $1;
-		}
-		if (defined($phone)) {
-		    $phone =~ s/\s//g;
-		    my $tmpphone = $phone;
-		    $tmpphone =~ s/[^0-9]//g;
-		    if (length($tmpphone) > 8 &&
-			length($phone) -length($tmpphone) <=4) {
-			$deal->phone($phone);
-		    }
-		}
-		
-		$address_phone =~ s/>\s*([0-9\(\)\-\.\s]{9,17})/>/;
-		$address_phone =~ s/phone[^<]*//i;
-		$address_phone =~ s/<[^>]*>//g;
-		
-		if ($address_phone =~ /[A-Z]{2}[^0-9]+[0-9]{5}/) {
-		    $deal->addresses($address_phone);
-		}
+	    foreach my $address (@addresses) {
+		$address = $address->as_HTML();
+		$address =~ s/<div\s*class=\"address-name\">[^<]*<\/div>//g;
+		$address =~ s/<[^>]*>/ /g;
+		$address =~ s/\s+/ /g;
+		$address =~ s/^\s*//;
+		$address =~ s/\s*$//;
+		$deal->addresses($address);
 	    }
 	}
 

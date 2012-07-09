@@ -456,11 +456,18 @@
         my $tree_ref = $_[2];
         
         my @deal_urls = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href'))});
+            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+	    $_[0]->attr('href') =~ /^\/deal\//});
 
         foreach my $deal_url (@deal_urls) {
-            if ($deal_url->as_text() =~ /^view\s+deal$/i) {
-                addToDealUrls($_[0], $deal_url->attr('href'));
+            if ($deal_url->as_text() =~ /^view/i) {
+		my $url = "http://www.getmyperks.com".$deal_url->attr('href');
+		# GetMyPerks postpends the city to the url. E.g.,:
+		# http:// ... deal url ... /seattle
+		# We get rid of the end so we don't have to crawl
+		# different URL versions of the same deal
+		$url =~ s/\/[^\/]+$//;
+                addToDealUrls($_[0], $url);
             }
         }
     }
