@@ -212,7 +212,9 @@
 		$address =~ s/\s+/ /g;
 		$address =~ s/^\s*//;
 		$address =~ s/\s*$//;
-		$deal->addresses($address);
+		if (length($address) > 7) {
+		    $deal->addresses($address);
+		}
 	    }
 	}
 
