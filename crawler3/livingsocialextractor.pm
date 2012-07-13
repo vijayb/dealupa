@@ -62,6 +62,28 @@
 	    }
 	}
 
+	if (!defined($deal->title())) {
+	    my @title = $tree->look_down(
+		sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+			defined($_[0]->attr('content')) &&
+			($_[0]->attr('property') eq "og:title")});
+	    
+	    if (@title) {
+		my $clean_title = $title[0]->attr('content');
+		$clean_title =~ s/:\s*LivingSocial.*$//;
+		$deal->title($clean_title);
+	    }
+	}
+
+	
+	my @subtitle = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "tour-title")});
+
+	if (@subtitle && $subtitle[0]->as_HTML() =~ /<p>([^<>]+)/) {
+	    $deal->subtitle($1);
+	}
+
 
 	my @price = $tree->look_down(
 	    sub{($_[0]->tag() eq 'div' || $_[0]->tag() eq 'span') && 
@@ -102,7 +124,17 @@
 		$deal->price($price);
 		$deal->value($value);
 	    }
+	}
 
+	if (!defined($deal->value())) {
+	    my @value = $tree->look_down(
+		sub{defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "original-price")});
+	    if (@value && $value[0]->as_text() =~ /\$([0-9,\.]+)/) {
+		my $value = $1;
+		$value =~ s/,//g;
+		$deal->value($value);
+	    }
 	}
 
 
@@ -411,10 +443,39 @@
 		$address =~ s/<[^>]*>/ /g;
 		$deal->addresses($address);
 	    }
+	}
+
+	if (!@addresses) {
+	    @addresses = $tree->look_down(sub{defined($_[0]->attr('class')) &&
+						  $_[0]->attr('class') eq "addresses"});
+	    
+	    if (@addresses) {
+		my @address =
+		    $addresses[0]->look_down(sub{defined($_[0]->attr('class')) &&
+						     $_[0]->attr('class') eq "meta"});
+		if (@address && $address[0]->as_HTML() =~ /(<span.+?)<span/) {
+		    my $address = $1;
+		    $address =~ s/<[^>]*>/ /g;
+		    $address =~ s/^\s*//;
+		    $address =~ s/\s*$//;
+		    if (length($address) > 7) {
+			$deal->addresses($address);
+		    }
+		}
 
 
+		my @phone =
+		    $addresses[0]->look_down(sub{defined($_[0]->attr('class')) &&
+						     $_[0]->attr('class') eq "phone"});
+		if (@phone) {
+		    my $phone = $phone[0]->as_text();
+		    $phone =~ s/[^\.\-0-9\(\)]//g;
+		    $deal->phone($phone);
+		}
+	    }
 
 	}
+
 
 	$tree->delete();
     }
