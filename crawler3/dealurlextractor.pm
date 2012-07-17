@@ -137,15 +137,23 @@
         my $tree_ref = $_[2];
         
 	my @links = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    $_[0]->attr('href') =~ /^\// &&
-		    $_[0]->as_text() =~ /view\s*deal/i});
-	
+            sub{($_[0]->tag() eq 'a' || $_[0]->tag() eq 'span')
+		    && defined($_[0]->attr('href')) &&
+		    $_[0]->attr('href') =~ /^\//});
 
 	foreach my $link (@links) {
 	    my $url = "http://www.livingsocial.com".$link->attr('href');
-	    addToDealUrls($_[0], $url);
+	    
+	    if ($link->as_text() =~ /view\sdeal/i ||
+		(defined($link->attr('class')) && 
+		 $link->attr('class') eq "btn")) {
+		#print "[$url] [".$link->as_text()."]\n";
+		addToDealUrls($_[0], $url);
+	    }
 	}
+
+	
+
     }
 
     sub BuyWithMeURLExtractor {
