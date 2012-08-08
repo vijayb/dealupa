@@ -102,7 +102,8 @@
 	    my @text = $tree->look_down(
 		sub{$_[0]->tag() =~ /^h[0-9]/i && $_[0]->as_text() =~ /the\sdeal/i});
 	    if (@text) {
-		my $text_tag = $text[0]->parent()->right();
+		my $text_tag = $text[0]->parent();
+		print $text_tag->as_text();
 		$deal->text($text_tag->as_text());
 	    }
 

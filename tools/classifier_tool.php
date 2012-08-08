@@ -504,7 +504,7 @@ echo "</div>\n";
 
 } else {
   $sql="SELECT Deals.id,url,company_id,title,subtitle,price,text,fine_print,yelp_categories FROM Deals LEFT JOIN Categories ".
-    "ON Deals.id=Categories.deal_id WHERE dup=0 and category_id IS NULL and (discovered != last_updated or title is not null or text is not null)";
+    "ON Deals.id=Categories.deal_id WHERE dup=0 and discovered > (NOW() - INTERVAL 4 DAY) and category_id IS NULL and (discovered != last_updated or title is not null or text is not null)";
 
   echo $sql."<BR>\n";
   $result = mysql_query($sql, $con);
