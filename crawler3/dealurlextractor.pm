@@ -573,10 +573,10 @@
         my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' &&
 		    defined($_[0]->attr('href')) &&
-		    $_[0]->attr('href') =~ /^http:\/\/schwaggle.active.com\/deal\//});
+		    $_[0]->attr('href') =~ /^\/deal\//});
 
 	foreach my $deal_url (@deal_urls) {
-	    my $clean_url = $deal_url->attr('href');
+	    my $clean_url = "http://schwaggle.active.com".$deal_url->attr('href');
 	    # Schwaggle postpends the city to the url. E.g.,:
 	    # http:// ... deal url ... /seattle
 	    # We get rid of the end so we don't have to crawl
