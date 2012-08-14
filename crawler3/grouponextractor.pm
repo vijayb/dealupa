@@ -78,6 +78,12 @@
 	my @value = $tree->look_down(
 	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "value")});
+	if (!@value) {
+	    @value = $tree->look_down(
+		sub{defined($_[0]->attr('id')) &&
+			($_[0]->attr('id') eq "discount_details_value")});
+	}
+
 	if (@value && $value[0]->as_text() =~ /([0-9,]*\.?[0-9]+)/) {
 	    my $value = $1;
 	    $value =~ s/,//g;
