@@ -74,14 +74,16 @@
 	    $deal->price($price);  
 	}
 
-	my $value_regex = "<dd>([^<]+)";
-	my $value = &genericextractor::extractFirstPatternMatched(
-	    $deal_content_ref, $value_regex);
-	if (defined($value) && $value =~ /([0-9,]*\.?[0-9]+)/) {
-	    $value = $1;
+
+	my @value = $tree->look_down(
+	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "value")});
+	if (@value && $value[0]->as_text() =~ /([0-9,]*\.?[0-9]+)/) {
+	    my $value = $1;
 	    $value =~ s/,//g;
 	    $deal->value($value);  
 	}
+
 
 	my $expired_regex1 = "<h5>This\\s+deal\\s+ended";
 	my $expired_regex2 = "<h5>This\\s+deal\\s+sold\\s+out";
