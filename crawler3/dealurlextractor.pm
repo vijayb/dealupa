@@ -911,11 +911,11 @@
         
         my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    $_[0]->attr('href') =~ /^http/ && 
-		    $_[0]->attr('href') =~ /\/deal\/[0-9]+\//});
+		    $_[0]->attr('href') =~ /^\/deal\/[0-9]+\//});
 
         foreach my $deal_url (@deal_urls) {
-            addToDealUrls($_[0], $deal_url->attr('href'));
+	    my $url = "http://deals.dailycandy.com".$deal_url->attr('href');
+            addToDealUrls($_[0], $url);
         }
     }
 
