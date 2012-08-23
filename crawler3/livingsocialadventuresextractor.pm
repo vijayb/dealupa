@@ -35,20 +35,17 @@
 	$tree->parse(decode_utf8 $$deal_content_ref);
 	$tree->eof();
 
-	my @escapes_title = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "escapes-title")});
-	if (@escapes_title) {
-	    my @title = $escapes_title[0]->look_down(sub{$_[0]->tag() eq 'h1'});
-	    if (@title) {
-		$deal->title($title[0]->as_text());
-	    }
-	    my @subtitle =
-		$escapes_title[0]->look_down(sub{$_[0]->tag() eq 'p'});
-	    if (@subtitle) {
-		$deal->subtitle($subtitle[0]->as_text());
-	    }	    
+
+	my @title = $tree->look_down(
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    ($_[0]->attr('property') eq "og:title")});
+	if (@title) {
+	    my $cleantitle = $title[0]->attr('content');
+	    $cleantitle =~ s/:\s*LivingSocial.*$//i;
+	    $deal->title($cleantitle);
 	}
+
 
 	my @buy_box = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
