@@ -50,24 +50,20 @@
 	$tree->eof();
 
 
-	my @title_container = $tree->look_down(
-	    sub{$_[0]->tag() eq "div" && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /^content/)});
-
-	if (@title_container) {
-	    my @title = $title_container[0]->look_down(sub{$_[0]->tag() eq "h1"});
-	    
-	    if (@title) {
-		$deal->title($title[0]->as_text());
-	    }
-
-	    my @subtitle = $title_container[0]->look_down(sub{$_[0]->tag() eq "h2"});
-	    
-	    if (@subtitle) {
-		$deal->subtitle($subtitle[0]->as_text());
-	    }
+	my @title = $tree->look_down(
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    ($_[0]->attr('property') eq "og:title")});
+	if (@title) {
+	    my $cleantitle = $title[0]->attr('content');
+	    $deal->title($cleantitle);
 	}
 
+	my @subtitle = $tree->look_down(sub{$_[0]->tag() eq "h2"});
+	
+	if (@subtitle) {
+	    $deal->subtitle($subtitle[0]->as_text());
+	}
 
 	my @price = $tree->look_down(
 	    sub{$_[0]->tag() eq "div" && defined($_[0]->attr('class')) &&
