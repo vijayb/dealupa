@@ -103,7 +103,6 @@
 		sub{$_[0]->tag() =~ /^h[0-9]/i && $_[0]->as_text() =~ /the\sdeal/i});
 	    if (@text) {
 		my $text_tag = $text[0]->parent();
-		print $text_tag->as_text();
 		$deal->text($text_tag->as_text());
 	    }
 
@@ -174,6 +173,9 @@
 		my $days = 0;
 		if ($deadline =~ /([0-9]+)\sday/) {
 		    $days = $1;
+		    if ($days > 1000) {
+			$days = 0;
+		    }
 		}
 
 		if ($deadline =~ /([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})/) {

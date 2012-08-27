@@ -57,7 +57,11 @@
 	    my $image_url =
 		$deal_tag->look_down(sub{$_[0]->tag() eq "large_image_url"});
 	    if (defined($image_url)) {
-		$deal->image_urls($image_url->as_text());
+		if ($image_url->as_text() =~ /^\s*http/i) {
+		    $deal->image_urls($image_url->as_text());
+		} else {
+		    $deal->image_urls("http://signpost.com".$image_url->as_text());
+		}
 	    }
 
 	    my $deadline = 
