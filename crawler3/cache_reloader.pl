@@ -19,7 +19,7 @@ use constant {
 downloader::setTimeout(0);
 
 
-workqueue::registerWorker(\&doWork, WORK_TYPE, 10, 0, 60) || 
+workqueue::registerWorker(\&doWork, WORK_TYPE, 1, 0, 10) || 
     die "Unable to register worker\n";
 workqueue::run();
 
