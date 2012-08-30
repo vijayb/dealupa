@@ -647,7 +647,8 @@
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
 		    $_[0]->attr('href') =~ /^\// &&
 		    defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "view-deal"});
+		    $_[0]->attr('class') eq "blueButton" &&
+		    $_[0]->as_text() =~ /view\sdeal/i});
 
         foreach my $deal (@deal_urls) {
 	    addToDealUrls($_[0],
