@@ -36,17 +36,21 @@
 	$tree->eof();
 
 	my @escapes_title = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "escapes-title")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "header")});
 	if (@escapes_title) {
 	    my @title = $escapes_title[0]->look_down(sub{$_[0]->tag() eq 'h1'});
 	    if (@title) {
 		$deal->title($title[0]->as_text());
 	    }
 	    my @subtitle =
-		$escapes_title[0]->look_down(sub{$_[0]->tag() eq 'p'});
+		$escapes_title[0]->look_down(sub{$_[0]->tag() eq 'h3'});
 	    if (@subtitle) {
-		$deal->subtitle($subtitle[0]->as_text());
+		my $clean_subtitle = $subtitle[0]->as_text();
+		$clean_subtitle =~ s/[^A-Za-z0-9\s,.].*$//;
+		if (length($clean_subtitle) > 3) {
+		    $deal->subtitle($clean_subtitle);
+		}
 	    }	    
 	}
 
@@ -95,6 +99,16 @@
 	    my $text = $text[0]->as_HTML();
 	    $text =~ s/<\/?div[^>]*>//g;
 	    $deal->text($text);
+
+	    # LivingSocial puts the website in the text with a target=_blank
+	    my @website = $text[0]->look_down(
+		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+			defined($_[0]->attr('target')) &&
+			$_[0]->attr('target') =~ /blank/});
+	    
+	    if (@website) {
+		$deal->website($website[0]->attr('href'));
+	    }
 	}
 
 	my @fine_print = $tree->look_down(
@@ -185,24 +199,18 @@
 	    }
 	}
 
-	# LivingSocialEscapes puts name in the subtitle
-	if (defined($deal->subtitle()) &&
-	    $deal->subtitle() =~ /([A-Za-z0-9&\s]+)/) {
-	    my $name = $1;
+	my @name = $tree->look_down(
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    ($_[0]->attr('property') eq "og:merchant")});
+
+	if (@name) {
+	    my $name = $name[0]->attr('content');
 	    $name =~ s/\s+$//;
+	    $name =~ s/-.*+$//;
 	    $deal->name($name);
 	}
 
-
-	my @website = $tree->look_down(
-	    sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    defined($_[0]->attr('target')) &&
-		    $_[0]->attr('target') =~ /blank/ &&
-		    $_[0]->as_text() =~ $deal->name()});
-
-	if (@website) {
-	    $deal->website($website[0]->attr('href'));
-	}
 
 
 	my @location = $tree->look_down(

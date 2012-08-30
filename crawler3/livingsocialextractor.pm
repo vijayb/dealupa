@@ -48,7 +48,7 @@
 	    }
 
 	    my @subtitle = $title_div[0]->look_down(
-		sub{$_[0]->tag() eq "p"});
+		sub{$_[0]->tag() eq "h2"});
 
 	    if (@subtitle) {
 		$deal->subtitle($subtitle[0]->as_text());
