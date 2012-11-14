@@ -37,12 +37,22 @@
 	$tree->eof();
 
 
-	my @title = $tree->look_down(
-	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
-		    defined($_[0]->attr('content')) &&
-		    ($_[0]->attr('property') eq "og:description")});
-	if (@title) {
-	    $deal->title($title[0]->attr('content'));
+	my @titlediv = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "mainDeal")});
+
+	if (@titlediv) {
+	    my @title = $titlediv[0]->look_down(
+		sub{$_[0]->tag() eq 'h1'});
+	    if (@title) {
+		$deal->title($title[0]->as_text());
+	    }
+
+	    my @subtitle = $titlediv[0]->look_down(
+		sub{$_[0]->tag() eq 'h2'});
+	    if (@subtitle) {
+		$deal->subtitle($subtitle[0]->as_text());
+	    }
 	}
 
 
