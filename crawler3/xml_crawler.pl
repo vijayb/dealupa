@@ -269,7 +269,7 @@ sub insertDeal {
 	$update_values = $update_values.", value=?";
         push(@update_params, $deal->value());
     }
-    if (defined($deal->num_purchased()) && $deal->num_purchased != -1) {
+    if (defined($deal->num_purchased()) && $deal->num_purchased() != -1) {
         $update_values = $update_values.", num_purchased=?";
         push(@update_params, $deal->num_purchased());
 

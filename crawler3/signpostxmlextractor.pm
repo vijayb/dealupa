@@ -45,7 +45,8 @@
 
 	    my $num_purchased =
 		$deal_tag->look_down(sub{$_[0]->tag() eq "quantity_sold"});
-	    if (defined($num_purchased)) {
+	    $num_purchased =~ s/\s,//g;
+	    if (defined($num_purchased) && $num_purchased =~ /^[0-9]+$/) {
 		$deal->num_purchased($num_purchased->as_text());
 	    }
 
@@ -127,6 +128,7 @@
 		    $address = $address.$zip->as_text()." ";
 		}
 		$address =~ s/\s+$//;
+		$address =~ s/http:\/\/[^\/]*\///i;
 		if (length($address) > 0 && $address !~ /33\s*hudson/i) {
 		    $deal->addresses($address);
 		}
