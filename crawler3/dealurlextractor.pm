@@ -147,7 +147,6 @@
 	    if ($link->as_text() =~ /view\sdeal/i ||
 		(defined($link->attr('class')) && 
 		 $link->attr('class') eq "btn")) {
-		#print "[$url] [".$link->as_text()."]\n";
 		addToDealUrls($_[0], $url);
 	    }
 	}
