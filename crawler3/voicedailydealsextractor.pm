@@ -177,9 +177,8 @@
 	
 	
 	my @biz_info = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->as_text() =~ /company\s+info/i &&
-		    $_[0]->attr('class') =~ /bin\s+main-right/});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    $_[0]->attr('id') eq "companyinfo"});
 
 	if (@biz_info) {
 	    # Name:
@@ -198,7 +197,7 @@
 	    }
 	    
 	    # Phone:
-	    my @phone = $biz_info[0]->look_down(sub{$_[0]->tag() eq 'p'});
+	    my @phone = $biz_info[0]->look_down(sub{$_[0]->tag() eq 'span'});
 	    
 	    foreach my $phone_p (@phone) {
 		my $phone = $phone_p->as_text();
