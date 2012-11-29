@@ -164,12 +164,20 @@
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
 		    ($_[0]->attr('id') eq "dealtimer")});
 
-	    if (@deadline &&
-		$deadline[0]->as_HTML =~
-		/([0-9]+)[^0-9]+([0-9]+)[^0-9]+([0-9]+)/) {
-		my $days = $1;
-		my $hours = $2;
-		my $minutes = $3;
+	    if (@deadline) {
+		my $days = 0;
+		my $hours = 0;
+		my $minutes = 0;
+
+		if ($deadline[0]->as_HTML =~ /([0-9]+)\s*day/i) {
+		    $days = $1;
+		}
+		if ($deadline[0]->as_HTML =~ /([0-9]+)\s*hour/i) {
+		    $hours = $1;
+		}
+		if ($deadline[0]->as_HTML =~ /([0-9]+)\s*minute/i) {
+		    $minutes = $1;
+		}
 
 		my $offset = ($days*24*3600) + ($hours*3600) + ($minutes*60);
 
