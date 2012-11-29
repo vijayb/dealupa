@@ -47,81 +47,107 @@
 	my $tree = HTML::TreeBuilder->new;
 	my $deal = shift;
 	my $deal_content_ref = shift;
-	
+	$tree->ignore_unknown(0);
 	$tree->parse(decode_utf8 $$deal_content_ref);
 	$tree->eof();
 
 	# Zozi doesn't provide this information on its pages
 	$deal->num_purchased(-1);
 
-	my @title = $tree->look_down(
-	    sub{$_[0]->tag() eq 'h1'});
-	if (@title) {
-	    $deal->title($title[0]->as_text());
-	}
-
-	my @price = $tree->look_down(
+	my @container = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "top-buy-button")});
-	if (@price) {
-	    my $price = $price[0]->as_text();
-	    if ($price =~ /([0-9,]+)/) {
-		$price = $1;
-		$price =~ s/,//g;
-		$deal->price($price);
+		    $_[0]->attr('class') eq "experience-overview"});
+
+	if (@container) {
+	    my @title = $container[0]->look_down(
+		sub{$_[0]->tag() eq 'h3'});
+	    if (@title) {
+		$deal->title($title[0]->as_text());
+	    }
+	    
+	    my @price = $container[0]->look_down(
+		sub{defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "new-price" ||
+			 $_[0]->attr('class') eq "value")});
+	    
+	    if (@price) {
+		my $price = $price[0]->as_text();
+		if ($price =~ /([0-9,]+)/) {
+		    $price = $1;
+		    $price =~ s/,//g;
+		    $deal->price($price);
+		}
+	    }
+	    
+	    my @value = $container[0]->look_down(
+		sub{defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "old-price")});
+	    if (@value && $value[0]->as_text() =~ /([0-9,]+)/) {
+		my $value = $1;
+		$value =~ s/,//g;
+		$deal->value($value);
+	    }
+
+	    
+	    my @address = $container[0]->look_down(
+		sub{$_[0]->tag() eq 'p' && $_[0]->as_text() =~ /,/});
+	    if (@address) {
+		my $clean_address = $address[0]->as_text();
+		$clean_address =~ s/^near\s*//i;
+		if (length($clean_address) > 5) {
+		    $deal->addresses($clean_address);
+		}
 	    }
 	}
 
-	my @value = $tree->look_down(
-	    sub{defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "value")});
-	if (@value && $value[0]->as_text() =~ /([0-9,]+)/) {
-	    my $value = $1;
-	    $value =~ s/,//g;
-	    $deal->value($value);
+
+
+	my $text = "";
+	my @text1 = $tree->look_down(
+	    sub{$_[0]->tag() eq 'section' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "experience-snapshot")});
+	my @text2 = $tree->look_down(
+	    sub{$_[0]->tag() eq 'section' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "experience-info")});
+
+	if (@text1) {
+	    $text .= $text1[0]->as_HTML();
 	}
-
-
-	my @text = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "description")});
-	if (@text) {
-	    my $text = $text[0]->as_HTML();
-	    $text =~ s/<h3>[^<]*<\/h3>//;
+	if (@text2) {
+	    $text .= $text2[0]->as_HTML();
+	}
+	if (length($text) > 0) {
+	    $text =~ s/<\/?section[^>]*>//g;
 	    $text =~ s/<\/?div[^>]*>//g;
 	    $deal->text($text);
 	}
 
 	my @fine_print = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "terms")});
+	    sub{$_[0]->tag() eq 'section' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "return-policy")});
 	if (@fine_print) {
 	    my $fine_print = $fine_print[0]->as_HTML();
 	    $fine_print =~ s/<\/?div[^>]*>//g;
+	    $fine_print =~ s/<\/?section[^>]*>//g;
 	    $fine_print =~ s/<\/?h[0-9][^>]*>//g;
 	    $deal->fine_print($fine_print);
 	}
 
 
 	my @images = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "deal_carousel")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "large-carousel")});
 
 	if (@images) {
 	    my @image_src = $images[0]->look_down(
 		sub{$_[0]->tag() eq 'img' &&
-			(defined($_[0]->attr('src')) || 
-			 defined($_[0]->attr('data-src')))});
+			defined($_[0]->attr('src')) &&
+			$_[0]->attr('src') =~ /^http/});
 
 	    foreach my $image_src (@image_src) {
 		my $clean_image = $image_src->attr('src');
-		if (defined($image_src->attr('data-src'))) {
-		    $clean_image = $image_src->attr('data-src');
-		}
 		$clean_image =~ s/\?[^\?]*$//;
-		if ($clean_image !~ /blank/) {
-		    $deal->image_urls($clean_image);
-		}
+		$deal->image_urls($clean_image);
 	    }
 	}
 
@@ -138,36 +164,21 @@
 	}
 
 
-	if (!defined($deal->expired()) && !$deal->expired()) {
-	    if ($tree->as_HTML() =~ /until:\s*new\s*Date\(([0-9]{10})/i) {
-		my $time = $1;
-		my ($year, $month, $day, $hour, $minute);
-		($year, $month, $day, $hour, $minute) =
-		    (gmtime($time))[5,4,3,2,1];
-		
-		my $deadline = sprintf("%d-%02d-%02d %02d:%02d:01",
-				    1900+$year, $month+1, $day,
-				    $hour, $minute);
+#	if (!defined($deal->expired()) && !$deal->expired()) {
+#	    if ($tree->as_HTML() =~ /until:\s*new\s*Date\(([0-9]{10})/i) {
+#		my $time = $1;
+#		my ($year, $month, $day, $hour, $minute);
+#		($year, $month, $day, $hour, $minute) =
+#		    (gmtime($time))[5,4,3,2,1];
+#		
+#		my $deadline = sprintf("%d-%02d-%02d %02d:%02d:01",
+#				    1900+$year, $month+1, $day,
+#				    $hour, $minute);
+#
+#		$deal->deadline($deadline);
+#	    }
+#	}
 
-		$deal->deadline($deadline);
-	    }
-	}
-
-	# Zozi puts the expiry information in the fine print.
-	# This regex will only work for United States format. E.g.,
-	# May 5th, 2011. In Australia they do 5th May, 2011
-	if (defined($deal->fine_print()) && $deal->fine_print() =~ 
-	    /([A-Z][a-z]+)\s+([0-9]{1,2})[a-z]{0,2},\s+([0-9]{4})/) {
-	    my $month = $1;
-	    my $day = $2;
-	    my $year = $3;
-	    
-	    if (defined($month_map{$month})) {
-		my $expires = sprintf("%d-%02d-%02d 01:01:01",$year,
-				      $month_map{$month}, $day);
-		$deal->expires($expires);
-	    }
-	}
 
 	# Sometimes Zozi gives us expiry information in the form
 	# Expires 6 months from the date of purchase. Or, even, annoyingly,
@@ -217,106 +228,14 @@
 	}
 
 
-	my @info = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "where")});
-	if (@info) {
-	    my @website = $info[0]->look_down(
-		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-			defined($_[0]->attr('class')) &&
-			$_[0]->attr('class') eq "website" &&
-			($_[0]->attr('href') !~ /maps.google/i)});
-
-	    if (@website) {
-		my $website = $website[0]->attr('href');
-		$deal->website($website);
-
-		my $name = $website[0]->as_text();
-		$name =~ s/\s*\(provider\)//i;
-		$deal->name($name);
-	    }
-
-	    if ($info[0]->as_HTML =~ /maps.google.com\/\?q=loc:([^\'\"]+)/) {
-		my $address = $1;
-		$address =~ s/\([^\)]*\)//;
-		# Sometimes zozi gives just a city or a state as an address.
-		# We're only interested in full addresses, so we'll filter
-		# by length
-		if (length($address) > 15) {
-		    $deal->addresses($address);
-		}
-	    } else {
-		my @address_container = $info[0]->look_down(
-		    sub{$_[0]->tag() eq 'ul' && defined($_[0]->attr('class')) &&
-			    ($_[0]->attr('class') eq "addresses")});
-		
-		if (@address_container) {
-		    my @addresses = $address_container[0]->look_down(
-			sub{$_[0]->tag() eq 'li'});
-
-		    foreach my $address (@addresses) {
-			if (length($address->as_text()) > 10) {
-			    $deal->addresses($address->as_text());
-			}
-		    }
-		}
-
-	    }
-	}
-
-	my @website = $tree->look_down(
-	    sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') =~ /Main_MerchantWebSite/i)});
-	if (@website) {
-	    $deal->website($website[0]->attr('href'));
-	}
-
-	my @addresses = $tree->look_down(
+	my @name = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /smallMap/)});
-	if (@addresses) {
-	    my @ptags = $addresses[0]->look_down(
-		sub{$_[0]->tag() eq 'p' && !defined($_[0]->attr('id'))});
-
-	    foreach my $ptag (@ptags) {
-		my $address = $ptag->as_HTML();
-		if ($address =~ /([^>]+)$/) {
-		    my $end = $1;
-		    $end =~ s/\s+//g;
-		    my $end2 = $end;
-		    $end2 =~ s/[^0-9]+//g;
-
-		    # Check if end of string is a phone number
-		    # (most of its content is numbers)
-		    if (length($end2) > 8 &&
-			length($end) - length($end2) <= 3) {
-			$deal->phone($end);
-			$address =~ s/<[^>]+>[^>]+$//;
-		    }
-		}
-		
-		# Remove superfluous tags and text for deals
-		# which can only be redeemed online
-		$address =~ s/<[^>]+>/ /g;
-		$address =~ s/online redemption only//gi;
-		$address =~ s/^\s+//g;
-
-		# US addresses:
-		if ($address =~ /,\s+(.*)\s+[0-9]{5}$/ &&
-		    genericextractor::isState($1)) {
-		    $deal->addresses($address);
-		}
-
-		# Canadian addresses:
-		if ($address =~ /,\s+(.*)\s+[A-Z0-9]{3}\s+[A-Z0-9]{3}$/ &&
-		    genericextractor::isState($1)) {
-		    $deal->addresses($address);
-		}
-	    }
+		    $_[0]->attr('class') eq "map" &&
+		    defined($_[0]->attr('data-supplier_name'))});
+	if (@name) {
+	    $deal->name($name[0]->attr('data-supplier_name'));
 	}
-
-
-
+	    
 	$tree->delete();
     }
   

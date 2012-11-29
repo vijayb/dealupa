@@ -271,15 +271,17 @@
         
         my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    defined($_[0]->attr('id')) &&
-		    $_[0]->attr('id') =~ /learn_more/ &&
+		    $_[0]->attr('href') =~ /^http/ &&
+		    defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "offer-snippet-img" &&
 		    (($_[0]->attr('href') =~ 
-		      /^\/experiences\/.*\/[0-9]+$/) ||
+		      /\/guru_experiences\/[0-9]+$/) ||
 		     ($_[0]->attr('href') =~ 
-		      /^\/getaways\/.*\/[0-9]+$/))});
+		      /\/local\/.*\/[0-9]+$/) ||
+		     ($_[0]->attr('href') =~ 
+		      /\/getaways\/[0-9]+$/))});
         foreach my $deal (@deal_urls) {
-            addToDealUrls($_[0], "http://www.zozi.com".
-			  $deal->attr('href'));
+	    addToDealUrls($_[0], $deal->attr('href'));
         }
     }
 
