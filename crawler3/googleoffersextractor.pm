@@ -48,7 +48,6 @@
 	    $deal->subtitle($subtitle[0]->attr('content'));
 	}
 
-
 	if ($tree->as_text() =~ /buy\snow[^\$]{1,10}\$([0-9,]+)/i) {
 	    my $price = $1;
 	    $price =~ s/,//g;
@@ -158,15 +157,8 @@
 
 	if (!defined($deal->expired()) && !$deal->expired()) {
 	    my @deadline = $tree->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') eq "mgoh-s-time mgoh-status-box")});
-	    if (!@deadline) {
-		my @deadline_span = $tree->look_down(
-		    sub{$_[0]->tag() eq 'span' && $_[0]->as_text() =~ /time\sleft/i});
-		if (@deadline_span) {
-		    push(@deadline, $deadline_span[0]->right());
-		}
-	    }
+		sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('id')) &&
+			($_[0]->attr('id') eq "countdown-time")});
 
 	    if (@deadline) {
 		my $deadline = $deadline[0]->as_text();
@@ -235,34 +227,29 @@
 	}
 
 
-	my @address_div = $tree->look_down(
+	my @addresses = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
 		    $_[0]->attr('class') =~ /mgoh-a-address/});
 
-	if (@address_div) {
-	    my @addresses = $address_div[0]->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-			$_[0]->attr('class') eq "gwt-HTML"});
-
-	    foreach my $address_phone (@addresses) {
-		my $address_html = $address_phone->as_HTML();
-		if ($address_phone->as_HTML() =~
-		    />\s*([\(\)\s\-\.0-9]{9,17})\s*<\/div>/) {
-		    $deal->phone($1);
-		    $address_html =~ 
-			s/>\s*([\(\)\s\-\.0-9]{9,17})\s*<\/div>/><\/div>/;
-		}
-
-		$address_html =~ s/<[^>]*>/ /g;
-		$address_html =~ s/\s+/ /g;
-		$address_html =~ s/^\s+//;
-		$address_html =~ s/\s+$//g;
-		if (length($address_html) > 7) {
-		    $deal->addresses($address_html);
-		}
+	foreach my $address_phone (@addresses) {
+	    my $address_html = $address_phone->as_HTML();
+	    if ($address_phone->as_HTML() =~
+		/>\s*([\(\)\s\-\.0-9]{9,17})\s*<\/div>/) {
+		$deal->phone($1);
+		$address_html =~ 
+		    s/>\s*([\(\)\s\-\.0-9]{9,17})\s*<\/div>/><\/div>/;
+	    }
+	    
+	    $address_html =~ s/<[^>]*>/ /g;
+	    $address_html =~ s/\s+/ /g;
+	    $address_html =~ s/^\s+//;
+	    $address_html =~ s/\s+$//g;
+	    $address_html =~ s/View\s.*$//;
+	    if (length($address_html) > 7) {
+		print $address_html,"\n";
+		$deal->addresses($address_html);
 	    }
 	}
-
 
 	$tree->delete();
     }
