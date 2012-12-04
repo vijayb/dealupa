@@ -77,15 +77,26 @@
 	}
 
 
+	my $text = "";
+	my @text1 = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "highlights")});
 
-	my @text = $tree->look_down(
+	my @text2 = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "aboutDeal")});
 	
-	if (@text) {
-	    my $clean_text = $text[0]->as_HTML();
-	    $clean_text =~ s/<\/?div[^>]*>//g;
-	    $deal->text($clean_text);
+	if (@text1) {
+	    $text = $text1[0]->as_HTML();
+	    $text =~ s/<\/?div[^>]*>//g;
+	}
+	if (@text2) {
+	    $text .= $text2[0]->as_HTML();
+	    $text =~ s/<\/?div[^>]*>//g;
+	}
+
+	if (length($text) > 7) {
+	    $deal->text($text);
 	}
 
 
