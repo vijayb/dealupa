@@ -147,9 +147,10 @@
 
 
 	my @expired = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /mgoh-s-time/)});
-	if (@expired && $expired[0]->attr('class') =~ /soldout/i) {
+	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('id')) &&
+		    $_[0]->attr('id') eq "countdown-no-longer-available" &&
+		    !defined($_[0]->attr('style'))});
+	if (@expired) {
 	    $deal->expired(1);
 	}
 
@@ -246,7 +247,6 @@
 	    $address_html =~ s/\s+$//g;
 	    $address_html =~ s/View\s.*$//;
 	    if (length($address_html) > 7) {
-		print $address_html,"\n";
 		$deal->addresses($address_html);
 	    }
 	}
