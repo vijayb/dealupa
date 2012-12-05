@@ -456,6 +456,16 @@
 		addToDealUrls($_[0], $deal_url);
 	    }
         }
+
+	@deal_urls = ${$tree_ref}->look_down(
+            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+		    $_[0]->attr('href') =~ /google\.com\/offers\/ppo\/SELF/});
+
+	foreach my $deal (@deal_urls) {
+	    my $deal_url = $deal->attr('href');
+	    $deal_url =~ s/\?[^\?]*$//;
+	    addToDealUrls($_[0], $deal_url);
+        }
     }
 
 

@@ -13,17 +13,28 @@
 
     my %month_map = (
 	"Jan" => 1,
+	"January" => 1,
 	"Feb" => 2,
+	"February" => 2,
 	"Mar" => 3,
+	"March" => 3,
 	"Apr" => 4,
+	"April" => 4,
 	"May" => 5,
 	"Jun" => 6,
+	"June" => 6,
 	"Jul" => 7,
+	"July" => 7,
 	"Aug" => 8,
+	"August" => 8,
 	"Sep" => 9,
+	"September" => 9,
 	"Oct" => 10,
+	"October" => 10,
 	"Nov" => 11,
-	"Dec" => 12
+	"November" => 11,
+	"Dec" => 12,
+	"December" => 12
     );
 
     sub extract {
@@ -116,7 +127,8 @@
 
 	my @fine_print = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "mgoh-terms")});
+		    $_[0]->attr('class') eq "detail-section" &&
+		    $_[0]->as_text() =~ /see[a-zA-Z0-9\,\s]{1,30}rules/i});
 
 	if (@fine_print) {
 	    my $fine_print = $fine_print[0]->as_HTML();
@@ -190,14 +202,9 @@
 	    }
 	}
 
-
-	my @expires = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /mgoh-redeem/)});
-
-	if (@expires &&
-	    $expires[0]->as_text() =~
-	    /([A-Za-z]+)\s+([0-9]{1,2}),?\s*([0-9]{4})\s*$/) {
+	if (defined($deal->fine_print()) &&
+	    $deal->fine_print() =~
+	    /([A-Za-z]+)\s+([0-9]{1,2}),?\s*([0-9]{4})/) {
 	    my $month = $1;
 	    my $day = $2;
 	    my $year = $3;
