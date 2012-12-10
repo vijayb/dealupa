@@ -247,12 +247,18 @@
 		$address_html =~ 
 		    s/>\s*([\(\)\s\-\.0-9]{9,17})\s*<\/div>/><\/div>/;
 	    }
+	    $address_html =~ s/<div\s*class=[\"\']mgoh-a-name[\'\"]>[^<]*<\/div>//;
+	    $address_html =~ s/<a[^>]*>[^<]*<\/a>//gi;
 	    
 	    $address_html =~ s/<[^>]*>/ /g;
 	    $address_html =~ s/\s+/ /g;
 	    $address_html =~ s/^\s+//;
 	    $address_html =~ s/\s+$//g;
 	    $address_html =~ s/View\s.*$//;
+
+	    $address_html =~ s/http:\/\///gi;
+	    $address_html =~ s/www.//gi;
+	    $address_html =~ s/[a-z0-9]+\.com//gi;
 	    if (length($address_html) > 7) {
 		$deal->addresses($address_html);
 	    }
