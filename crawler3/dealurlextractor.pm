@@ -757,15 +757,20 @@
         my $tree_ref = $_[2];
         
         my @deal_urls = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    $_[0]->attr('href') =~ /^\/adventures\//});
+            sub{defined($_[0]->attr('class'))
+		    && $_[0]->attr('class') =~ /^ls-item/});
 
         foreach my $deal (@deal_urls) {
-	    if ($deal->attr('href') !~ /about$/) {
-		my $url = "http://www.livingsocial.com".$deal->attr('href');
-		addToDealUrls($_[0], $url);
+	    my @deal_url = $deal->look_down(
+		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href'))
+			&& $_[0]->attr('href') =~ /^\/events/});
+	    if (@deal_url) {
+		my $deal_url =
+		    "https://www.livingsocial.com".$deal_url[0]->attr('href');
+		addToDealUrls($_[0], $deal_url);
 	    }
         }
+
     }
 
 
