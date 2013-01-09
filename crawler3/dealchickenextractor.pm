@@ -11,7 +11,7 @@
     use genericextractor;
     use HTML::TreeBuilder;
     use Encode;
-
+    
     my %month_map = (
 	"Jan" => 1,
 	"Feb" => 2,
@@ -26,7 +26,7 @@
 	"Nov" => 11,
 	"Dec" => 12
     );
-
+    
     sub extract {
 	my $tree = HTML::TreeBuilder->new;
 	my $deal = shift;
@@ -97,27 +97,37 @@
 	    $deal->num_purchased($num_purchased);
 	}
 
-	my @image = $tree->look_down(
-	    sub{$_[0]->tag() eq 'img' &&
-		    defined($_[0]->attr('id')) &&
-		    defined($_[0]->attr('src')) &&
-		    $_[0]->attr('src') =~ /^http/ &&
-		    ($_[0]->attr('id') =~ /imgDeal/)});
-	
-	if (@image) {
-	    $deal->image_urls($image[0]->attr('src'));
-	} else {
-	    my @images = $tree->look_down(
+	my @image_container =
+	    $tree->look_down(
+		sub{$_[0]->tag() eq 'div' &&
+		    defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "thumbnails"});
+	if (@image_container) {
+	    my @images = $image_container[0]->look_down(
 		sub{$_[0]->tag() eq 'a' &&
-			defined($_[0]->attr('id')) &&
 			defined($_[0]->attr('href')) &&
-			$_[0]->attr('href') =~ /^http/ &&
-			($_[0]->attr('id') =~ /lnkCarousel/)});
+			$_[0]->attr('href') =~ /\/WebServices/});
+	    
 	    foreach my $image (@images) {
-		$deal->image_urls($image->attr('href'));
+		my $image_url = "http://www.dealchicken.com".
+		    $image->attr('href');
+		$deal->image_urls($image_url);
+	    }
+	} else {
+	    my @image =
+		$tree->look_down(
+		    sub{$_[0]->tag() eq 'img' &&
+			    defined($_[0]->attr('id')) &&
+			    defined($_[0]->attr('src')) &&
+			    $_[0]->attr('id') eq "imgDeal" &&
+			    $_[0]->attr('src') =~ /\//});
+	    if (@image) {
+		my $image_url = "http://www.dealchicken.com".
+		    $image[0]->attr('src');
+		$deal->image_urls($image_url);
 	    }
 	}
-
+	
 
 	my @expired = $tree->look_down(
 	    sub{defined($_[0]->attr('class')) &&
@@ -126,31 +136,29 @@
 	    $deal->expired(1);
 	}
 
-
+	
 	if (!defined($deal->expired()) && !$deal->expired()) {
-	    my $offset = 0;
-	    if ($tree->as_HTML() =~ /countdown\(\{until:([^,:]+)/) {
-		my $deadline = $1;
-		if ($deadline =~ /([0-9]+)d/) {
-		    $offset += $1 * 3600 *24;
-		}
+	    my @deadline = $tree->look_down(
+	    sub{$_[0]->tag() eq "input" &&
+		    defined($_[0]->attr('id')) &&
+		    defined($_[0]->attr('value')) &&
+		    $_[0]->attr('id') eq "hiddenDealEndDate"});
 
-		if ($deadline =~ /([0-9]+)h/) {
-		    $offset += $1 * 3600;
-		}
-
-		if ($deadline =~ /([0-9]+)m/) {
-		    $offset += $1 * 60;
-		}
-	    }
-
-	    if ($offset > 0) {
-		my ($year, $month, $day, $hour, $minute);
-		($year, $month, $day, $hour, $minute) =
-		    (gmtime(time()+$offset))[5,4,3,2,1];
+	    if (@deadline &&
+		$deadline[0]->attr('value') =~ /([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4})\s*([0-9]{2}):([0-9]{2}):([0-9]{2})\s*([A-Z]{2})/) {
 		
-		my $deadline = sprintf("%d-%02d-%02d %02d:%02d:01",
-				       1900+$year, $month+1, $day,
+		my $year = $3;
+		my $month = $1;
+		my $day = $2;
+		my $hour = $4;
+		my $minute = $5;
+		my $second = $6;
+		my $ampm = $7;
+		if ($ampm eq "PM") {
+		    $hour += 12;
+		}
+		my $deadline = sprintf("%d-%02d-%02d %02d:%02d:00",
+				       $year, $month, $day,
 				       $hour, $minute);
 		$deal->deadline($deadline);
 	    }
@@ -226,7 +234,7 @@
 	    }
 
 	}
-
+	
 	$tree->delete();
     }
   
