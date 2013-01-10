@@ -31,7 +31,7 @@
 	my $tree = HTML::TreeBuilder->new;
 	my $deal = shift;
 	my $deal_content_ref = shift;
-	
+	$tree->ignore_unknown(0);
 	$tree->parse(decode_utf8 $$deal_content_ref);
 	$tree->eof();
 
@@ -48,28 +48,29 @@
 
 
 	my @buy_box = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "deal-buy-box")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "buy-box")});
 
 	if (@buy_box) {
 
 	    my @price = $buy_box[0]->look_down(
 		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
 			($_[0]->attr('class') =~ /^deal-price/)});
-	    if (@price && $price[0]->as_text() =~ /([0-9,]+)/) {
-		my $price = $1;
-		$price =~ s/,//g;
-		$deal->price($price);
+	    if (@price) {
+		if ($price[0]->as_text() =~ /([0-9,]+)[^0-9]([0-9,]+)/) {
+		    my $price = $2;
+		    my $value = $1;
+		    $price =~ s/,//g;
+		    $value =~ s/,//g;
+		    $deal->price($price);
+		    $deal->value($value);
+		} elsif ($price[0]->as_text() =~ /([0-9,]+)/) {
+		    my $price = $1;
+		    $price =~ s/,//g;
+		    $deal->price($price);
+		}
 	    }
 	    
-	    my @value = $buy_box[0]->look_down(
-		sub{$_[0]->tag() eq 'p' && defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') eq "original-price")});
-	    if (@value && $value[0]->as_text() =~ /([0-9,]+)/) {
-		my $value = $1;
-		$value =~ s/,//g;
-		$deal->value($value);
-	    }
 
 	    my @num_purchased = $buy_box[0]->look_down(
 		sub{defined($_[0]->attr('class')) &&
@@ -87,26 +88,15 @@
 
 	my @text = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "description")});
+		    ($_[0]->attr('class') eq "deal-description")});
 	if (@text) {
 	    my $text = $text[0]->as_HTML();
 	    $text =~ s/<\/?div[^>]*>//g;
 	    $deal->text($text);
-
-	    # LivingSocial adventures usually puts the name and website
-	    # in the first href in the body of the text.
-	    my @website = $text[0]->look_down(
-		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-			$_[0]->attr('href') =~ /^http/});
-	    
-	    if (@website) {
-		$deal->website($website[0]->attr('href'));
-		$deal->name($website[0]->as_text());
-	    }
 	}
 
 	my @fine_print = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+	    sub{$_[0]->tag() eq 'section' && defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "fine-print")});
 	if (@fine_print) {
 	    my $fine_print = $fine_print[0]->as_HTML();
@@ -115,25 +105,19 @@
 	}
 
 
-	my @images = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('style')) &&
+	my @image_container = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' &&
 		    defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "slide")});
-	
-	foreach my $image (@images) {
-	    if ($image->attr('style') =~ /url\(\'?(http[^\'\)]+)/) {
-		$deal->image_urls($1);
-	    } else {
-		my @the_image = $image->look_down(
-		    sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
-			    ($_[0]->attr('src') =~ /^http/)});
-
-		if (@the_image) {
-		    $deal->image_urls($the_image[0]->attr('src'));
-		}
+		    ($_[0]->attr('class') eq "deal-carousel")});
+	if (@image_container) {
+	    my @images = $image_container[0]->look_down(
+		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
+			($_[0]->attr('src') =~ /^http/)});
+	    
+	    foreach my $image (@images) {
+		$deal->image_urls($image->attr('src'));
 	    }
 	}
-
 
 	my @expired = $tree->look_down(
 	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
@@ -160,7 +144,7 @@
 	}
 
 
-	# LivingSocialEscapes puts the expiry information in the fine print.
+	# LivingSocialAdventures puts the expiry information in the fine print.
 	# This regex will only work for United States format. E.g.,
 	# April 30, 2012. In Australia they do 1st February, 2012
 	if (defined($deal->fine_print()) && $deal->fine_print() =~ 
@@ -178,31 +162,46 @@
 
 	my @location = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') =~ /^location/});
+		    $_[0]->attr('class') =~ /^venue-info/});
 
 	if (@location) {
-	    my @meta = $location[0]->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-			$_[0]->attr('class') eq "meta"});
-	    
-	    if (@meta) {
-		my $address = $meta[0]->as_HTML();
-		$address =~ s/<span\s+class=[\'\"]phone[\'\"]>[^<]+<\/span>//;
-		$address =~ s/<[^>]+>//g;
-		$address =~ s/\s*get\s+directions\s*//gi;
-		$deal->addresses($address);
-
-		my @phone = $location[0]->look_down(
-		    sub{$_[0]->tag() eq 'span' &&
-			    defined($_[0]->attr('class')) &&
-			    $_[0]->attr('class') eq "phone"});
-
-		if (@phone) {
-		    my $phone = $phone[0]->as_text();
-		    $phone =~ s/[^0-9]//g;
-		    $deal->phone($phone);
-		}
+	    my @name = $location[0]->look_down(
+		sub{$_[0]->tag() =~ /^h[0-9]/});
+	    if (@name) {
+		$deal->name($name[0]->as_text());
 	    }
+
+	    my @phone = $location[0]->look_down(
+		sub{defined($_[0]->attr('class')) &&
+			    $_[0]->attr('class') eq "tel"});
+	    if (@phone) {
+		$deal->phone($phone[0]->as_text());
+	    }
+
+
+	    my @website = $location[0]->look_down(
+		sub{$_[0]->tag() eq "a" &&
+			defined($_[0]->attr('href')) &&
+			defined($_[0]->attr('target')) &&
+			$_[0]->attr('href') !~ /maps.google/i &&
+			$_[0]->attr('target') =~ /blank/i});
+	    if (@website) {
+		$deal->website($website[0]->attr('href'));
+	    }
+
+	    my @addresses = $location[0]->look_down(
+		sub{$_[0]->tag() eq 'address'});
+	    
+	    foreach my $address (@addresses) {
+		my $clean_address = $address->as_HTML();
+		$clean_address =~ s/<span\s*class=[\'\"]tel[\'\"]>.*//;
+		$clean_address =~ s/<a\s.*//;
+		$clean_address =~ s/<[^>]*>/ /g;
+		$clean_address =~ s/^\s*//;
+		$clean_address =~ s/\s*$//;
+		$deal->addresses($clean_address);
+	    }
+
 	}
 
 
