@@ -107,8 +107,10 @@
 
 	my @image_container = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' &&
-		    defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "deal-carousel")});
+		    ((defined($_[0]->attr('class')) &&
+		     ($_[0]->attr('class') =~ /carousel/)) ||
+		     (defined($_[0]->attr('id')) &&
+		      ($_[0]->attr('id') =~ /carousel/)))});
 	if (@image_container) {
 	    my @images = $image_container[0]->look_down(
 		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
