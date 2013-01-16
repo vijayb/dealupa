@@ -184,56 +184,28 @@
 
 	if (!defined($deal->expired()) && !$deal->expired()) {
 	    my $deadline;
-	    my @deadline = $tree->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-			($_[0]->attr('id') eq "countdown")});
-	    if (@deadline) {
-		$deadline = $deadline[0]->as_text();
-		$deadline =~ s/\s//g;
-	    } 
-
-	    if (!@deadline) {
-		@deadline = $tree->look_down(
-		    sub{defined($_[0]->attr('class')) &&
-			    ($_[0]->attr('class') =~ /clearfix\s*deal-info/)});
-		if (@deadline) {
-		    $deadline = $deadline[0]->as_text();
-		}
+	    if ($tree->as_HTML() =~ /countdown([^\s;]+)/) {
+		$deadline = $1;
 	    }
-	    
-	    if (!@deadline) {
-		@deadline = $tree->look_down(
-		    sub{defined($_[0]->attr('class')) &&
-			    ($_[0]->attr('class') eq "time-left")});
-		if (@deadline) {
-		    $deadline = $deadline[0]->as_text();
-		}
-	    }
-
 
 	    my $days = 0;
 	    my $hours = 0;
 	    my $minutes = 0;
-	    my $seconds = 0;
 	    my $deadline_offset = 0;
-	    # LivingSocial only gives us a countdown timer, not a date,
-	    # so we have to infer it. It is either has the format
-	    # "N days remaining" or e.g., 15:27:55 remaining.
-	    # We compute the UTC time by adding the above countdown offset
-	    # to the current UTC time. The greater the time between
-	    # crawling the page and performing this calculation, the more
-	    # inaccurate will be the computed deadline. But hopefully
-	    # it won't be off by more than a few seconds.
+
 	    if (defined($deadline)) {
-		if ($deadline =~ /([0-9]{1,2})\s*days?/) {
+		if ($deadline =~ /([0-9]{1,2})","d/) {
 		    $days = $1;
-		} elsif ($deadline =~ /([0-9]{2}):([0-9]{2}):([0-9]{2})/) {
-		    $hours = $1;
-		    $minutes = $2;
-		    $seconds = $3;
 		}
+		if ($deadline =~ /([0-9]{1,2})","h/) {
+		    $hours = $1;
+		}
+		if ($deadline =~ /([0-9]{1,2})","m/) {
+		    $minutes = $1;
+		}
+
 		$deadline_offset = ($days*24*60*60)+($hours*60*60)+
-		    ($minutes*60) + $seconds;
+		    ($minutes*60);
 		
 		if ($deadline_offset > 0) {
 		    $deadline = crawlerutils::gmtNow($deadline_offset);
@@ -447,7 +419,7 @@
 
 	if (!@addresses) {
 	    @addresses = $tree->look_down(sub{defined($_[0]->attr('class')) &&
-						  $_[0]->attr('class') eq "addresses"});
+						  $_[0]->attr('class') =~ /^addresses/});
 	    
 	    if (@addresses) {
 		my @address =
@@ -473,7 +445,6 @@
 		    $deal->phone($phone);
 		}
 	    }
-
 	}
 
 
