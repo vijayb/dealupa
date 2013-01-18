@@ -165,31 +165,34 @@
 		    ($_[0]->attr('id') eq "dealtimer")});
 
 	    if (@deadline) {
+		my $deadline = $deadline[0]->as_HTML();
+		$deadline =~ s/<[^>]*>/ /g;
 		my $days = 0;
 		my $hours = 0;
 		my $minutes = 0;
 
-		if ($deadline[0]->as_HTML =~ /([0-9]+)\s*day/i) {
+		if ($deadline =~ /([0-9]+)\s+([0-9]+)\s+([0-9]+)/) {
 		    $days = $1;
-		}
-		if ($deadline[0]->as_HTML =~ /([0-9]+)\s*hour/i) {
+		    $hours = $2;
+		    $minutes = $3;
+		} elsif ($deadline =~ /([0-9]+)\s+([0-9]+)/) {
 		    $hours = $1;
-		}
-		if ($deadline[0]->as_HTML =~ /([0-9]+)\s*minute/i) {
-		    $minutes = $1;
+		    $minutes = $2;
 		}
 
-		my $offset = ($days*24*3600) + ($hours*3600) + ($minutes*60);
-
-		my ($year, $month, $day, $hour, $minute);
-		($year, $month, $day, $hour, $minute) =
-		    (gmtime(time() + $offset))[5,4,3,2,1];
-		
-		my $deadline = sprintf("%d-%02d-%02d %02d:%02d:01",
-				       1900+$year, $month+1, $day,
-				       $hour, $minute);
-
-		$deal->deadline($deadline);
+		if ($days + $hours + $minutes > 0) {
+		    my $offset = ($days*24*3600) + ($hours*3600) + ($minutes*60);
+		    
+		    my ($year, $month, $day, $hour, $minute);
+		    ($year, $month, $day, $hour, $minute) =
+			(gmtime(time() + $offset))[5,4,3,2,1];
+		    
+		    $deadline = sprintf("%d-%02d-%02d %02d:%02d:01",
+					1900+$year, $month+1, $day,
+					$hour, $minute);
+		    
+		    $deal->deadline($deadline);
+		}
 	    }
 	}
 
