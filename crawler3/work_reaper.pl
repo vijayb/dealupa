@@ -44,12 +44,25 @@ sub doWork {
     my $status_ref = shift;
     my $status_message_ref = shift;
     
-    my $sql = "select id, work, type, ".
+    # First remove old jobs (older then 25 days)
+    my $sql = "delete FROM `WorkQueue` WHERE ".
+	"(type=3 or type=4 or type=5 or type=9) and ".
+	"completed is not null and ".
+	"(created < DATE_SUB(NOW(), INTERVAL 25 DAY))";
+    my $sth = $workqueue_dbh->prepare($sql);
+    if (!$sth->execute()) {
+        $$status_ref = 2;
+        $$status_message_ref =
+	    "Failed database query: ".$workqueue_dbh->errstr;
+        return;        
+    }
+
+    $sql = "select id, work, type, ".
 	"TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), started)) from WorkQueue ".
 	"WHERE started is not null and completed is null and ".
 	"TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), started)) > ".MIN_REAPING_AGE;
 
-    my $sth = $workqueue_dbh->prepare($sql);
+    $sth = $workqueue_dbh->prepare($sql);
     if (!$sth->execute()) {
         $$status_ref = 2;
         $$status_message_ref =
