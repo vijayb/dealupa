@@ -311,8 +311,9 @@
         my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href'))});
         foreach my $deal (@deal_urls) {
-            if ($deal->attr('href') =~ /^(\/[^\/]+\/deal\/[0-9]+)/) {
-                addToDealUrls($_[0], "http://www.scoutmob.com$1");
+            if ($deal->attr('href') =~ /^(\/[^\/]+\/deals\/[0-9]+)/) {
+		my $deal_url = "http://www.scoutmob.com$1";
+                addToDealUrls($_[0], $deal_url);
             }
         }
     }
