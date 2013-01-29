@@ -92,8 +92,13 @@
 		my $price = $1;
 		$price =~ s/,//g;
 		$deal->price($price);
+	    } elsif (defined($deal->title()) &&
+		     $deal->title() =~ /\$([0-9,]+)[^\$]+\$([0-9,]+)/) {
+		$deal->price($1);
+		$deal->value($2);
 	    }
 	}
+	
 
 	
 	my @text = $tree->look_down(

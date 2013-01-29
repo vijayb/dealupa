@@ -435,10 +435,10 @@
         foreach my $deal (@deal_urls) {
 	    my @deal_url = $deal->look_down(
 		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href'))
-			&& $_[0]->attr('href') =~ /^\//});
-	    if (@deal_url && $deal_url[0]->attr('href') =~ /\/deals(\/.*)/) {
-		my $deal_url = "http://www.livingsocial.com/escapes".$1;
-		print $deal_url,"\n";
+			&& $_[0]->attr('href') =~ /^\/escapes\//});
+	    if (@deal_url) {
+		my $deal_url = "http://www.livingsocial.com".
+		    $deal_url[0]->attr('href');
 		addToDealUrls($_[0], $deal_url);
 	    }
         }
