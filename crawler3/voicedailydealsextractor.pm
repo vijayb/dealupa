@@ -122,11 +122,12 @@
 	}
 
 	my @image = $tree->look_down(
-	    sub{$_[0]->tag() eq 'link' && defined($_[0]->attr('rel')) &&
-		    defined($_[0]->attr('href')) &&
-		    ($_[0]->attr('rel') eq "image_src")});
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    $_[0]->attr('content') =~ /^http/ &&
+		    ($_[0]->attr('property') eq "og:image")});
 	if (@image) {
-	    $deal->image_urls($image[0]->attr('href'));
+	    $deal->image_urls($image[0]->attr('content'));
 	}
 
 
