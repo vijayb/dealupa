@@ -133,15 +133,15 @@
 
 
 	my @images = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') =~ /slideshowModule/i)});
+	    sub{defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "slideshowNavigation")});
 	if (@images) {
 	    my @image_links = $images[0]->look_down(
 		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('rel'))});
-	    
+
 	    foreach my $image_link (@image_links) {
 		if ($image_link->attr('rel') =~ 
-		    /(http:\/\/cdn.bloomspot.com[^\'\"]+)/) {
+		    /(http:\/\/edge.bloomspot.com[^\'\"]+)/) {
 		    $deal->image_urls($1);
 		}
 	    }
