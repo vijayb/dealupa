@@ -242,12 +242,13 @@
 	foreach my $address_phone (@addresses) {
 	    my $address_html = $address_phone->as_HTML();
 	    if ($address_phone->as_HTML() =~
-		/>\s*([\(\)\s\-\.0-9]{9,17})\s*<\/div>/) {
+		/>\s*([\(\)\s\-\.0-9]{9,17})\s*<\/?[^>]*>/) {
 		$deal->phone($1);
 		$address_html =~ 
-		    s/>\s*([\(\)\s\-\.0-9]{9,17})\s*<\/div>/><\/div>/;
+		    s/>\s*([\(\)\s\-\.0-9]{9,17})\s*<\/?[^>]*>/><\/div>/;
 	    }
 	    $address_html =~ s/<div\s*class=[\"\']mgoh-a-name[\'\"]>[^<]*<\/div>//;
+	    $address_html =~ s/<div\s*class=[\"\']mgoh-a-redemption[\'\"]>[^<]*<\/div>//;
 	    $address_html =~ s/<a[^>]*>[^<]*<\/a>//gi;
 	    
 	    $address_html =~ s/<[^>]*>/ /g;
