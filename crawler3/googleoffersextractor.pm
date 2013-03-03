@@ -235,33 +235,28 @@
 	}
 
 
+	my @phone =  $tree->look_down(
+	    sub{defined($_[0]->attr('itemprop')) &&
+		    $_[0]->attr('itemprop') =~ /telephone/});
+
+	if (@phone) {
+	    $deal->phone($phone[0]->as_text());
+	}
+
 	my @addresses = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') =~ /mgoh-a-address/});
+	    sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+		    $_[0]->attr('href') =~ /maps.google.com/ &&
+		    $_[0]->attr('href') =~ /daddr=/ &&
+		    $_[0]->as_text() =~ /directions/i});
 
-	foreach my $address_phone (@addresses) {
-	    my $address_html = $address_phone->as_HTML();
-	    if ($address_phone->as_HTML() =~
-		/>\s*([\(\)\s\-\.0-9]{9,17})\s*<\/?[^>]*>/) {
-		$deal->phone($1);
-		$address_html =~ 
-		    s/>\s*([\(\)\s\-\.0-9]{9,17})\s*<\/?[^>]*>/><\/div>/;
-	    }
-	    $address_html =~ s/<div\s*class=[\"\']mgoh-a-name[\'\"]>[^<]*<\/div>//;
-	    $address_html =~ s/<div\s*class=[\"\']mgoh-a-redemption[\'\"]>[^<]*<\/div>//;
-	    $address_html =~ s/<a[^>]*>[^<]*<\/a>//gi;
-	    
-	    $address_html =~ s/<[^>]*>/ /g;
-	    $address_html =~ s/\s+/ /g;
-	    $address_html =~ s/^\s+//;
-	    $address_html =~ s/\s+$//g;
-	    $address_html =~ s/View\s.*$//;
-
-	    $address_html =~ s/http:\/\///gi;
-	    $address_html =~ s/www.//gi;
-	    $address_html =~ s/[a-z0-9]+\.com//gi;
-	    if (length($address_html) > 7) {
-		$deal->addresses($address_html);
+	foreach my $address (@addresses) {
+	    if ($address->as_HTML() =~ /daddr=([^\"<>]+)/) {
+		my $address = $1;
+		$address =~ s/\%2[A-Z]\+/ /g;
+		$address =~ s/\+/ /g;
+		if (length($address) > 7) {
+		    $deal->addresses($address);
+		}
 	    }
 	}
 
