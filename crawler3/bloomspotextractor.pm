@@ -155,6 +155,13 @@
 	    $deal->expired(1);
 	}
 
+	@expired = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /buyarea/i)});
+	if (@expired && $expired[0]->as_text() =~ /sold\s*out/i) {
+	    $deal->expired(1);
+	}
+
 	my @upcoming = $tree->look_down(
 	    sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
 		    ($_[0]->attr('src') =~ /offers_upcoming/i)});
