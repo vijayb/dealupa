@@ -86,9 +86,9 @@
 
 
 	my @price = $tree->look_down(
-	    sub{($_[0]->tag() eq 'div' || $_[0]->tag() eq 'span') && 
-		    defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /^deal-price/)});
+	    sub{($_[0]->tag() eq 'div' || $_[0]->tag() eq 'li') && 
+		    defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') =~ /^deal-buy-box-price/)});
 
 	if (@price && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
 	    my $price = $1;
@@ -97,19 +97,17 @@
 	}
 
 
-	# LivingSocial doesn't directly give us the value, only
-	# the discount percentage. We have to infer the value.
-	if (defined($deal->price())) {
-	    my @percent = $tree->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-			($_[0]->attr('id') eq "percentage")});
-	    
-	    if (@percent && $percent[0]->as_text() =~ /([1-9][0-9]?)%/) {
-		my $percent = $1/100.0;
-		my $value = sprintf("%.0f", $deal->price()/(1.0-$percent));
-		$deal->value($value);
-	    }
+	my @value = $tree->look_down(
+	    sub{$_[0]->tag() eq 'li' && 
+		    defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /^ls-deal_price/)});
+
+	if (@value && $value[0]->as_text() =~ /\$([0-9,\.]+)/) {
+	    my $value = $1;
+	    $value =~ s/,//g;
+	    $deal->value($value);
 	}
+
 
 	# If we didn't extract price/value this might be one of LS's
 	# event deals, which has a different format.
