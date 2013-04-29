@@ -139,14 +139,35 @@
 	my @links = ${$tree_ref}->look_down(
             sub{($_[0]->tag() eq 'a' || $_[0]->tag() eq 'span')
 		    && defined($_[0]->attr('href')) &&
-		    $_[0]->attr('href') =~ /^\//});
+		    ($_[0]->attr('href') =~ /deal/ ||
+		     $_[0]->attr('href') =~ /cities/) &&
+		    ($_[0]->attr('href') =~ /^\// ||
+		     $_[0]->attr('href') =~ /^http/)});
 
 	foreach my $link (@links) {
-	    my $url = "http://www.livingsocial.com".$link->attr('href');
+	    my $url;
+	    if ($link->attr('href') =~ /^\//) {
+		$url = "http://www.livingsocial.com".$link->attr('href');
+	    } else {
+		$url = $link->attr('href');
+	    }
 	    
-	    if ($link->as_text() =~ /view\sdeal/i ||
+	    $url =~ s/\?[^\?]*$//;
+	    my $is_escapes_deal = 0;
+	    my $parent = $link->parent();
+	    while (defined($parent)) {
+		if (defined($parent->attr("class")) &&
+		    $parent->attr("class") =~ /escapes/i) {
+		    $is_escapes_deal = 1;
+		    last;
+		}
+		$parent = $parent->parent();
+	    }
+
+	    if ($is_escapes_deal == 0 && 
+		($link->as_text() =~ /view\sdeal/i ||
 		(defined($link->attr('class')) && 
-		 $link->attr('class') eq "btn")) {
+		 $link->attr('class') eq "btn"))) {
 		addToDealUrls($_[0], $url);
 	    }
 	}
