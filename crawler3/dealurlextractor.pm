@@ -455,12 +455,13 @@
 
         foreach my $deal (@deal_urls) {
 	    my @deal_url = $deal->look_down(
-		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href'))
-			&& $_[0]->attr('href') =~ /^\/escapes\//});
+		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) && 
+			$_[0]->attr('href') =~ /\/escapes\// && 
+			$_[0]->attr('href') =~ /^\/\/www/i});
 	    if (@deal_url) {
-		my $deal_url = "http://www.livingsocial.com".
-		    $deal_url[0]->attr('href');
-		addToDealUrls($_[0], $deal_url);
+		my $url = "https:".$deal_url[0]->attr('href');
+		$url =~ s/\?[^\?]*$//;
+		addToDealUrls($_[0], $url);
 	    }
         }
     }
