@@ -46,15 +46,6 @@
 	}
 
 
-	my @price = $tree->look_down(
-	    sub{defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "price")});
-	if (@price && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
-	    my $price = $1;
-	    $price =~ s/,//g;
-	    $deal->price($price);
-	}
-
 	my @value = $tree->look_down(
 	    sub{defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "la-value")});
@@ -62,6 +53,16 @@
 	    my $value = $1;
 	    $value =~ s/,//g;
 	    $deal->value($value);
+
+	    my @price = $tree->look_down(
+		sub{defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "la-savings")});
+	    if (@price && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
+		my $price = $1;
+		$price =~ s/,//g;
+		$price = $value - $price;
+		$deal->price($price);
+	    }
 	}
 
 
@@ -145,7 +146,7 @@
 		    $_[0]->attr('id') eq "hiddenDealEndDate"});
 
 	    if (@deadline &&
-		$deadline[0]->attr('value') =~ /([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4})\s*([0-9]{2}):([0-9]{2}):([0-9]{2})\s*([A-Z]{2})/) {
+		$deadline[0]->attr('value') =~ /([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4})\s*([0-9]{1,2}):([0-9]{2}):([0-9]{2})\s*([A-Z]{2})/) {
 		
 		my $year = $3;
 		my $month = $1;

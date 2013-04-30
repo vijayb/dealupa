@@ -970,27 +970,17 @@
         my $hub_properties = $_[1];
         my $tree_ref = $_[2];
 
-
-	my @deal_url = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
-		    defined($_[0]->attr('content')) &&
-		    $_[0]->attr('content') =~ /^http/ &&
-		    ($_[0]->attr('property') eq "og:url")});
-
-        if (@deal_url) {
-            my $url = $deal_url[0]->attr('content');
-            addToDealUrls($_[0], $url);
-        }
-
-
 	my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    $_[0]->attr('href') =~ /^http/ && 
-		    $_[0]->attr('href') =~ /\/[0-9]+$/ &&
-		    $_[0]->as_text() =~ /view\s*deal/i});
-	
+		    defined($_[0]->attr('id')) &&
+		    $_[0]->attr('id') =~ /DealTiles/ &&
+		    ($_[0]->attr('href') =~ /^http/)});
+
         foreach my $deal_url (@deal_urls) {
-            addToDealUrls($_[0], $deal_url->attr('href'));
+            my $url = $deal_url->attr('href');
+	    $url =~ s/\?[^\?]*$//;
+	    $url =~ s/\s//g;
+            addToDealUrls($_[0], $url);
         }
     }
 
