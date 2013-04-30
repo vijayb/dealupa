@@ -96,6 +96,19 @@
 	    $deal->price($price);
 	}
 
+	if (!defined($deal->price())) {
+	    @price = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && 
+			defined($_[0]->attr('class')) &&
+			$_[0]->attr('class') eq "deal-price"});
+	    
+	    if (@price && $price[0]->as_text() =~ /\$([0-9,\.]+)/) {
+		my $price = $1;
+		$price =~ s/,//g;
+		$deal->price($price);
+	    }
+
+	}
 
 	my @value = $tree->look_down(
 	    sub{$_[0]->tag() eq 'li' && 
@@ -120,17 +133,6 @@
 		my $value = $1;
 		my $price = $2;
 		$deal->price($price);
-		$deal->value($value);
-	    }
-	}
-
-	if (!defined($deal->value())) {
-	    my @value = $tree->look_down(
-		sub{defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') eq "original-price")});
-	    if (@value && $value[0]->as_text() =~ /\$([0-9,\.]+)/) {
-		my $value = $1;
-		$value =~ s/,//g;
 		$deal->value($value);
 	    }
 	}
