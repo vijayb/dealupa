@@ -235,6 +235,15 @@
 	if (@name) {
 	    $deal->name($name[0]->attr('data-supplier_name'));
 	}
+
+	my @website = $tree->look_down(
+	    sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+		    defined($_[0]->attr('id')) &&
+		    $_[0]->attr('id') eq "merchant_link" &&
+		    $_[0]->attr('href') =~ /^http/i});
+	if (@website) {
+	    $deal->website($website[0]->attr('href'));
+	}
 	    
 	$tree->delete();
     }

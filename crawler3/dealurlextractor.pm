@@ -292,7 +292,7 @@
         
         my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    $_[0]->attr('href') =~ /^http/ &&
+		    $_[0]->attr('href') =~ /^\// &&
 		    defined($_[0]->attr('class')) &&
 		    $_[0]->attr('class') eq "offer-snippet-img" &&
 		    (($_[0]->attr('href') =~ 
@@ -300,9 +300,10 @@
 		     ($_[0]->attr('href') =~ 
 		      /\/local\/.*\/[0-9]+$/) ||
 		     ($_[0]->attr('href') =~ 
-		      /\/getaways\/[0-9]+$/))});
+		      /\/getaways\/.*\/[0-9]+$/))});
         foreach my $deal (@deal_urls) {
-	    addToDealUrls($_[0], $deal->attr('href'));
+	    my $url = "http://www.zozi.com".$deal->attr('href');
+	    addToDealUrls($_[0], $url);
         }
     }
 
