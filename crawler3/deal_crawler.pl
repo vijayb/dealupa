@@ -28,6 +28,9 @@ use constant {
     YELP_WORK_FREQUENCY => 300,
     MAX_CRAWLABLE_AGE => 864000, # 10 days in seconds
 
+    MAX_ADDRESSES => 7,
+    MAX_IMAGES => 5,
+
     IMAGE_CRAWLER_WORK_TYPE => 9,
     # Since the deal crawler seems to slowly grow in memory usage
     # we'll retire it every 5 hours. It gets restarted by the worker_restarter
@@ -432,8 +435,13 @@ sub insertAddresses {
     my $status_ref = shift;
     my $status_message_ref = shift;
 
+    my $count = 0;
     my $addresses_ref = $deal->addresses();
     foreach my $address (keys %{$addresses_ref}) {
+	if ($count >= MAX_ADDRESSES) {
+	    last;
+	}
+
 	my $sql = "insert into Addresses (deal_id, raw_address) ".
 	    "values (?,?)";
 	
@@ -445,6 +453,8 @@ sub insertAddresses {
 	    $$status_message_ref = "Failed database query: ".$dbh->errstr;
 	    return 0;
 	}
+
+	$count++;
     }
     
     return 1;
@@ -459,8 +469,13 @@ sub insertImages {
     my $status_ref = shift;
     my $status_message_ref = shift;
     
+    my $count = 0;
     my $image_urls_ref = $deal->image_urls();
     foreach my $image_url (keys %{$image_urls_ref}) {
+	if ($count >= MAX_IMAGES) {
+	    last;
+	}
+
 	my $sql = "insert into Images (deal_id, image_url) ".
 	    "values (?,?) on duplicate key update id=id";
 	
@@ -472,6 +487,8 @@ sub insertImages {
 	    $$status_message_ref = "Failed database query: ".$dbh->errstr;
 	    return 0;
 	}
+
+	$count++;
     }
     
     return 1;

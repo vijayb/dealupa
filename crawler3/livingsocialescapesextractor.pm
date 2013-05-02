@@ -129,10 +129,11 @@
 	foreach my $image_container (@images) {
 	    my @image = $image_container->look_down(
 		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
-			($_[0]->attr('src') =~ /^http/)});
+			($_[0]->attr('src') =~ /^\/\//)});
 
 	    if (@image) {
-		$deal->image_urls($image[0]->attr('src'));
+		my $image_url = "http:".$image[0]->attr('src');
+		$deal->image_urls($image_url);
 	    }
 	}
 
@@ -200,12 +201,12 @@
 	}
 
 	my @name = $tree->look_down(
-	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
-		    defined($_[0]->attr('content')) &&
-		    ($_[0]->attr('property') eq "og:merchant")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    defined($_[0]->attr('data-merchant')) &&
+		    ($_[0]->attr('class') =~ /^deal-description/)});
 
 	if (@name) {
-	    my $name = $name[0]->attr('content');
+	    my $name = $name[0]->attr('data-merchant');
 	    $name =~ s/\s+$//;
 	    $name =~ s/-.*+$//;
 	    $deal->name($name);
