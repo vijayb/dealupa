@@ -253,7 +253,10 @@
 	    if ($address->as_HTML() =~ /daddr=([^\"<>]+)/) {
 		my $address = $1;
 		$address =~ s/\%2[A-Z]\+/ /g;
+		$address =~ s/\%2[A-Z]/ /g;
+		$address =~ s/\%2[0-9]*[A-Z]/ /g;
 		$address =~ s/\+/ /g;
+		$address =~ s/&amp;hl=en/ /gi;
 		if (length($address) > 7) {
 		    $deal->addresses($address);
 		}
