@@ -458,9 +458,9 @@
 	    my @deal_url = $deal->look_down(
 		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) && 
 			$_[0]->attr('href') =~ /\/escapes\// && 
-			$_[0]->attr('href') =~ /^\/\/www/i});
+			$_[0]->attr('href') =~ /^\//i});
 	    if (@deal_url) {
-		my $url = "https:".$deal_url[0]->attr('href');
+		my $url = "https://www.livingsocial.com".$deal_url[0]->attr('href');
 		$url =~ s/\?[^\?]*$//;
 		addToDealUrls($_[0], $url);
 	    }
