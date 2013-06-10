@@ -53,6 +53,17 @@
 		$deal->title($header[0]->as_text());
 	    }
 	}
+
+	if (!defined($deal->title())) {
+	     @title = $tree->look_down(
+		sub{$_[0]->tag() eq 'title'});
+
+	     if (@title) {
+		 my $clean_title = $title[0]->as_text();
+		 $clean_title =~ s/\s*\|.*//;
+		 $deal->title($clean_title);
+	     }
+	}
 	
 	my @subtitle = $tree->look_down(
 	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('name')) &&
@@ -197,7 +208,16 @@
 	    $deal->image_urls($image);  
 	}
 
+	if ($tree->as_HTML() =~ /Groupon.currentDeal.images(.*)/) {
+	    my $images_str = $1;
+	    my @image_urls = ($images_str =~ m/\"(http[^\"]+)\"/g);
+	    foreach my $image_url (@image_urls) {
+		$deal->image_urls($image_url);  
+		last;
+	    }
 
+	}
+	    
 	my @num_purchased = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
 		    ($_[0]->attr('id') eq "number_sold_container")});
