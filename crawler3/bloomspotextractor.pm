@@ -141,7 +141,7 @@
 
 	    foreach my $image_link (@image_links) {
 		if ($image_link->attr('rel') =~ 
-		    /(http:\/\/edge.bloomspot.com[^\'\"]+)/) {
+		    /(http[s]?:\/\/[^\'\"]+)/) {
 		    $deal->image_urls($1);
 		}
 	    }
