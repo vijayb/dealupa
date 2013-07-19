@@ -37,7 +37,7 @@
 	$tree->eof();
 
 	my @title = $tree->look_down(
-	    sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('class')) &&
+	    sub{$_[0]->tag() eq 'h2' && defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "deal_title")});
 	if (@title) {
 	    $deal->title($title[0]->as_text());
@@ -52,7 +52,7 @@
 
 	my @price = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "price")});
+		    ($_[0]->attr('id') =~ /Price$/)});
 	if (@price && $price[0]->as_text() =~ /([0-9,]+)/) {
 	    my $price = $1;
 	    $price =~ s/,//g;
@@ -60,8 +60,8 @@
 	}
 
 	my @value = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "value")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "deal_price_value")});
 	if (@value && $value[0]->as_text() =~ /([0-9,]+)/) {
 	    my $value = $1;
 	    $value =~ s/,//g;
@@ -69,8 +69,9 @@
 	}
 
 	my @num_purchased = $tree->look_down(
-	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "sold_count")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /deal_statistics_section_data/) &&
+		    $_[0]->as_text() =~ /bought/i});
 	if (@num_purchased && $num_purchased[0]->as_text() =~ /([0-9,]+)/) {
 	    my $num_purchased = $1;
 	    $num_purchased =~ s/,//g;
@@ -79,17 +80,31 @@
 	
 
 	my @text = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "the_details")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "subcontent_desc")});
 	if (@text) {
 	    my $text = $text[0]->as_HTML();
 	    $text =~ s/<\/?div[^>]*>//g;
 	    $deal->text($text);
 	}
 
+	my @details = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "deal_details")});
+	if (@details) {
+	    my @website = $details[0]->look_down(
+		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+			defined($_[0]->attr('target')) &&
+			($_[0]->attr('href') =~ /^http/)});
+	    if (@website) {
+		$deal->website($website[0]->attr('href'));
+	    }
+	}
+
+
 	my @fine_print = $tree->look_down(
-	    sub{$_[0]->tag() eq 'pre' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "fineprint")});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "deal_fineprint")});
 	if (@fine_print) {
 	    my $fine_print = $fine_print[0]->as_HTML();
 	    $fine_print =~ s/^\s+//;
@@ -98,12 +113,16 @@
 	}
 
 
-	my @image = $tree->look_down(
-	    sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
-		    defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "deal_image")});
-	if (@image) {
-	    $deal->image_urls($image[0]->attr('src'));
+	my @image_div = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "deal_image")});
+	if (@image_div) {
+	    my @image = $image_div[0]->look_down(
+		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
+			$_[0]->attr('src') =~ /^http/});
+	    if (@image) {
+		$deal->image_urls($image[0]->attr('src'));
+	    }
 	}
 
 	my @expired = $tree->look_down(
@@ -118,7 +137,7 @@
 	if (!defined($deal->expired()) && !$deal->expired()) {
 	    my @deadline = $tree->look_down(
 		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') =~ "time_left_data")});
+			($_[0]->attr('class') =~ "time_left")});
 
 	    if (@deadline) {
 		my $deadline = $deadline[0]->as_text();
@@ -173,23 +192,23 @@
 
 	my @name = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "merchant"});
+		    $_[0]->attr('class') eq "deal_merchant"});
 	if (@name) {
 	    $deal->name($name[0]->as_text());
 
-	    my @website = $tree->look_down(
-		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-			&genericextractor::similarEnough($_[0]->as_text(),
-							 $deal->name())});
-	    if (@website) {
-		$deal->website($website[0]->attr('href'));
-	    }
+	    #my @website = $tree->look_down(
+	#	sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+	#		&genericextractor::similarEnough($_[0]->as_text(),
+						#	 $deal->name())});
+	 #   if (@website) {
+	#	$deal->website($website[0]->attr('href'));
+	 #   }
 	}
 
 
 	my @addresses = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "address"});
+	    sub{defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "deal_location_address"});
 
 	foreach my $address (@addresses) {
 	    my $address = $address->as_text();
