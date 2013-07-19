@@ -345,15 +345,22 @@
         if (!$#_ == 2) { die "Incorrect usage of AmazonLocalURLExtractor.\n"; }
         my $hub_properties = $_[1];
         my $tree_ref = $_[2];
-        
-        my @deal_urls = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    $_[0]->attr('href') =~ /^\//});
 
-        foreach my $deal_url (@deal_urls) {
-	    my $clean_url = "http://local.amazon.com".$deal_url->attr('href');
-	    addToDealUrls($_[0], $clean_url);
-        }
+	
+	my @deals_container = ${$tree_ref}->look_down(
+            sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    $_[0]->attr('id') eq "deals_container"});
+        
+	if (@deals_container) {
+	    my @deal_urls = $deals_container[0]->look_down(
+		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+			$_[0]->attr('href') =~ /^\//});
+	    
+	    foreach my $deal_url (@deal_urls) {
+		my $clean_url = "http://local.amazon.com".$deal_url->attr('href');
+		addToDealUrls($_[0], $clean_url);
+	    }
+	}
     }
 
 

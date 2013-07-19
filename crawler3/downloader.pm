@@ -110,6 +110,7 @@
 	my $content =
 	    `DISPLAY=:23 ~/phantomjs/bin/phantomjs $phantom_script '$url'`;
 	$response->content($content);
+
 	return $response;
     }
 
