@@ -484,22 +484,12 @@
 
 	my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    $_[0]->attr('href') =~ /^#!details/});
+		    defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "card-offer-url" &&
+		    $_[0]->attr('href') =~ /https?:\/\/www.google.com\/offers\//});
 
         foreach my $deal (@deal_urls) {
-	    if ($deal->attr('href') =~ /(^#!details\/[^\/]+\/[^;]+);/) {
-		my $deal_url = "https://www.google.com/offers/home".$1;
-		addToDealUrls($_[0], $deal_url);
-	    }
-        }
-
-	@deal_urls = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-		    $_[0]->attr('href') =~ /google\.com\/offers\/ppo\/SELF/});
-
-	foreach my $deal (@deal_urls) {
 	    my $deal_url = $deal->attr('href');
-	    $deal_url =~ s/\?[^\?]*$//;
 	    addToDealUrls($_[0], $deal_url);
         }
     }
