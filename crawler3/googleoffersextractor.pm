@@ -51,13 +51,13 @@
 	    $deal->title($title[0]->as_text());
 	}
 
-	my @subtitle = $tree->look_down(
-	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('name')) &&
-		    defined($_[0]->attr('content')) &&
-		    ($_[0]->attr('name') eq "description")});
-	if (@subtitle) {
-	    $deal->subtitle($subtitle[0]->attr('content'));
-	}
+	#my @subtitle = $tree->look_down(
+	#    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('name')) &&
+	#	    defined($_[0]->attr('content')) &&
+	#	    ($_[0]->attr('name') eq "description")});
+	#if (@subtitle) {
+	#    $deal->subtitle($subtitle[0]->attr('content'));
+	#}
 
 	if ($tree->as_text() =~ /buy\snow[^\$]{1,10}\$([0-9,]+)/i) {
 	    my $price = $1;
