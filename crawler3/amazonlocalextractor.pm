@@ -211,10 +211,12 @@
 		    $_[0]->attr('class') eq "deal_location_address"});
 
 	foreach my $address (@addresses) {
-	    my $address = $address->as_text();
+	    my $address = $address->as_HTML();
+	    $address =~ s/<[^>]*>/ /g;
+	    $address =~ s/\s+/ /g;
 	    if ($address =~ /(.*)([A-Z]{2})(\s+[0-9]{5})\s*([^a-zA-Z]*)/ &&
 		genericextractor::isState($2)) {
-		$address = $1.$2.$3;
+		$address = $1." ".$2." ".$3;
 		my $phone = $4;
 
 		$address =~ s/^\s+//g;
