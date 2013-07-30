@@ -102,23 +102,15 @@
 		    ($_[0]->attr('property') eq "og:image")});
 
 	if (@image_url) {
-	    $deal->image_urls($image_url[0]->attr('content'));
-	}
+	    my $clean_image_url = $image_url[0]->attr('content');
+	    if ($clean_image_url =~ /^\/\//) {
+		$clean_image_url = "http:".$clean_image_url;
+	    }
 
-	# Extra image:
-	my @venue_image = $tree->look_down(
-	    sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('class')) &&
-		    defined($_[0]->attr('src')) &&
-		    $_[0]->attr('class') eq "venue_image"});
-	if (@venue_image) {
-	    my $clean_image = $venue_image[0]->attr('src');
-	    $clean_image =~ s/\?[^\?]*$//;
-	    if ($clean_image !~ /missing_venue/) {
-		$deal->image_urls($clean_image);
+	    if ($clean_image_url =~ /^http/) {
+		$deal->image_urls($clean_image_url);
 	    }
 	}
-
-
 
 	my @expired = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
