@@ -48,8 +48,8 @@
 
 
 	my @price = $tree->look_down(
-	    sub{$_[0]->tag() eq 'dl' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /our_price/)});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /event-full-price/)});
 
 	if (@price) {
 	    if ($price[0]->as_text() =~ /\$([0-9,\.]+)/) {
@@ -62,8 +62,8 @@
 	}
 
 	my @value = $tree->look_down(
-	    sub{$_[0]->tag() eq 'dl' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') =~ /full_price/)});
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /event-our-price/)});
 
 	if (@value && $value[0]->as_text() =~ /\$([0-9,\.]+)/) {
 	    my $value = $1;
