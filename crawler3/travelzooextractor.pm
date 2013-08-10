@@ -41,6 +41,15 @@
 		    ($_[0]->attr('class') eq "mainTitle")});
 	if (@title) {
 	    $deal->title($title[0]->as_text());
+	} else {
+	    @title = $tree->look_down(
+		sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+			defined($_[0]->attr('content')) &&
+			($_[0]->attr('property') eq "og:title")});
+	    if (@title) {
+		$deal->title($title[0]->attr('content'));
+	    }
+
 	}
 
 	my @price = $tree->look_down(
@@ -53,6 +62,19 @@
 		$price =~ s/,//g;
 		$deal->price($price);
 	    }
+	} else {
+	    @price = $tree->look_down(
+		sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') =~ /ourprice/i)});
+	    if (@price) {
+		my $price = $price[0]->as_text();
+		if ($price =~ /([0-9,]+)/) {
+		    $price = $1;
+		    $price =~ s/,//g;
+		    $deal->price($price);
+		}
+	    }
+
 	}
 
 	my @value = $tree->look_down(
@@ -118,6 +140,18 @@
 		foreach my $image (@images) {
 		    $deal->image_urls($image->attr('src'));
 		}
+	    }
+	} 
+
+	if (scalar(keys(%{$deal->image_urls()})) == 0) {
+	    my @images = $tree->look_down(
+		sub{$_[0]->tag() eq 'meta' &&
+			defined($_[0]->attr('property')) &&
+			defined($_[0]->attr('content')) &&
+			($_[0]->attr('property') eq "og:image") &&
+			$_[0]->attr('content') =~ /^http/});
+	    foreach my $image (@images) {
+		$deal->image_urls($image->attr('content'));
 	    }
 	}
 
@@ -199,14 +233,41 @@
 		    ($_[0]->attr('id') =~ /Main_MerchantInMapBox/)});
 	if (@name) {
 	    $deal->name($name[0]->as_text());
+	} else {
+	    @name = $tree->look_down(
+		sub{defined($_[0]->attr('id')) &&
+			($_[0]->attr('id') =~ /MerchantName/)});
+	    if (@name) {
+		$deal->name($name[0]->as_text());
+	    }
+	}
+
+
+	my @phone = $tree->look_down(
+	    sub{defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') =~ /MerchantPhone/)});
+	if (@phone) {
+	    my $phone = $phone[0]->as_text();
+	    $phone =~ s/^[^0-9]*//;
+	    $deal->phone($phone);
+	}
+
+	my @address = $tree->look_down(
+	    sub{defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') =~ /MerchantAddress/)});
+	if (@address) {
+	    my $address = $address[0]->as_text();
+	    $deal->addresses($address);
 	}
 
 	my @website = $tree->look_down(
-	    sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') =~ /Main_MerchantWebSite/i)});
+	    sub{defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') =~ /MerchantWebSite/i)});
 	if (@website) {
-	    $deal->website($website[0]->attr('href'));
-	}
+	    if ($website[0]->as_HTML() =~ /href=[\'\"]([^\'\"]+)/) {
+		$deal->website($1);
+	    }
+	} 
 
 	my @addresses = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
