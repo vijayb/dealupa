@@ -255,7 +255,8 @@
 	my @address = $tree->look_down(
 	    sub{defined($_[0]->attr('id')) &&
 		    ($_[0]->attr('id') =~ /MerchantAddress/)});
-	if (@address) {
+	if (@address && length($address[0]->as_text()) > 7 &&
+	    $address[0]->as_text() !~ /http/) {
 	    my $address = $address[0]->as_text();
 	    $deal->addresses($address);
 	}
