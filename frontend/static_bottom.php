@@ -21,6 +21,8 @@
 			<a href="/privacy">Privacy Policy</a>
 			&#160;&#160;&#160;&#160;&#160;&#160;
 			<a href="/terms">Terms of Service</a>
+			&#160;&#160;&#160;&#160;&#160;&#160;
+			<a href="/partner">Run a deal with us</a>
 		</div>
 	</div>
 

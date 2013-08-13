@@ -783,6 +783,8 @@ pushState();
 			&#160;&#160;&#160;&#160;&#160;&#160;
 			<a href="/terms">Terms of Service</a>
 			&#160;&#160;&#160;&#160;&#160;&#160;
+			<a href="/partner">Run a deal with us</a>
+			&#160;&#160;&#160;&#160;&#160;&#160;
 			<a href="javascript:void(0);" style="color:#3A1500" onclick='load(); removeWelcome();'>.</a>
 		</div>
 	</div>
