@@ -16,8 +16,7 @@ Array.indexOf||(Array.prototype.indexOf=function(b){for(var a=0;a<this.length;a+
 <link rel="icon" type="image/png" href="/images/favicon.png"/>
 <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico"/>
 <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'>
-<link rel="stylesheet" type="text/css" href="/map148.css" />
-<link rel="stylesheet" type="text/css" href="/lib/jquery.qtip.css" />
+<link rel="stylesheet" type="text/css" href="/map156version.css" />
 <link rel="stylesheet" href="/lib/jquery-ui-1.8.16.custom.css">
 
 <!----------- GOOGLE ANALYTICS BEGIN ----------->
@@ -53,7 +52,7 @@ Array.indexOf||(Array.prototype.indexOf=function(b){for(var a=0;a<this.length;a+
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
-<script type="text/javascript" src="/helpers.js"></script>
+<script type="text/javascript" src="/helpers156version.js"></script>
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
 
@@ -127,15 +126,19 @@ function loadPopularDeals() {
 	
 	var startTime = $("#pd-start-time").val() + " 00:00:00 UTC";
 	var endTime = $("#pd-end-time").val() + " 23:59:59 UTC";
-	
+	var yelp_rating = $("#pd-yelp-rating").val();
+
+	var low_price = $("#pd-low-price").val();
+	var high_price = $("#pd-high-price").val();
+
 	console.log("startTime: " + startTime);
 	console.log("endTime: " + endTime);
 	
 	
-	ajaxUrl = "most_popular.php?company_id=" + company + "&start_time=" + getEpoch(startTime) + "&end_time=" + getEpoch(endTime) + "&category_id=" + category + "&city_id=" + city;
+	ajaxUrl = "most_popular.php?company_id=" + company + "&start_time=" + getEpoch(startTime) + "&end_time=" + getEpoch(endTime) + "&category_id=" + category + "&city_id=" + city + "&yelp_rating=" + yelp_rating + "&low_price=" + low_price + "&high_price=" + high_price;
 	
 	$("#loading-div").center().show();
-	
+
 	jQuery.ajax({
 		type: "GET",
 		url: ajaxUrl,
@@ -215,8 +218,39 @@ function numberWithCommas(x) {
 
 function showPopularForDay(day) {
   $("#pd-company").val($("#gb-company").val());
+  $("#pd-yelp-rating").val(0); // ignore yelp
+  $("#pd-low-price").val(0);
+  $("#pd-high-price").val(0); // ignore price
   $("#pd-start-time").val(day);
   $("#pd-end-time").val(day);
+  $("#pd-city").val($("#gb-city").val());
+  $("#pd-category").val($("#gb-category").val());
+  loadPopularDeals();
+  changeView("POPULAR");
+  //alert($("#pd-start-time").val());
+}
+
+function showPopularForPriceRange(low_price, high_price) {
+  $("#pd-company").val($("#gb-company").val());
+  $("#pd-yelp-rating").val(0); // ignore yelp
+  $("#pd-low-price").val(low_price);
+  $("#pd-high-price").val(high_price);
+  $("#pd-start-time").val($("#gb-start-time").val());
+  $("#pd-end-time").val($("#gb-end-time").val());
+  $("#pd-city").val($("#gb-city").val());
+  $("#pd-category").val($("#gb-category").val());
+  loadPopularDeals();
+  changeView("POPULAR");
+
+
+}
+
+
+function showPopularForYelpRating(yelp_rating) {
+  $("#pd-yelp-rating").val(yelp_rating);
+  $("#pd-company").val($("#gb-company").val());
+  $("#pd-start-time").val($("#gb-start-time").val());
+  $("#pd-end-time").val($("#gb-end-time").val());
   $("#pd-city").val($("#gb-city").val());
   $("#pd-category").val($("#gb-category").val());
   loadPopularDeals();
@@ -272,6 +306,23 @@ function drawPriceChart() {
   data.addRows(priceGraphData);
   
   var chart = new google.visualization.ColumnChart(document.getElementById('price_chart_div'));
+
+  // The select handler. Call the chart's getSelection() method      
+  function priceRangeHandler() {
+    var selectedItem = chart.getSelection()[0];
+    if (selectedItem) {
+      var value = data.getValue(selectedItem.row, 0);
+      var low_price = value.match(/([0-9\.]+)/g)[0];
+      var high_price = value.match(/([0-9\.]+)/g)[1];
+      showPopularForPriceRange(low_price, high_price);
+    }
+  }
+  // Listen for the 'select' event, and call my function selectHandler() when
+  // the user selects something on the chart. 
+  google.visualization.events.addListener(chart, 'select', priceRangeHandler);
+
+
+
   
   chart.draw(data, options);
 }
@@ -295,6 +346,21 @@ function drawYelpChart() {
   
   var chart = new google.visualization.ColumnChart(document.getElementById('yelp_chart_div'));
   
+
+  // The select handler. Call the chart's getSelection() method      
+  function yelpHandler() {
+    var selectedItem = chart.getSelection()[0];
+    if (selectedItem) {
+      var value = data.getValue(selectedItem.row, 0);
+      showPopularForYelpRating(value);
+      //alert('The user selected ' + value);
+    }
+  }
+  // Listen for the 'select' event, and call my function selectHandler() when
+  // the user selects something on the chart. 
+  google.visualization.events.addListener(chart, 'select', yelpHandler);
+
+
   chart.draw(data, options);
 }
 
@@ -494,6 +560,9 @@ function drawYelpChart() {
 
 		<input type="text" id="pd-start-time" placeholder="Start time">			
 		<input type="text" id="pd-end-time" placeholder="End time">	
+                <input type="hidden" id="pd-yelp-rating">
+                <input type="hidden" id="pd-low-price">
+                <input type="hidden" id="pd-high-price">
 
 		<select id="pd-city">
                   <option value="0" >All Cities</option>
@@ -556,7 +625,7 @@ function drawYelpChart() {
 	
 	
 	
-	<div id="loading-div"><img src="/images/loading-spinner.gif"></div>
+	<div id="loading-div"><img src="/images/loadinfo.gif"></div>
 
 	
 </body>

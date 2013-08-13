@@ -2,46 +2,21 @@
 
 require("db_user.php");
 
-// This file is EITHER required from index.php OR called via AJAX from the
-// application. If required from index.php, then index.php has already set
-// $params_arr. If called via AJAX from the application, then the parameters are
-// set in the URL.
-
-if (isset($params_arr)) {
-	// If $params_arr is set, this file is called from index.php which already
-	// set $params_arr
-} else {
-	// If we're here, this file is called via AJAX from deelio.js and the params
-	// are specified in the URL
-	$params_arr = $_GET;
-}
-
+$params_arr = $_GET;
 
 
 echo("<!-- \$params_arr in deal_html_from_url_params:\n");
 print_r($params_arr);
 echo("-->");
 
-
-
 require_once("deals_index_from_url_params.php");
 
-// $params_arr is defined in index.php. It's the params from last_view or from
-// the URL. If this file is called via AJAX from the main Deelio application,
-// then $params_arr is set above to the GET paramters passed in by the application.
 $deals_index = deals_index_from_url_params($params_arr, $deals_con, $users_con, $memcache, $cache_life);
 
 $num_deals = count($deals_index);
 
-
-
-
 require_once("deal_html_from_deals_index.php");
 
-
-// A not set p must be set to 1 because index.php cannot pass a p (or any) 
-// parameter, and we want the index.php require of this file to show just one
-// page of deals
 $p_param = isset($params_arr['p']) ? $params_arr['p'] : 1;
 
 
@@ -53,14 +28,25 @@ if (!preg_match("/^[0-9]+$/", $i_param)) {
 	$i_param = $citiesReverse[$i_param];
 }
 
-
-$items_per_page = 30;
+$items_per_page = 25;
 
 if ($p_param > 0) {
 	$deals_index = array_slice($deals_index, (($p_param - 1) * $items_per_page), ($items_per_page));
 }
 
-$html = deal_html_from_deals_index($deals_index, $deals_con, $i_param);
+
+if (isset($params_arr['seo'])) {
+	// This file is being called from mod_rewrite to generate seo output
+	$html = deal_html_from_deals_index($deals_index, $deals_con, $i_param, 0, 1);
+} else {
+
+	if (isset($params_arr['v']) && $params_arr['v'] == "SINGLE-CATEGORY") {
+		$html = deal_html_from_deals_index($deals_index, $deals_con, $i_param, 1, 0);
+	} else {
+		$html = deal_html_from_deals_index($deals_index, $deals_con, $i_param, 0, 0);
+	}
+}
+
 
 /*
 if ($p_param > 0 && count($deals_index) >= $items_per_page) {
@@ -70,6 +56,7 @@ HTML;
 
 }
 */
+
 
 
 
@@ -86,6 +73,7 @@ if (isset($params_arr['seo'])) {
 		<a href='http://dealupa.com/dallas/daily-deals#!'>Daily Deals in Dallas</a><br>
 		<a href='http://dealupa.com/denver/daily-deals#!'>Daily Deals in Denver</a><br>
 		<a href='http://dealupa.com/detroit/daily-deals#!'>Daily Deals in Detroit</a><br>
+		<a href='http://dealupa.com/honolulu/daily-deals#!'>Daily Deals in Honolulu</a><br>
 		<a href='http://dealupa.com/houston/daily-deals#!'>Daily Deals in Houston</a><br>
 		<a href='http://dealupa.com/kansas-city/daily-deals#!'>Daily Deals in Kansas&#160;City</a><br>
 		<a href='http://dealupa.com/las-vegas/daily-deals#!'>Daily Deals in Las&#160;Vegas</a><br>
@@ -112,14 +100,30 @@ if (isset($params_arr['seo'])) {
 	</div>
 HTML;
 
-	$html = "<h1>Daily Deals in " . $cities[$i_param] . "</h1>" . $html;
-	$html = "<head><meta charset='utf-8' /><link rel='stylesheet' type='text/css' href='/map148.css' /></head>" . $html;
 
+	$edition = $cities[$i_param];
+
+	$full_html = <<<HTML
+	
+	<html>
+		<head>
+			<title>Daily Deals in {$edition}</title>
+			<meta charset='utf-8' /><link rel='stylesheet' type='text/css' href='/map152.css' />
+			<meta name="keywords" content="daily deals, coupons, discounts, groupon, living social, gilt city, bloomspot, scoutmob, goldstar, spa, restaurant, hair removal, food" />
+			<meta name="description" content="All the best daily deals in {$edition} in one email." />
+		</head>
+		
+		<body>
+			{$html}
+		</body>
+	</html>
+HTML;
+
+	echo($full_html);
+	exit;
+		
 }
 
-
-
 echo("<span id='list-view-data' num-deals=" . $num_deals . "></span>" . $html);
-
 
 ?>

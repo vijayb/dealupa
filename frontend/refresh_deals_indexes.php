@@ -5,6 +5,7 @@ set_time_limit(0);
 require_once("array_constants.php");
 require("db.php");
 require("get_deal.php");
+require("dealupa_score.php");
 
 $cache_life = 86400;
 
@@ -29,10 +30,11 @@ function getDealsIndex($sort_order, $requested_city_id, $deals_con, $memcache, $
 	
 	$return_deals_index = $memcache->get("deals_index_" . $sort_order . "_" . $requested_city_id);
 
-	if (!$return_deals_index || isset($_GET["reload_cache"])) {
+	//	if (!$return_deals_index || isset($_GET["reload_cache"])) {
+	if (isset($_GET["reload_cache"])) {
 
 		$query = "
-			SELECT id from Deals777
+			SELECT id from Deals
 			WHERE
 			((expired=0) AND (upcoming=0) AND (dup=0) AND 
 			 (deadline IS NULL or 
@@ -130,6 +132,9 @@ function getDealsIndex($sort_order, $requested_city_id, $deals_con, $memcache, $
 		$memcache->set("deals_index_DEADLINE", $deals_index_DEADLINE, false, $cache_life);
 		*/
 		
+	} elseif (!$return_deals_index) {
+	  print "No index currently available, please wait\n";
+	  return;
 	}
 	
 	$return_deals_index = $memcache->get("deals_index_" . $sort_order . "_" . $requested_city_id);
@@ -141,8 +146,13 @@ function getDealsIndex($sort_order, $requested_city_id, $deals_con, $memcache, $
 
 
 function inEdition(&$deal, $city_id) {
-  if ($city_id == 500) {
-    return containsCat($deal, 9);
+  if ($city_id == 1) {
+    // For city_id==1 (i.e., unknown edition) we'll only allow it into the edition index
+    // if that's the only edition it has. Many border city deals (e.g., baltimore/washington dc)
+    // might also have an edition of 1 too, and we don't really want to add them to the index,
+    // which would become very large if we did let them in. This means that the unknown edition
+    // might be missing some deals. We'll live with that.
+    return isset($deal["Cities"]) && count($deal["Cities"]) == 1 && hasCityId($deal, 1);
   } else if ($city_id == 2) {
     return hasCityId($deal, 2);
   } else {
@@ -158,7 +168,19 @@ function inBoundingBox(&$deal, $city_id) {
     
   global $swLat, $swLng, $neLat, $neLng;    
     
-  if (hasCityId($deal, $city_id)) {
+  // Category 43 is "Road trip". We only allow Road trip deals to be
+  // "inBoundingBox" if they're within the lat-long for the city.
+  // We do this because some deal sites put Road Trip deals in many
+  // editions, and we don't want to show them in all those Dealupa
+  // editions. We let "Around the World" (cat 42) through tho, because
+  // those deals are actually truly interesting in all editions.
+  //
+  // Also we only do the hasCityId check if the deal has no addresses.
+  // So for example, a deal which has an address in San Francisco
+  // but also has Seattle as a city_id, is NOT going to be allowed
+  // into the Seattle edition. We only pay attention to the city_id
+  // if a deal has no address.
+  if (!isset($deal["Addresses"]) && hasCityId($deal, $city_id) && !containsCat($deal, 43)) {
     return 1;
   }
 
@@ -234,8 +256,8 @@ function sort_sold($a, $b) {
   $deal_a = getDealById($a, $deals_con, $memcache, $cache_life);
   $deal_b = getDealById($b, $deals_con, $memcache, $cache_life);
   
-  $score_a = $deal_a["num_purchased"];	
-  $score_b = $deal_b["num_purchased"];
+  $score_a = dealupaScore($deal_a);
+  $score_b = dealupaScore($deal_b);
   
   return ($score_b - $score_a);
 }
@@ -251,8 +273,8 @@ function sort_new($a, $b) {
   $deal_a = getDealById($a, $deals_con, $memcache, $cache_life);
   $deal_b = getDealById($b, $deals_con, $memcache, $cache_life);
   
-  $discovered_a = strtotime(str_replace("-", "/", $deal_a["discovered"]));
-  $discovered_b = strtotime(str_replace("-", "/", $deal_b["discovered"]));
+  $discovered_a = $deal_a["discovered"];
+  $discovered_b = $deal_b["discovered"];
   
   return ($discovered_b - $discovered_a);
 }
@@ -284,8 +306,8 @@ function sort_deadline($a, $b) {
   $deal_a = getDealById($a, $deals_con, $memcache, $cache_life);
   $deal_b = getDealById($b, $deals_con, $memcache, $cache_life);
   
-  $deadline_a = strtotime(str_replace("-", "/", $deal_a["deadline"]));
-  $deadline_b = strtotime(str_replace("-", "/", $deal_b["deadline"]));
+  $deadline_a = $deal_a["deadline"];
+  $deadline_b = $deal_b["deadline"];
   
   if ($deadline_a == "") $deadline_a = 1000000000000;
   if ($deadline_b == "") $deadline_b = 1000000000000;

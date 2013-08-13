@@ -1,9 +1,171 @@
 <?php
 
 require_once("array_constants.php");
+require_once("db_user.php");
+require_once("db.php");
+
+function getCategoryInformation() {
+	$memcache = new Memcache;
+	$success = $memcache->connect('localhost', 11211);
+
+	global $deals_con;
+
+	$categoryInformationKey = "categoryInformation";
+	$categoryInformation = $memcache->get($categoryInformationKey);
+
+	if (!$categoryInformation) {
+		$query = "SELECT * FROM CategoryInfo";
+
+		$result = mysql_query($query, $deals_con);
+		if (!$result) die('Invalid query: ' . mysql_error());
+
+		$categoryInformation = array();
+		while ($row = mysql_fetch_assoc($result)) {
+			array_push($categoryInformation, $row);
+		}
+
+		$memcache->set($categoryInformationKey, $categoryInformation, false, 3600);
+	}
+	
+	return $categoryInformation;
+}
+
+
+
+function get_simple_categories_array() {
+	$get_categories = getCategoryInformation();
+	
+	$return_categories = array();
+	$return_categories[0] = "Uncategorized";
+	
+	for ($j = 0; $j < count($get_categories); $j++) {
+		$return_categories[$j + 1] = $get_categories[$j]["name"];
+	}
+	
+	return $return_categories;
+}
+
+
+
+
+
+
+function initialize_categories_if_needed($user_id) {
+	
+	global $users_con;
+	
+	$query = "SELECT id FROM CategoryPreferences WHERE user_id=$user_id LIMIT 1";
+	$result = mysql_query($query, $users_con);
+	if (!$result) die('Invalid query: ' . mysql_error());
+
+	if (mysql_num_rows($result) > 0) {
+		return;
+	}	
+	
+	
+	if (isset($user_id) && $user_id != "") {
+		$categoryInformation = getCategoryInformation();
+		
+		for ($i = 0; $i < count($categoryInformation); $i++) {
+			$category_id = intval($categoryInformation[$i]["id"]);
+		
+			$insert_sql = "INSERT INTO CategoryPreferences (user_id, category_id, rank) VALUES ($user_id, $category_id, 1) ON DUPLICATE KEY UPDATE id=id";
+			$result = mysql_query($insert_sql, $users_con);
+		}
+	}
+}
+
+
+function set_edition_if_not_set($user_id, $latitude, $longitude) {
+
+	global $users_con;
+
+	$edition = calculate_city_edition_from_lat_lng($latitude, $longitude);
+	
+	$query = "UPDATE Users SET edition=$edition WHERE user_id=$user_id AND edition IS NULL";
+	
+	$result = mysql_query($query, $users_con);
+	if (!$result) {
+	  die('Invalid query: ' . mysql_error());
+	}
+}
+
+
+
+function generate_password_link($email) {
+	return generate_action_link($email) . "&action=reset_password";
+}
+
+
+function generate_settings_link($email) {
+	return generate_action_link($email) . "&action=show_settings";
+}
+
+function generate_logged_in_link($email) {
+	return generate_action_link($email) . "&action=email_login";
+}
+
+
+function generate_action_link($email) {
+
+	global $users_con;
+	global $domain_ac;
+
+	$query = "SELECT user_id, user_created FROM Users WHERE email='$email' LIMIT 1";
+	
+	$result = mysql_query($query, $users_con);
+
+	if ($row = mysql_fetch_assoc($result)) {
+		$user_id = $row['user_id'];
+		$user_created = $row['user_created'];
+		$token = generate_user_token($user_id, $user_created);
+	} else {
+		return "0";
+	}
+
+	return($domain_ac . "/?id=$user_id&token=$token");
+
+}
+
+function check_token($user_id, $token) {
+	$correct_token = generate_user_token_from_user_id($user_id);
+	if ($token == $correct_token) {
+		return 1;
+	}
+
+	return 0;
+}
+
+
+function generate_user_token($user_id, $user_created) {
+	return sha1($user_id . $user_created);
+}
+
+
+function generate_user_token_from_user_id($user_id) {
+
+	global $users_con;
+	
+	$query = "SELECT user_created FROM Users WHERE user_id='$user_id' LIMIT 1";
+	
+	$result = mysql_query($query, $users_con);
+
+	if ($row = mysql_fetch_assoc($result)) {
+		$user_created = $row['user_created'];
+		$token = generate_user_token($user_id, $user_created);
+	} else {
+		return "0";
+	}
+
+	return($token);
+
+}
+
+
+
 
 function days_ago($d) { 
-	$ts = time() - strtotime(str_replace("-","/",$d)); 
+	$ts = time() - $d; 
 	if ($ts > 86400) {
 		$val = floor($ts/86400);
 	} else {
@@ -14,7 +176,7 @@ function days_ago($d) {
 
 
 function has_expired($d) {
-	$remaining = strtotime(str_replace("-","/",$d)) - time();
+	$remaining = $d - time();
 	if ($remaining > 0) {
 		return false;
 	} else {
@@ -23,7 +185,7 @@ function has_expired($d) {
 }
 
 function time_left($d) {
-	$remaining = strtotime(str_replace("-","/",$d)) - time();
+	$remaining = $d - time();
 	$days_remaining = floor($remaining / 86400);
 	$hours_remaining = floor(($remaining % 86400) / 3600);
 	$minutes_remaining = floor(($remaining % 3600) / 60);	
@@ -105,7 +267,8 @@ function get_discount($price, $value) {
 	return round($discount);
 }
 
-
+/*
+// Old version before we had a 1 edition
 function calculate_city_edition_from_lat_lng($lat, $lng) {
 
 	global $cityLat;
@@ -114,7 +277,7 @@ function calculate_city_edition_from_lat_lng($lat, $lng) {
 	$minDistance = 1000000;
 	$currDistance;
 	
-	$edition;
+	$edition = 3;
 
 	for ($i = 0; $i < count($cityLat); $i++) {
 		if ($cityLat[$i] != 0 && $i != 500) {
@@ -128,23 +291,89 @@ function calculate_city_edition_from_lat_lng($lat, $lng) {
 	
 	return $edition;
 }
+*/
 
-function distance($lat1, $lon1, $lat2, $lon2) {
-        $radlat1 = pi() * $lat1 / 180;
-        $radlat2 = pi() * $lat2 / 180;
-        $radlon1 = pi() * $lon1 / 180;
-        $radlon2 = pi() * $lon2 / 180;
-        $theta = $lon1 - $lon2;
-        $radtheta = pi() * $theta / 180;
-        $dist = sin($radlat1) * sin($radlat2) + cos($radlat1) * cos($radlat2) * cos($radtheta);
- 
-        $dist = acos($dist);
-        $dist = $dist * 180 / pi();
-        $dist = $dist * 60 * 1.1515;
-        $dist = $dist * 1.609344;
- 
-        return $dist;
+
+
+function calculate_city_edition_from_lat_lng($lat, $lng) {
+	
+	global $cities;
+	global $swLat, $swLng, $neLat, $neLng, $center_lat, $center_lng;
+
+	$edition = 1;
+	$min_distance = 10000000;
+	
+	for ($i = 3; $i <= count($cities); $i++) {
+		if ($swLng[$i] <= $lng && $swLat[$i] <= $lat && $neLng[$i] >= $lng && $neLat[$i] >= $lat) {
+
+			$distance = distance($lat, $lng, $center_lat[$i], $center_lng[$i]);
+			if ($distance < $min_distance) {
+				$edition = $i;
+				$min_distance = $distance;
+			}
+		}
+	}
+	
+	return $edition;
 }
+
+
+
+
+
+
+
+
+
+function distance($latitude1, $longitude1, $latitude2, $longitude2) {
+    $theta = $longitude1 - $longitude2;
+    $miles = (sin(deg2rad($latitude1)) * sin(deg2rad($latitude2))) + (cos(deg2rad($latitude1)) * cos(deg2rad($latitude2)) * cos(deg2rad($theta)));
+    $miles = acos($miles);
+    $miles = rad2deg($miles);
+    return ($miles * 60 * 1.1515);
+}
+
+
+function sendEmail($to, $from, $subject, $html) {
+
+	if ($from == "") {
+		$from = "Dealupa <founders@dealupa.com>";
+	}
+
+  $request = new HttpRequest('https://api.mailgun.net/v2/dealupamail.com/messages', HttpRequest::METH_POST);
+  $auth = base64_encode('api:key-68imhgvpoa-6uw3cl8728kcs9brvlmr9');
+  $request->setHeaders(array('Authorization' => 'Basic '.$auth));
+  $request->setPostFields(array('from' => $from,
+								'to' => $to,
+								'subject' => $subject,
+								'html' => $html));
+  $request->send();
+  return $request;
+}
+
+
+
+
+function check_valid_id_token_pair($user_id, $token) {
+
+	global $users_con;
+
+	$query = "SELECT user_created FROM Users WHERE user_id='$user_id' LIMIT 1";
+	
+	$result = mysql_query($query, $users_con);
+	if ($row = mysql_fetch_assoc($result)) {
+		$created = $row["user_created"];
+
+		$token_db = sha1($user_id . $created);
+		
+		if ($token_db == $token) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+
 
 
 

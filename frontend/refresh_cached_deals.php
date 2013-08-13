@@ -1,4 +1,8 @@
 <?php
+// REMOVE THIS LINE:
+//require("array_constants.php");
+
+
 // The purpose of this script is to keep recently updated deals fresh in
 // memcache. So e.g., when a deal is recrawled, its last_updated field
 // is set to the current time. We want to make sure that the cache
@@ -46,7 +50,7 @@ if (!$last_updated || isset($_GET["reload_cache"])) {
 $seconds_since_last_updated = (time() - $last_updated) + 60;
 
 $query = 
-  "SELECT id from Deals777
+  "SELECT id from Deals
    WHERE TIME_TO_SEC(TIMEDIFF(UTC_TIMESTAMP(), last_updated)) < 
    $seconds_since_last_updated";
 
@@ -56,13 +60,57 @@ if (!$result) {
 }
 
 $count = 0;
+// REMOVE:
+//$num_purchased_count = 0;
+//$purchased = array();
+//$trending = array();
 while ($row = @mysql_fetch_assoc($result)) {
   //echo "Refreshing article with id: ".$row['id']." in cache<BR>\n";
-  refreshDealById($row['id'], $deals_con, $memcache, $cache_life);
+  $deal = refreshDealById($row['id'], $deals_con, $memcache, $cache_life);
+  /*
+  if (isset($deal["num_purchased"]) && !$deal["expired"] && (!isset($deal["deadline"]) || $deal["deadline"] > time())) { 
+    
+    $num_purchased_count++; 
+
+    if (isset($deal["num_purchased"])) {
+      if (isset($purchased[$deal["company_id"]])) {
+	$purchased[$deal["company_id"]] += 1;
+      } else {
+	$purchased[$deal["company_id"]] = 1;
+      }
+    }
+    
+    if (isset($deal["trending"])) {
+      echo "Set trending for ".$deal["id"]." company_id_".$deal["company_id"]." ".$deal["num_purchased"]."<BR>\n";
+      if (isset($trending[$deal["company_id"]])) {
+	$trending[$deal["company_id"]] += 1;
+      } else {
+	$trending[$deal["company_id"]] = 1;
+      }
+    } 
+  }
+  */
+
+
+
   $count++;
 }
 echo "Successfully refreshed $count deals since the last update [$seconds_since_last_updated seconds ago]";
 
+/*
+echo " num_purchased_count: $num_purchased_count";
+
+echo "<BR><BR>\n";
+ksort($purchased);
+foreach ($purchased as $company_id => $count) {
+  $trending_count = 0;
+  if (isset($trending[$company_id])) {
+    $trending_count = $trending[$company_id];
+  }
+
+  echo $companies[$company_id]." ($company_id) : $trending_count out of $count<BR>\n";
+}
+*/
 
 // If we've gotten this far then we successfully updated the cache
 // with deals that have recently been updated. So we can

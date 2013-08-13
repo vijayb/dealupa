@@ -20,7 +20,7 @@ $swLng = $_GET["swLng"];
 $neLat = $_GET["neLat"];
 $neLng = $_GET["neLng"];
 
-
+$categories = get_simple_categories_array();
 
 
 ////////////////////////////////////////////////////////////////

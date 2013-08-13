@@ -1,5 +1,7 @@
 <?php
 
+require("helpers.php");
+
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
@@ -26,7 +28,7 @@ $neLat = $_GET["neLat"];
 $neLng = $_GET["neLng"];
 
 
-
+$categories = get_simple_categories_array();
 
 ////////////////////////////////////////////////////////////////
 ///////////////////// MEMCACHE SECTION /////////////////////////
@@ -130,7 +132,7 @@ for ($i = 0; $i < count($deals_index); $i++) {
  		 if ($key != "text") {
 			$node->setAttribute($key, $value);
 		   }
-		} else if (strcmp($key, "Addresses") != 0) {
+		} else if (strcmp($key, "Addresses") != 0 && strcmp($key, "NumPurchased") != 0) {
 		  // The arrays inside $deal have the name of the tables
 		  // they were populated from (Images, Categories, Cities).
 		  // For the sake of backward compatibility we want to map
@@ -149,7 +151,14 @@ for ($i = 0; $i < count($deals_index); $i++) {
 			$child_node = $dom->createElement($singular[$key]);
 
 			foreach ($child_array[$k] as $childkey => $childvalue) {
-			  $child_node->setAttribute($childkey, $childvalue);
+			
+				if ($childkey == "image_url") {
+					$orig_image = $childvalue;
+					$s3_url = "http://dealupa_images.s3.amazonaws.com/" . sha1($orig_image) . "_small";
+					$child_node->setAttribute($childkey, $s3_url);
+				} else {
+					$child_node->setAttribute($childkey, $childvalue);
+				}
 			}
 
 			$node->appendChild($child_node);

@@ -25,8 +25,20 @@ if (!$solr->ping()) {
 }
 
 
+$start_time = $_GET['start_time'] - 100;
+$end_time = $_GET['end_time'] + 100;
 
-$query = "dup:0 AND num_purchased:[1 TO *]";
+$query = "dup:0 AND num_purchased:[1 TO *] AND discovered:[$start_time TO $end_time]";
+
+if (isset($_GET['yelp_rating']) && $_GET['yelp_rating'] != 0) {
+  $query .= " AND yelp_rating:".$_GET['yelp_rating'];
+}
+
+if (isset($_GET['low_price']) && isset($_GET['high_price']) &&
+    $_GET['high_price'] > 0) {
+  $query .= " AND price:[".$_GET['low_price']." TO ".$_GET['high_price']."]";
+
+}
 
 if (isset($_GET['company_id']) && $_GET['company_id'] != "0") {
   if ($_GET['company_id'] == "2") {
@@ -83,7 +95,7 @@ if ($response->getHttpStatus() == 200) {
     $count = 0;
     arsort($most_popular);
     foreach ($most_popular as $deal_id => $value) {
-      $html = deal_html_from_deal_id($deal_id, $deals_con, 0);
+      $html = deal_html_from_deal_id($deal_id, $deals_con, 0, 0, 1);
       echo "$html";
       $count++;
       if ($count >= $MAX_RESULTS) {
