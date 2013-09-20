@@ -56,9 +56,17 @@
 
 	my @buy_box = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "deal-buy-box")});
+		    ($_[0]->attr('id') eq "deal-buy-box" ||
+		     $_[0]->attr('id') eq "big-price")});
 
 	if (@buy_box) {
+	    if ($buy_box[0]->as_HTML() =~ />([0-9\.]+)<sup/) {
+		$deal->price($1);
+	    }
+
+	    if ($buy_box[0]->as_HTML() =~ />\$([0-9\.]+)<\/strike/) {
+		$deal->value($1);
+	    }
 
 	    my @price = $buy_box[0]->look_down(
 		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
@@ -93,8 +101,11 @@
 
 
 	my @text = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "description")});
+	    sub{$_[0]->tag() eq 'div' && 
+		    ((defined($_[0]->attr('class')) &&
+		     $_[0]->attr('class') eq "description") ||
+		     (defined($_[0]->attr('id')) &&
+		     $_[0]->attr('id') eq "hotel-description"))});
 	if (@text) {
 	    my $text = $text[0]->as_HTML();
 	    $text =~ s/<\/?div[^>]*>//g;
@@ -103,6 +114,7 @@
 	    # LivingSocial puts the website in the text with a target=_blank
 	    my @website = $text[0]->look_down(
 		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
+			$_[0]->attr('href') =~ /^http/ &&
 			defined($_[0]->attr('target')) &&
 			$_[0]->attr('target') =~ /blank/});
 	    
@@ -125,15 +137,34 @@
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('style')) &&
 		    defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "slide")});
-	
-	foreach my $image_container (@images) {
-	    my @image = $image_container->look_down(
-		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
-			($_[0]->attr('src') =~ /^\/\//)});
+	if (@images) {
+	    foreach my $image_container (@images) {
+		my @image = $image_container->look_down(
+		    sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
+			    ($_[0]->attr('src') =~ /^\/\//)});
+		
+		if (@image) {
+		    my $image_url = "http:".$image[0]->attr('src');
+		    $deal->image_urls($image_url);
+		}
+	    }
+	} else {
+	    my @image_container = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "other-images")});
+	    if (@image_container) {
+		my @images = $image_container[0]->look_down(
+		    sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
+			    ($_[0]->attr('src') =~ /^http/)});
 
-	    if (@image) {
-		my $image_url = "http:".$image[0]->attr('src');
-		$deal->image_urls($image_url);
+		my $count = 0;
+		foreach my $image (@images) {
+		    $deal->image_urls($image->attr('src'));
+		    $count++;
+		    if ($count >= 7) {
+			last;
+		    }
+		}
 	    }
 	}
 
@@ -210,6 +241,18 @@
 	    $name =~ s/\s+$//;
 	    $name =~ s/-.*+$//;
 	    $deal->name($name);
+	} else {
+	    @name = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "property-name")});
+	    if (@name) {
+		my $name = $name[0]->as_text();
+		$deal->name($name);
+		if (defined($deal->text()) && $deal->text() =~
+		    /href=\"(http[^\"]+)\">/) {
+		    $deal->website($1);
+		}
+	    }
 	}
 
 
@@ -240,6 +283,17 @@
 		    $phone =~ s/[^0-9]//g;
 		    $deal->phone($phone);
 		}
+	    }
+	} else {
+	    my @address =  $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "street_1"});
+	    if (@address) {
+		my $clean_address = $address[0]->as_HTML();
+		$clean_address =~ s/<[^>]*>/ /g;
+		$clean_address =~ s/^\s*//;
+		$clean_address =~ s/\s*$//;
+		$deal->addresses($clean_address);
 	    }
 	}
 
