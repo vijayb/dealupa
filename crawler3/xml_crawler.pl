@@ -187,6 +187,10 @@ sub doWork {
 	    
 		
 		$num_inserted++;
+		
+		#if ($num_inserted >= 5) {
+		#    last;
+		#}
 	    }
 
 

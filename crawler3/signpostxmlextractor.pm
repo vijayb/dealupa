@@ -43,14 +43,14 @@
 		$deal->value($value->as_text());
 	    }
 
-	    my $num_purchased =
-		$deal_tag->look_down(sub{$_[0]->tag() eq "quantity_sold"});
-	    $num_purchased =~ s/\s,//g;
-	    if (defined($num_purchased) && $num_purchased =~ /^[0-9]+$/) {
-		$deal->num_purchased($num_purchased->as_text());
-	    }
+	    #my $num_purchased =
+	    #$deal_tag->look_down(sub{$_[0]->tag() eq "quantity_sold"});
+	    #$num_purchased =~ s/\s,//g;
+	    #if (defined($num_purchased) && $num_purchased =~ /^[0-9]+$/) {
+	    #$deal->num_purchased($num_purchased->as_text());
+	    #}
 
-	    my $text = $deal_tag->look_down(sub{$_[0]->tag() eq "details"});
+	    my $text = $deal_tag->look_down(sub{$_[0]->tag() eq "description"});
 	    if (defined($text)) {
 		$deal->text($text->as_text());
 	    }
@@ -66,17 +66,17 @@
 	    }
 
 	    my $deadline = 
-		$deal_tag->look_down(sub{$_[0]->tag() eq "end_date"});
+		$deal_tag->look_down(sub{$_[0]->tag() eq "sale_end_date"});
 	    if (defined($deadline) && $deadline->as_text() =~
-		/([0-9]{4}-[0-9]{2}-[0-9]{2})T([0-9]{2}:[0-9]{2}:[0-9]{2})/) {
-		$deal->deadline($1." ".$2);
+		/([0-9]{4}-[0-9]{2}-[0-9]{2})/) {
+		$deal->deadline($1." 01:01:01");
 	    }
 
 	    my $expires = $deal_tag->look_down(
-		sub{$_[0]->tag() eq "voucher_expiration_date"});
+		sub{$_[0]->tag() eq "redemption_end_date"});
 	    if (defined($expires) && $expires->as_text() =~
-		/([0-9]{4}-[0-9]{2}-[0-9]{2})T([0-9]{2}:[0-9]{2}:[0-9]{2})/) {
-		$deal->expires($1." ".$2);
+		/([0-9]{4}-[0-9]{2}-[0-9]{2})/) {
+		$deal->expires($1." 01:01:01");
 	    }
 
 
@@ -106,7 +106,7 @@
 		}
 
 		my $street =
-		    $location->look_down(sub{$_[0]->tag() eq "address"});
+		    $location->look_down(sub{$_[0]->tag() eq "street"});
 		my $city =
 		    $location->look_down(sub{$_[0]->tag() eq "city"});
 		my $state =
