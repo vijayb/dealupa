@@ -65,20 +65,25 @@ $(document).ready(function() {
     $(document).keyup(function(e) {
 	var code = e.keyCode || e.which;
 
-	if(code == 13) {
-
-	  if (checkCategoriesValid()) {
-	    //$("form#myform1").submit();
-	  }
-	}
-
 	if(code == 27) {
-	  if ($('input[name=is_nation]').is(':checked')) {
-	    $('input[name=is_nation]').attr('checked', false);
-	  } else {
-	    $('input[name=is_nation]').attr('checked', true);
+	  if (checkCategoriesValid()) {
+	    $("#categorybutton").click();
 	  }
 	}
+
+	if(code == 32) {
+	  //alert('hello');
+	  $('option:selected', 'select').removeAttr('selected').next('option').attr('selected', 'selected');
+	  $("#regexbutton").click();
+	}
+
+	//if(code == 27) {
+	//  if ($('input[name=is_nation]').is(':checked')) {
+	//    $('input[name=is_nation]').attr('checked', false);
+	//  } else {
+	//    $('input[name=is_nation]').attr('checked', true);
+	//  }
+	//}
     });
 
 
@@ -814,12 +819,12 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     $_POST["andregex"] = "";
   }
 
-  echo "<form action='/tools/regex_classifier_tool.php' method=post align=center>\n";
+  echo "<form id=categoryform action='/tools/regex_classifier_tool.php' method=post align=center>\n";
   echo "Regex: <input type='text' name='regex' $regex_value size=70 /><BR>\n";
   echo "And-Regex: <input type='text' name='andregex' $and_regex_value size=70 /><BR>\n";
   echo "&nbsp; Neg-regex: <input type='text' name='negregex' $neg_regex_value size=40 /><BR>\n";
 
-  echo "<select name=doc_section>\n";
+  echo "<select id=regexselector name=doc_section>\n";
   for ($i=0; $i< count($options); $i++) {
     echo "\t<option value='$i' ";
     if ($_POST["doc_section"] == $i) {
@@ -842,7 +847,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "</select>\n";
 
 
-  echo "<input name='regex_search' type=submit value='Apply regex' />\n";
+  echo "<input id=regexbutton name='regex_search' type=submit value='Apply regex' />\n";
 
 
 
@@ -855,7 +860,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     echo "2. <INPUT id=\"category_id2\" $cat2_value type=\"text\" name=\"category_id2\" autocomplete=\"array:categories\"><BR>\n";
     echo "3. <INPUT id=\"category_id3\" $cat3_value type=\"text\" name=\"category_id3\" autocomplete=\"array:categories\"><BR>\n";
     echo "4. <INPUT id=\"category_id4\" $cat4_value type=\"text\" name=\"category_id4\" autocomplete=\"array:categories\"><BR>\n";
-    echo "<BR><input type=\"submit\" name=\"submit_categories\" value=\"Submit\">\n";
+    echo "<BR><input id=categorybutton type=\"submit\" name=\"submit_categories\" value=\"Submit\">\n";
     echo "</div>\n";
 
     echo "<BR><BR>\n";
