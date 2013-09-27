@@ -40,6 +40,7 @@
 <li><a href="https://50.57.43.108/tools/classifier_fixer.php" target=_panel>Classification fixer</a>
 <li><a href="https://50.57.43.108/tools/address_fixer.php" target=_panel>Address fixer</a>
 <li><a href="https://50.57.43.108/tools/image_fixer.php" target=_panel>Image fixer</a>
+<li><a href="https://50.57.43.108/tools/grade_classifications.php" target=_panel>Grade classifications</a>
 
 <li><a href="http://blog.thedealmix.com/wp-admin" target=_panel>Word Press admin page</a>
 

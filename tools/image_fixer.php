@@ -42,14 +42,14 @@ Deal ID: <input type='text' name='deal_id' onkeypress="return validate(event)"  
 // Make a MySQL Connection
 $con = mysql_connect("localhost", "crawler", "daewoo");
 if (!$con) {
-  die('Error: could not connect. ' . mysql_error());
+  die('Error 1: could not connect. ' . mysql_error());
 }
 mysql_select_db("Deals", $con) or die(mysql_error());
 
 
 $wq_con = mysql_connect("50.57.136.167", "crawler", "daewoo");
 if (!$wq_con) {
-  die('Error: could not connect. ' . mysql_error());
+  die('Error 2: could not connect. ' . mysql_error());
 }
 mysql_select_db("WorkQueue", $wq_con) or die(mysql_error());
 
@@ -231,7 +231,7 @@ function doQuery($query, $con) {
   $result = mysql_query($query, $con);
     
   if (!$result) {
-    die('Error: ' . mysql_error());
+    die('Error 3 [$query]: ' . mysql_error());
   }
   return $result;
 
