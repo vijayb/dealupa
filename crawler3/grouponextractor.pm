@@ -164,7 +164,12 @@
 	my @text = $tree->look_down(
 	    sub{defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') =~ /^write-up/)});
-
+	if (!@text) {
+	    @text = $tree->look_down(
+		sub{$_[0]->tag() eq "div" && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') eq "pitch-content")});
+	}
+	
 	if (@text) {
 	    my $clean_text = $text[0]->as_HTML();
 	    $clean_text =~ s/<[^>]*>/ /g;
@@ -192,6 +197,11 @@
 		    ($_[0]->attr('property') eq "og:image")});
 	if (@image) {
 	    $deal->image_urls($image[0]->attr('content'));
+	}
+
+	my @images = $tree->as_HTML() =~ m/media[\'\"]:[\'\"](http[s]?:\/\/img.grouponcdn[^\"\']*)/g;
+	foreach my $image (@images) {
+	    $deal->image_urls($image);
 	}
 
 	    
