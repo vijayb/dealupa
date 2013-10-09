@@ -32,7 +32,7 @@
 	my $tree = HTML::TreeBuilder->new;
 	my $deal = shift;
 	my $deal_content_ref = shift;
-	
+	$tree->ignore_unknown(0);
 	$tree->parse(decode_utf8 $$deal_content_ref);
 	$tree->eof();
 	
@@ -74,26 +74,19 @@
 	}
 
 
-
-	my $price_regex = "(<span\\s+class=[\'\"]price[\'\"].*)";
-	my $price_filter = "<[^>]+>";
-	my $price = &genericextractor::extractFirstPatternMatched(
-	    $deal_content_ref, $price_regex, $price_filter, "\\\$");
-	if (defined($price) && $price =~ /([0-9,]*\.?[0-9]+)/) {
-	    $price = $1;
+	my @price = $tree->look_down(
+	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "price")});
+	if (@price && $price[0]->as_text() =~ /([0-9,]*\.?[0-9]+)/) {
+	    my $price = $1;
 	    $price =~ s/,//g;
 	    $deal->price($price);  
 	}
 
 
 	my @value = $tree->look_down(
-	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "value")});
-	if (!@value) {
-	    @value = $tree->look_down(
-		sub{defined($_[0]->attr('id')) &&
-			($_[0]->attr('id') eq "discount_details_value")});
-	}
+	    sub{defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') eq "discount-value")});
 
 	if (@value && $value[0]->as_text() =~ /([0-9,]*\.?[0-9]+)/) {
 	    my $value = $1;
@@ -116,23 +109,31 @@
 	if (!defined($deal->expired()) && !$deal->expired()) {
 	    my @deadline = $tree->look_down(
 		sub{$_[0]->tag() eq 'li' &&
-			defined($_[0]->attr('data-deadline')) &&
 			defined($_[0]->attr('class')) &&
-			$_[0]->attr('class') eq "groupon_countdown"});
+			$_[0]->attr('class') eq "countdown-timer"});
 
-	    if (@deadline &&
-		$deadline[0]->attr('data-deadline') =~ /^([0-9]+)$/) {
-		my $timestamp = $1;
-		
-		my ($year, $month, $day, $hour, $minute);
-		($year, $month, $day, $hour, $minute) =
-		    (gmtime($timestamp))[5,4,3,2,1];
-		
-		my $deadline = sprintf("%d-%02d-%02d %02d:%02d:01",
-				       1900+$year, $month+1, $day,
-				       $hour, $minute);
+	    my $days = 0;
+	    my $hours = 0;
+	    my $minutes = 0;
+	    my $deadline_offset = 0;
 
-		$deal->deadline($deadline);
+	    if (@deadline) {
+		my $deadline = $deadline[0]->as_text();
+		if ($deadline =~ /([0-9]{1,2})\sday/i) {
+		    $days = $1;
+		}
+		if ($deadline =~ /([0-9]{2}):([0-9]{2}):[0-9]{2}/) {
+		    $hours = $1;
+		    $minutes = $2;
+		}
+
+		$deadline_offset = ($days*24*60*60)+($hours*60*60)+
+		    ($minutes*60);
+		
+		if ($deadline_offset > 0) {
+		    $deadline = crawlerutils::gmtNow($deadline_offset);
+		    $deal->deadline($deadline);
+		}
 	    }
 	}
 
@@ -160,10 +161,18 @@
 	    }
 	}
 
-	my $text = &genericextractor::extractBetweenPatterns(
-	    $deal_content_ref, "<div\\s+class=[\'\"]pitch_content[\'\"]",
-	    "<\\\/div>");
-	$deal->text($text);  
+	my @text = $tree->look_down(
+	    sub{defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /^write-up/)});
+
+	if (@text) {
+	    my $clean_text = $text[0]->as_HTML();
+	    $clean_text =~ s/<[^>]*>/ /g;
+	    $clean_text =~ s/\s\s+/ /g;
+	    $deal->text($clean_text);  
+	}
+
+
 
 	my $fine_print = &genericextractor::extractBetweenPatterns(
 	    $deal_content_ref, "The Fine Print<\\\/h3>",
@@ -176,51 +185,19 @@
 	$deal->fine_print($fine_print);  
 
 
-	my @everyscape = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "everyscape")});
-	if (@everyscape) {
-	    my @images = $everyscape[0]->look_down(
-		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src'))});
-	    
-	    foreach my $image (@images) {
-		my $clean_image = $image->attr('src');
-		$clean_image =~ s/\?.*$//;
-		if ($clean_image !~ /profile/) {
-		    $deal->image_urls($clean_image);
-		}
-	    }
+	my @image = $tree->look_down(
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    $_[0]->attr('content') =~ /^http/i &&
+		    ($_[0]->attr('property') eq "og:image")});
+	if (@image) {
+	    $deal->image_urls($image[0]->attr('content'));
 	}
 
-	my $image_url = &genericextractor::extractBetweenPatternsN(
-	    5,
-	    $deal_content_ref,
-	    "<div\\s+class=[\'\"]photos[\'\"]\\s+id=[\'\"]everyscape[\'\"]",
-	    "<\\\/div>");
-	if (defined($image_url) &&
-	    $image_url =~ /src=[\'\"](http:\/\/[^\'\"\?<]+)/) {
-	    $deal->image_urls($1);  
-	}
-
-	my @images = ($tree->as_HTML() =~ m|\"image\":\"(http:[^\"]+)|g);
-
-	foreach my $image (@images) {
-	    $deal->image_urls($image);  
-	}
-
-	if ($tree->as_HTML() =~ /Groupon.currentDeal.images(.*)/) {
-	    my $images_str = $1;
-	    my @image_urls = ($images_str =~ m/\"(http[^\"]+)\"/g);
-	    foreach my $image_url (@image_urls) {
-		$deal->image_urls($image_url);  
-		last;
-	    }
-
-	}
 	    
 	my @num_purchased = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') eq "number_sold_container")});
+	    sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /^qty-bought/)});
 	if (@num_purchased && $num_purchased[0]->as_text() =~ /([0-9,]+)\s*bought/i) {
 	    my $num_purchased = $1;
 	    $num_purchased =~ s/,//g;
@@ -228,10 +205,12 @@
 	}
 
 
-	my @name = $tree->look_down(
-	    sub{$_[0]->tag() eq 'h3' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "name"});
-	if (@name) {
+	my @name_container = $tree->look_down(
+	    sub{$_[0]->tag() eq 'aside' && defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "merchant-rail"});
+	if (@name_container) {
+	    my @name = $name_container[0]->look_down(
+		sub{$_[0]->tag() =~ /^h[0-9]/});
 	    $deal->name($name[0]->as_text());
 	}
 
@@ -244,43 +223,37 @@
 	}
 
 
-	my @company_box = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-		    $_[0]->attr('id') eq "company_box"});
+	my @addresses_container = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "merchant-locations"});
 
-	if (@company_box) {
-	    my $addresses_node = $company_box[0];
-	    if ($addresses_node->as_HTML() =~
-		/see\s*all\s*[0-9]+\s*locations/i) {
-		$addresses_node = $tree;
-	    }
-
+	if (@addresses_container) {
 	    # addresses
-	    my @addresses = $addresses_node->look_down(
-		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
-			$_[0]->attr('href') =~ /maps.google.com/});
+	    my @addresses = $addresses_container[0]->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			$_[0]->attr('class') eq "address"});
 
 	    foreach my $address (@addresses) {
-		if ($address->attr('href') =~ /addr=(.*)/) {
-		    my $clean_address = $1;
-		    $clean_address =~ s/\+/ /g;
-		    $clean_address =~ s/\%[0-9][A-Z]/ /g;
-		    $deal->addresses($clean_address);
-		}
-	    }
+		my $clean_address = $address->as_HTML();
+		$clean_address =~ s/<strong>[^<]*<\/strong>//;
+		$clean_address =~ s/<a[^>]*>[^<]*<\/a>//g;
 
-	    # Phone
-	    if (!defined($deal->phone()) && $company_box[0]->as_HTML() =~
-		/<br[^>]*>([0-9\(\)\-\.\s]{10,20})/) {
-		my $phone = $1;
-		$phone =~ s/\s+//g;
-	    
-		my $tmpphone = $phone;
-		$tmpphone =~ s/[^0-9]//g;
-		if (length($tmpphone) > 8 &&
-		    length($phone) -length($tmpphone) <=4) {
-		    $deal->phone($phone);
+		# Phone:
+		if ($clean_address =~ /<br[^>]*>\s*([0-9\(\)\-\.\s]{10,20})/) {
+		    my $phone = $1;
+		    $phone =~ s/\s+//g;
+		    
+		    my $tmpphone = $phone;
+		    $tmpphone =~ s/[^0-9]//g;
+		    if (length($tmpphone) > 8 &&
+			length($phone) -length($tmpphone) <=4) {
+			$deal->phone($phone);
+		    }
+		    $clean_address =~ s/<br[^>]*>\s*([0-9\(\)\-\.\s]{10,20})//;
 		}
+
+		$clean_address =~ s/<[^>]*>//g;
+		$deal->addresses($clean_address);
 	    }
 	}
 
