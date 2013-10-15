@@ -54,21 +54,23 @@
 	# Zozi doesn't provide this information on its pages
 	$deal->num_purchased(-1);
 
+
+	my @title = $tree->look_down(
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    ($_[0]->attr('property') eq "og:title")});
+	if (@title) {
+	    $deal->title($title[0]->attr('content'));
+	}
+
 	my @container = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "experience-overview"});
+		    $_[0]->attr('class') =~ /booking-section/});
 
 	if (@container) {
-	    my @title = $container[0]->look_down(
-		sub{$_[0]->tag() eq 'h3'});
-	    if (@title) {
-		$deal->title($title[0]->as_text());
-	    }
-	    
 	    my @price = $container[0]->look_down(
 		sub{defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') eq "new-price" ||
-			 $_[0]->attr('class') eq "value")});
+			$_[0]->attr('class') eq "current"});
 	    
 	    if (@price) {
 		my $price = $price[0]->as_text();
@@ -81,7 +83,7 @@
 	    
 	    my @value = $container[0]->look_down(
 		sub{defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') eq "old-price")});
+			($_[0]->attr('class') eq "original")});
 	    if (@value && $value[0]->as_text() =~ /([0-9,]+)/) {
 		my $value = $1;
 		$value =~ s/,//g;
@@ -90,7 +92,8 @@
 
 	    
 	    my @address = $container[0]->look_down(
-		sub{$_[0]->tag() eq 'p' && $_[0]->as_text() =~ /,/});
+		sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('class')) &&
+			$_[0]->attr('class') eq "location"});
 	    if (@address) {
 		my $clean_address = $address[0]->as_text();
 		$clean_address =~ s/^near\s*//i;
@@ -104,11 +107,11 @@
 
 	my $text = "";
 	my @text1 = $tree->look_down(
-	    sub{$_[0]->tag() eq 'section' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "experience-snapshot")});
-	my @text2 = $tree->look_down(
-	    sub{$_[0]->tag() eq 'section' && defined($_[0]->attr('class')) &&
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
 		    ($_[0]->attr('class') eq "experience-info")});
+	my @text2 = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') =~ /whats-included/)});
 
 	if (@text1) {
 	    $text .= $text1[0]->as_HTML();
@@ -136,13 +139,14 @@
 
 	my @images = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "large-carousel")});
+		    ($_[0]->attr('class') eq "orbit-container")});
 
 	if (@images) {
 	    my @image_src = $images[0]->look_down(
 		sub{$_[0]->tag() eq 'img' &&
 			defined($_[0]->attr('src')) &&
-			$_[0]->attr('src') =~ /^http/});
+			$_[0]->attr('src') =~ /^http/ &&
+			$_[0]->attr('src') !~ /thumb/i});
 
 	    foreach my $image_src (@image_src) {
 		my $clean_image = $image_src->attr('src');
