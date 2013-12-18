@@ -165,9 +165,7 @@
 	    }
 
 	    if ($is_escapes_deal == 0 && 
-		($link->as_text() =~ /view\sdeal/i ||
-		(defined($link->attr('class')) && 
-		 $link->attr('class') eq "btn"))) {
+		$url =~ /\/deals\/[0-9]+-/) {
 		addToDealUrls($_[0], $url);
 	    }
 	}
@@ -216,6 +214,13 @@
             if ($deal->attr('href') =~
             /(http:\/\/www.travelzoo.com\/local-deals\/.*\/[0-9]+$)/)
             {
+                addToDealUrls($_[0], $1);
+            }
+
+            if ($deal->attr('href') =~
+            /(http:\/\/www.travelzoo.com\/local-deals\/[A-Za-z][^\/]*\/[A-Z][^\/]*\/[0-9]+\/.*$)/)
+            {
+		#print "$1\n";
                 addToDealUrls($_[0], $1);
             }
         }
