@@ -298,8 +298,6 @@
         my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
 		    $_[0]->attr('href') =~ /^\// &&
-		    defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "offer-snippet-img" &&
 		    (($_[0]->attr('href') =~ 
 		      /\/guru_experiences\/[0-9]+$/) ||
 		     ($_[0]->attr('href') =~ 
