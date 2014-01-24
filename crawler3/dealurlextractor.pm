@@ -118,16 +118,17 @@
         my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href'))});
         foreach my $deal (@deal_urls) {
-            if ($deal->attr('href') !~
-		/categories|set_location_sort|special_content|discussion|options/)
-	    {
-                if ($deal->attr('href') =~ /(http:\/\/www.groupon.com\/deals\/[^\?]+)/) {
-                    addToDealUrls($_[0], $1);
-                }
-                if ($deal->attr('href') =~ /(http:\/\/www.groupon.com\/ch\/[^\?]+)/) {
-		    addToDealUrls($_[0], $1);
-                }
-            }
+	    if ($deal->attr('href') =~
+		/^(http[s]?:\/\/www.groupon.com\/deals\/[^\?]+)/) {
+		my $url = $1;
+		#print "---- $url\n";
+		addToDealUrls($_[0], $url);
+	    } elsif ($deal->attr('href') =~
+		/^(\/\/www.groupon.com\/deals\/[^\?]+)/) {
+		my $url = "https:".$1;
+		#print "**** $url\n";
+		addToDealUrls($_[0], $url);
+	    }
         }
     }
 
