@@ -264,6 +264,10 @@ $indexes = $memcache->get("categories_index");
 /* Mix and Mingle + Nightlife	*/			$constant_expressions[85] = "(pub crawl)|(nightclub)";
 /* Threads + Good for Girls + Gift */		$constant_expressions[86] = "(earring)|(bracelet)|(jewelry)|(pendant)|(necklace)";
 /* Music Lover (+ Will Call) */				$constant_expressions[87] = "(live music)|(music)|(rock.*roll)";
+/* Road trip */				$constant_expressions[88] = "escapes|getaway|\Winn\W|hotel|lodge";
+/* Casual dining */				$constant_expressions[89] = "italian|indian|mexican|sushi|restaurant|grill|food|fare|bbq|dinner|fixe|dinner|scout";
+/* Well groomed */				$constant_expressions[90] = "dent|teeth|bikini|\Wwax\W|brazilian";
+/* Will call */				$constant_expressions[91] = "ticket";
 
 
 $regular_expressions["body_art"] = $constant_expressions[13];
@@ -658,6 +662,17 @@ $neg_regular_expressions["foodie"] = $constant_expressions[8] . "|" . $constant_
 $cat1_auto_fill["foodie"] = 4;
 
 
+$regular_expressions["road_trip2"] = $constant_expressions[88];
+$cat1_auto_fill["road_trip2"] = 43;
+
+$regular_expressions["casual_dining2"] = $constant_expressions[89];
+$cat1_auto_fill["casual_dining2"] = 1;
+
+$regular_expressions["well_groomed2"] = $constant_expressions[90];
+$cat1_auto_fill["well_groomed2"] = 10;
+
+$regular_expressions["will_call2"] = $constant_expressions[91];
+$cat1_auto_fill["will_call2"] = 22;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -929,6 +944,8 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "<BR><hr style=\"border:5px solid #000;\" /><BR>\n";
 
   echo "<table border=1>\n";
+  $MAX_COUNT =  3;
+  $my_count = 0;
   for ($i=0; $i< count($indexes); $i++) {
     $row = $memcache->get($indexes[$i]);
 
@@ -941,8 +958,10 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
     $company_id = $row["company_id"];
     $id = $row['id'];
 
-    if (!(isset($_POST["regex"]) && strlen($_POST["regex"]) > 0 &&
+    if ($my_count < $MAX_COUNT && !(isset($_POST["regex"]) && strlen($_POST["regex"]) > 0 &&
 	  matchesRegex($row, $_POST["regex"], $_POST["andregex"], $_POST["negregex"], $_POST["doc_section"]))) {
+
+      $my_count++;
       echo "\t<tr>\n";
       echo "\t\t<td width=600>\n";
 	  $image_url = "http://dealupa_images.s3.amazonaws.com/" . sha1($row["image_url"]) . "_small";

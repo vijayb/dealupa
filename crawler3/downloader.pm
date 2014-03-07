@@ -73,7 +73,7 @@
 	my $url = shift;
 	my $response = HTTP::Response->new(200);
 
-	my $content = `DISPLAY=:23 ~/phantomjs/bin/phantomjs getpage.js '$url'`;
+	my $content = `~/phantomjs/bin/phantomjs getpage.js '$url'`;
 	$response->content($content);
 	return $response;
     }
@@ -90,7 +90,7 @@
 
 	my $phantom_script = "getpagewithpassword_".$company_id.".js";
 	my $content =
-	    `DISPLAY=:23 ~/phantomjs/bin/phantomjs $phantom_script '$url'`;
+	    `~/phantomjs/bin/phantomjs $phantom_script '$url'`;
 	$response->content($content);
 	return $response;
     }
@@ -108,7 +108,7 @@
 
 	my $phantom_script = "gethub_".$company_id.".js";
 	my $content =
-	    `DISPLAY=:23 ~/phantomjs/bin/phantomjs $phantom_script '$url'`;
+	    `~/phantomjs/bin/phantomjs $phantom_script '$url'`;
 	$response->content($content);
 
 	return $response;

@@ -118,16 +118,17 @@
         my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href'))});
         foreach my $deal (@deal_urls) {
-            if ($deal->attr('href') !~
-		/categories|set_location_sort|special_content|discussion|options/)
-	    {
-                if ($deal->attr('href') =~ /(http:\/\/www.groupon.com\/deals\/[^\?]+)/) {
-                    addToDealUrls($_[0], $1);
-                }
-                if ($deal->attr('href') =~ /(http:\/\/www.groupon.com\/ch\/[^\?]+)/) {
-		    addToDealUrls($_[0], $1);
-                }
-            }
+	    if ($deal->attr('href') =~
+		/^(http[s]?:\/\/www.groupon.com\/deals\/[^\?]+)/) {
+		my $url = $1;
+		#print "---- $url\n";
+		addToDealUrls($_[0], $url);
+	    } elsif ($deal->attr('href') =~
+		/^(\/\/www.groupon.com\/deals\/[^\?]+)/) {
+		my $url = "https:".$1;
+		#print "**** $url\n";
+		addToDealUrls($_[0], $url);
+	    }
         }
     }
 
@@ -165,9 +166,7 @@
 	    }
 
 	    if ($is_escapes_deal == 0 && 
-		($link->as_text() =~ /view\sdeal/i ||
-		(defined($link->attr('class')) && 
-		 $link->attr('class') eq "btn"))) {
+		$url =~ /\/deals\/[0-9]+-/) {
 		addToDealUrls($_[0], $url);
 	    }
 	}
@@ -216,6 +215,13 @@
             if ($deal->attr('href') =~
             /(http:\/\/www.travelzoo.com\/local-deals\/.*\/[0-9]+$)/)
             {
+                addToDealUrls($_[0], $1);
+            }
+
+            if ($deal->attr('href') =~
+            /(http:\/\/www.travelzoo.com\/local-deals\/[A-Za-z][^\/]*\/[A-Z][^\/]*\/[0-9]+\/.*$)/)
+            {
+		#print "$1\n";
                 addToDealUrls($_[0], $1);
             }
         }
@@ -293,8 +299,6 @@
         my @deal_urls = ${$tree_ref}->look_down(
             sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) &&
 		    $_[0]->attr('href') =~ /^\// &&
-		    defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "offer-snippet-img" &&
 		    (($_[0]->attr('href') =~ 
 		      /\/guru_experiences\/[0-9]+$/) ||
 		     ($_[0]->attr('href') =~ 
@@ -458,19 +462,14 @@
         my $tree_ref = $_[2];
         
         my @deal_urls = ${$tree_ref}->look_down(
-            sub{$_[0]->tag() eq 'li' && defined($_[0]->attr('class'))
-		    && $_[0]->attr('class') =~ /ls-item deal/});
+            sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href'))
+		    && $_[0]->attr('href') =~ /^\/escapes\/properties/});
 
         foreach my $deal (@deal_urls) {
-	    my @deal_url = $deal->look_down(
-		sub{$_[0]->tag() eq 'a' && defined($_[0]->attr('href')) && 
-			$_[0]->attr('href') =~ /\/escapes\// && 
-			$_[0]->attr('href') =~ /^\//i});
-	    if (@deal_url) {
-		my $url = "https://www.livingsocial.com".$deal_url[0]->attr('href');
+
+		my $url = "https://www.livingsocial.com".$deal->attr('href');
 		$url =~ s/\?[^\?]*$//;
 		addToDealUrls($_[0], $url);
-	    }
         }
     }
 

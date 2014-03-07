@@ -218,10 +218,18 @@
 	my @name_container = $tree->look_down(
 	    sub{$_[0]->tag() eq 'aside' && defined($_[0]->attr('class')) &&
 		    $_[0]->attr('class') eq "merchant-rail"});
+	if (!@name_container) {
+	    @name_container = $tree->look_down(
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			$_[0]->attr('class') eq "merchant-profile"});
+	}
+
 	if (@name_container) {
 	    my @name = $name_container[0]->look_down(
 		sub{$_[0]->tag() =~ /^h[0-9]/});
-	    $deal->name($name[0]->as_text());
+	    if (@name) {
+		$deal->name($name[0]->as_text());
+	    }
 	}
 
 

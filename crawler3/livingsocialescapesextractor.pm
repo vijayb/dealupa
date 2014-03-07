@@ -178,40 +178,17 @@
 	}
 
 
-	if (!defined($deal->expired()) && !$deal->expired() &&
-	    $tree->as_HTML() =~ /countdown\'\)\.counter([^;\s]+)/) {
-	    my $counter = $1;
-
-	    my $days = 0;
-	    my $hours = 0;
-	    my $minutes = 0;
-	    my $seconds = 0;
-
-	    if ($counter =~ /\"([0-9]+)\",\"d\"\]/) {
-		$days = $1;
+	if (!defined($deal->expired()) && !$deal->expired()) {
+	    my @deadline = $tree->look_down(
+		sub{$_[0]->tag() eq 'li' && defined($_[0]->attr('id')) &&
+			defined($_[0]->attr('data-ends-at')) &&
+			($_[0]->attr('id') eq "time-left")});
+	    if (@deadline &&
+		$deadline[0]->attr('data-ends-at') =~ /([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})/) {
+		my $deadline = $1;
+		$deadline =~ s/T/ /g;
+		$deal->deadline($deadline);
 	    }
-	    if ($counter =~ /\"([0-9]+)\",\"h\"\]/) {
-		$hours = $1;
-	    }
-	    if ($counter =~ /\"([0-9]+)\",\"m\"\]/) {
-		$minutes = $1;
-	    }
-	    if ($counter =~ /\"([0-9]+)\",\"s\"\]/) {
-		$seconds = $1;
-	    }
-	    
-	    my $offset =
-		$days * 24 *3600 + $hours * 3600 + $minutes * 60 + $seconds;
-
-	    my ($year, $month, $day, $hour, $minute);
-	    ($year, $month, $day, $hour, $minute) =
-		(gmtime(time() + $offset))[5,4,3,2,1];
-	    
-	    my $deadline = sprintf("%d-%02d-%02d %02d:%02d:01",
-				   1900+$year, $month+1, $day,
-				   $hour, $minute);
-	    
-	    $deal->deadline($deadline);
 	}
 
 
