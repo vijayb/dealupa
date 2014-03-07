@@ -73,7 +73,7 @@ $(document).ready(function() {
 
 	if(code == 32) {
 	  //alert('hello');
-	  $('option:selected', 'select').removeAttr('selected').next('option').attr('selected', 'selected');
+	  $('#regexselector').find('option:selected').removeAttr('selected').next('option').attr('selected', 'selected');
 	  $("#regexbutton").click();
 	}
 
@@ -824,7 +824,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "And-Regex: <input type='text' name='andregex' $and_regex_value size=70 /><BR>\n";
   echo "&nbsp; Neg-regex: <input type='text' name='negregex' $neg_regex_value size=40 /><BR>\n";
 
-  echo "<select id=regexselector name=doc_section>\n";
+  echo "<select name=doc_section>\n";
   for ($i=0; $i< count($options); $i++) {
     echo "\t<option value='$i' ";
     if ($_POST["doc_section"] == $i) {
@@ -835,7 +835,7 @@ if ($success && $indexes != false && !isset($_GET["reload"])) {
   echo "</select>\n";
 
 
-  echo "<select name=auto_fill>\n";
+  echo "<select id=regexselector name=auto_fill>\n";
   echo "\t<option value='none'>Select auto_fill option</option>\n";
   foreach ($regular_expressions as $regex_name => $regex_value) {
     echo "\t<option value='$regex_name' ";
