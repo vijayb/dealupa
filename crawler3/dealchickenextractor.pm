@@ -98,35 +98,16 @@
 	    $deal->num_purchased($num_purchased);
 	}
 
-	my @image_container =
+	my @image =
 	    $tree->look_down(
-		sub{$_[0]->tag() eq 'div' &&
-		    defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "thumbnails"});
-	if (@image_container) {
-	    my @images = $image_container[0]->look_down(
-		sub{$_[0]->tag() eq 'a' &&
-			defined($_[0]->attr('href')) &&
-			$_[0]->attr('href') =~ /\/WebServices/});
-	    
-	    foreach my $image (@images) {
-		my $image_url = "http://www.dealchicken.com".
-		    $image->attr('href');
-		$deal->image_urls($image_url);
-	    }
-	} else {
-	    my @image =
-		$tree->look_down(
-		    sub{$_[0]->tag() eq 'img' &&
-			    defined($_[0]->attr('id')) &&
-			    defined($_[0]->attr('src')) &&
-			    $_[0]->attr('id') eq "imgDeal" &&
-			    $_[0]->attr('src') =~ /\//});
-	    if (@image) {
-		my $image_url = "http://www.dealchicken.com".
-		    $image[0]->attr('src');
-		$deal->image_urls($image_url);
-	    }
+		sub{$_[0]->tag() eq 'img' &&
+			defined($_[0]->attr('id')) &&
+			defined($_[0]->attr('src')) &&
+			$_[0]->attr('id') eq "imgDeal" &&
+			$_[0]->attr('src') =~ /^http/});
+	if (@image) {
+	    my $image_url = $image[0]->attr('src');
+	    $deal->image_urls($image_url);
 	}
 	
 
