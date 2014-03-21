@@ -108,8 +108,19 @@
 	if (@image) {
 	    my $image_url = $image[0]->attr('src');
 	    $deal->image_urls($image_url);
+	} else {
+	    my @images = $tree->look_down(
+		sub{$_[0]->tag() eq 'a' &&
+			defined($_[0]->attr('id')) &&
+			defined($_[0]->attr('href')) &&
+			$_[0]->attr('id') =~ /lnkCarousel/ &&
+			$_[0]->attr('href') =~ /^http/});
+	    foreach my $image (@images) {
+		$deal->image_urls($image->attr('href'));
+	    }
 	}
-	
+
+
 
 	my @expired = $tree->look_down(
 	    sub{defined($_[0]->attr('class')) &&
