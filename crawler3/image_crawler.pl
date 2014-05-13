@@ -17,8 +17,6 @@ use File::Copy;
 use constant {
     WORK_TYPE => 9,
     IMAGE_CACHE_DIRECTORY => "./image_cache/",
-    AWS_ACCESS_KEY_ID => 'AKIAJXSDQXVDAE2Q2GFQ',
-    AWS_SECRET_ACCESS_KEY => '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',
     S3_BUCKET => "dealupa_images",
     SMALL_IMAGE_WIDTH => 310,
     SMALL_IMAGE_QUALITY => 75,
@@ -30,9 +28,15 @@ use constant {
 my $start_time = time();
 createCacheDirectory();
 
+my $aws_access_key = workqueue::aws_access_key();
+my $aws_secret_key = workqueue::aws_secret_key();
+if (!defined($aws_access_key) || !defined($aws_secret_key)) {
+    die "No AWS keys provided, exiting...\n";
+}
+
 my $s3 = Net::Amazon::S3->new(
-    {   aws_access_key_id     => AWS_ACCESS_KEY_ID,
-	aws_secret_access_key => AWS_SECRET_ACCESS_KEY,
+    {   aws_access_key_id     => $aws_access_key,
+	aws_secret_access_key => $aws_secret_key,
 	retry                 => 1,
     }
     );

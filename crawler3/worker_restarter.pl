@@ -84,6 +84,8 @@ sub doWork {
 	    my $database = workqueue::database();
 	    my $user = workqueue::user();
 	    my $password = workqueue::password();
+	    my $aws_access_key = workqueue::aws_access_key();
+	    my $aws_secret_key = workqueue::aws_secret_key();
 
 	    my $last_error_cmd =
 		"tail -n 100 logs/$job.log > logs/$job.last_error";
@@ -92,7 +94,9 @@ sub doWork {
 
 	    my $restart_cmd = 
 		"nohup ./$job.pl --server=$server --database=$database ".
-		"--user=$user --password=$password < /dev/null ".
+		"--user=$user --password=$password ".
+		"--aws_access_key=$aws_access_key ".
+		"--aws_secret_key=$aws_secret_key < /dev/null ".
 		">> logs/$job.log 2>&1 &";
 	    
 	    print "[$job] isn't running, restarting\n[$restart_cmd]\n";

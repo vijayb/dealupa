@@ -10,13 +10,15 @@
     use Getopt::Long qw(GetOptionsFromArray);
     
     sub getBasicArgs {
-	if ($#_ != 6) {
+	if ($#_ != 8) {
 	    die "Incorrect number of arguments in getBasicArgs.\n"; 
 	}
 	my $server_ref = shift;
 	my $database_ref = shift;
 	my $user_ref = shift;
 	my $password_ref = shift;
+	my $aws_access_key_ref = shift;
+	my $aws_secret_key_ref = shift;
         my $work_id_ref = shift;
         my $company_id_ref = shift;
 	my $force_work_ref = shift;
@@ -27,6 +29,10 @@
 					 "database=s" => $database_ref,
 					 "user=s" => $user_ref,
 					 "password=s" => $password_ref,
+					 "aws_access_key=s" =>
+					 $aws_access_key_ref,
+					 "aws_secret_key=s" =>
+					 $aws_secret_key_ref,
 					 "work_id=i" => $work_id_ref,        
 					 "company_id=i" => $company_id_ref,
 					 "force_work" => $force_work_ref);

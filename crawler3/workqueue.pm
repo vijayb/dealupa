@@ -24,9 +24,10 @@
     };
     
     my ($server, $database, $user, $password, $work_id, $company_id,
-	$force_work);
+	$aws_access_key, $aws_secret_key, $force_work);
     getargs::getBasicArgs(\$server, \$database, \$user, \$password,
-			  \$work_id, \$company_id, \$force_work);
+			  \$aws_access_key, \$aws_secret_key, \$work_id,
+			  \$company_id, \$force_work);
 
     my @workqueue_db_params = ("DBI:mysql:$database;host=$server;mysql_ssl=1",
 			       $user, $password,
@@ -455,6 +456,14 @@
 
     sub pid {
 	return $pid;
+    }
+
+    sub aws_access_key {
+	return $aws_access_key;
+    }
+
+    sub aws_secret_key {
+	return $aws_secret_key;
     }
     
     1;
