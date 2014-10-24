@@ -37,38 +37,18 @@
 	$tree->eof();
 	
 	my @title = $tree->look_down(
-	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    ($_[0]->attr('class') eq "deal_title")});
-	if (!@title) {
-	    # GrouponGetaways puts the title in a different spot to 
-	    # regular Groupon
-	    @title = $tree->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-			($_[0]->attr('class') eq "title_container")});
-	}
-
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    ($_[0]->attr('property') eq "og:title")});
 	if (@title) {
-	    my @header = $title[0]->look_down(sub{$_[0]->tag() eq 'h2'});
-	    if (@header) {
-		$deal->title($header[0]->as_text());
-	    }
+	    $deal->title($title[0]->attr('content'));
 	}
 
-	if (!defined($deal->title())) {
-	     @title = $tree->look_down(
-		sub{$_[0]->tag() eq 'title'});
-
-	     if (@title) {
-		 my $clean_title = $title[0]->as_text();
-		 $clean_title =~ s/\s*\|.*//;
-		 $deal->title($clean_title);
-	     }
-	}
 	
 	my @subtitle = $tree->look_down(
 	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('name')) &&
 		    defined($_[0]->attr('content')) &&
-		    ($_[0]->attr('name') eq "description")});
+		    ($_[0]->attr('name') eq "twitter:description")});
 	if (@subtitle) {
 	    $deal->subtitle($subtitle[0]->attr('content'));
 	}
@@ -266,7 +246,6 @@
 		}
 		
 		$clean_address =~ s/<[^>]*>/ /g;
-		print $clean_address,"\n";
 		$deal->addresses($clean_address);
 	    }
 	}
