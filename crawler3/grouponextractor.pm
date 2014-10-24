@@ -216,14 +216,9 @@
 
 
 	my @name_container = $tree->look_down(
-	    sub{$_[0]->tag() eq 'aside' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "merchant-rail"});
-	if (!@name_container) {
-	    @name_container = $tree->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-			$_[0]->attr('class') eq "merchant-profile"});
-	}
-
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    $_[0]->attr('class') eq "merchant-profile"});
+	
 	if (@name_container) {
 	    my @name = $name_container[0]->look_down(
 		sub{$_[0]->tag() =~ /^h[0-9]/});
@@ -243,7 +238,7 @@
 
 	my @addresses_container = $tree->look_down(
 	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
-		    $_[0]->attr('class') eq "merchant-locations"});
+		    $_[0]->attr('class') =~ /^merchant-locations/});
 
 	if (@addresses_container) {
 	    # addresses
@@ -253,11 +248,11 @@
 
 	    foreach my $address (@addresses) {
 		my $clean_address = $address->as_HTML();
-		$clean_address =~ s/<strong>[^<]*<\/strong>//;
-		$clean_address =~ s/<a[^>]*>[^<]*<\/a>//g;
+		$clean_address =~ s/<strong>[^<]*<\/strong>/ /;
+		$clean_address =~ s/<a[^>]*>[^<]*<\/a>/ /g;
 
 		# Phone:
-		if ($clean_address =~ /<br[^>]*>\s*([0-9\(\)\-\.\s]{10,20})/) {
+		if ($clean_address =~ /<[^>]*>\s*([0-9\(\)\-\.\s]{10,20})/) {
 		    my $phone = $1;
 		    $phone =~ s/\s+//g;
 		    
@@ -267,10 +262,11 @@
 			length($phone) -length($tmpphone) <=4) {
 			$deal->phone($phone);
 		    }
-		    $clean_address =~ s/<br[^>]*>\s*([0-9\(\)\-\.\s]{10,20})//;
+		    $clean_address =~ s/<[^>]*>\s*([0-9\(\)\-\.\s]{10,20})//;
 		}
-
-		$clean_address =~ s/<[^>]*>//g;
+		
+		$clean_address =~ s/<[^>]*>/ /g;
+		print $clean_address,"\n";
 		$deal->addresses($clean_address);
 	    }
 	}
