@@ -108,7 +108,7 @@ if (isset($_COOKIE['geo'])) {
 
 	if (strpos($_SERVER["HTTP_USER_AGENT"], "Googlebot") === false) {
 	
-		if (strlen($ip) > 5) {
+		if (strlen($ip) > 5 and 0) {
 			$request = "http://www.geobytes.com/IpLocator.htm?GetLocation&template=php3.txt&IpAddress=$ip&pt_email=sanjay@gmail.com&pt_password=b4134789";
 			$tags = get_meta_tags($request);
 			if (preg_match('/^[-+]?([0-9]*\.[0-9]+|[0-9]+)$/', $tags['latitude']) &&
