@@ -13,18 +13,18 @@
     use Encode;
 
     my %month_map = (
-	"Jan" => 1,
-	"Feb" => 2,
-	"Mar" => 3,
-	"Apr" => 4,
+	"January" => 1,
+	"February" => 2,
+	"March" => 3,
+	"April" => 4,
 	"May" => 5,
 	"June" => 6,
 	"July" => 7,
-	"Aug" => 8,
-	"Sept" => 9,
-	"Oct" => 10,
-	"Nov" => 11,
-	"Dec" => 12
+	"August" => 8,
+	"September" => 9,
+	"October" => 10,
+	"November" => 11,
+	"December" => 12
     );
 
 
@@ -50,6 +50,14 @@
 		$deal->title($title[0]->attr('content'));
 	    }
 
+	}
+
+	my @subtitle = $tree->look_down(
+	    sub{$_[0]->tag() eq 'meta' && defined($_[0]->attr('property')) &&
+		    defined($_[0]->attr('content')) &&
+		    ($_[0]->attr('property') eq "og:description")});
+	if (@subtitle) {
+	    $deal->subtitle($subtitle[0]->attr('content'));
 	}
 
 	my @price = $tree->look_down(
@@ -123,25 +131,19 @@
 	}
 
 
-	my @image = $tree->look_down(
-	    sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('id')) &&
-		    defined($_[0]->attr('src')) &&
-		    ($_[0]->attr('id') =~ /Main_ProductImage/)});
-	if (@image) {
-	    $deal->image_urls($image[0]->attr('src'));
-	} else {
-	    my @slideshow = $tree->look_down(
-		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
-			($_[0]->attr('id') eq "dealSlider")});
-	    if (@slideshow) {
-		my @images = $slideshow[0]->look_down(
-		    sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
-			    $_[0]->attr('src') =~ /^http/});
-		foreach my $image (@images) {
-		    $deal->image_urls($image->attr('src'));
-		}
+	
+	my @slideshow = $tree->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('id')) &&
+		    ($_[0]->attr('id') =~ /ProductImageSlider/)});
+	if (@slideshow) {
+	    my @images = $slideshow[0]->look_down(
+		sub{$_[0]->tag() eq 'img' && defined($_[0]->attr('src')) &&
+			$_[0]->attr('src') =~ /^http/});
+	    foreach my $image (@images) {
+		$deal->image_urls($image->attr('src'));
 	    }
-	} 
+	}
+
 
 	if (scalar(keys(%{$deal->image_urls()})) == 0) {
 	    my @images = $tree->look_down(
@@ -171,38 +173,22 @@
 
 	if (!defined($deal->expired()) && !$deal->expired()) {
 	    my @deadline = $tree->look_down(
-		sub{$_[0]->tag() eq 'span' && defined($_[0]->attr('id')) &&
-			($_[0]->attr('id') =~ /Main_TimeLeft/)});
-	    # Deadline on travelzoo is in relative format: E.g.,
-	    # 3 days, 2 hours, 46 minutes, 35 seconds. /annoying
-	    if (@deadline) {
-		my $deadline = $deadline[0]->as_text();
-		my $offset_days = 0;
-		my $offset_hours = 0;
-		my $offset_minutes = 0;
+		sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+			($_[0]->attr('class') =~ /rightDealDetails/)});
 
-		if ($deadline =~ /([0-9]+)\s+day/i) {
-		    $offset_days = $1;
-		}
-		if ($deadline =~ /([0-9]+)\s+hour/i) {
-		    $offset_hours = $1;
-		}
-		if ($deadline =~ /([0-9]+)\s+minute/i) {
-		    $offset_minutes = $1;
+	    if (@deadline &&
+		$deadline[0]->as_text() =~ /Through\s([A-Za-z]+)\s([0-9]{1,2})[^0-9]{1,5}([0-9]{4})/) {
+		my $month = $1;
+		my $day = $2;
+		my $year = $3;
+		if (defined($month_map{$month})) {
+		    $month = $month_map{$month};
+		    my $deadline = sprintf("%d-%02d-%02d 01:01:01",
+					$year, $month, $day);
+
+		    $deal->deadline($deadline);
 		}
 
-		my $offset = $offset_days*24*60*60 +
-		    $offset_hours*60*60 + $offset_minutes*60;
-
-		my ($year, $month, $day, $hour, $minute);
-		($year, $month, $day, $hour, $minute) =
-		    (gmtime(time() + $offset))[5,4,3,2,1];
-		
-		$deadline = sprintf("%d-%02d-%02d %02d:%02d:01",
-				    1900+$year, $month+1, $day,
-				    $hour, $minute);
-
-		$deal->deadline($deadline);
 	    }
 	}
 
@@ -230,16 +216,9 @@
 
 	my @name = $tree->look_down(
 	    sub{defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') =~ /Main_MerchantInMapBox/)});
+		    ($_[0]->attr('id') =~ /merchantName/i)});
 	if (@name) {
 	    $deal->name($name[0]->as_text());
-	} else {
-	    @name = $tree->look_down(
-		sub{defined($_[0]->attr('id')) &&
-			($_[0]->attr('id') =~ /MerchantName/)});
-	    if (@name) {
-		$deal->name($name[0]->as_text());
-	    }
 	}
 
 
