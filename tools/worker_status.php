@@ -47,9 +47,9 @@ if (isset($_POST["force_shutdown"])) {
 }
 
 foreach ($_POST as $key => $value) {
-  //echo "$key ** $value\n";
+  //echo "$key ** $value<BR>\n";
 
-  $info = preg_split("/:/", $key);
+  $info = preg_split("/&/", $key);
   if (count($info)==3) {
     if (strcmp($info[0], $operation)==0) {
       $ip = str_replace("_", ".", $info[1]);
@@ -140,7 +140,7 @@ for ($i=0;$i < mysql_num_rows($result); $i++) {
     if ($status) {
       echo "        <td><span style='color:green'>running</span></td>\n";
     } else {
-      echo "        <td><span style='color:red'>shutdown</span><input type='hidden' name='clear_shutdown:$ip:$pid'  /></td>\n";
+      echo "        <td><span style='color:red'>shutdown</span><input type='hidden' name='clear_shutdown&$ip&$pid'  /></td>\n";
     }
     echo "        <td>$types[$type] ($type)</td>\n";
     echo "        <td><a href='/tools/work_info.php?id=$latest_work_id' target=_work_info>$latest_work_id</a></td>\n";
@@ -152,9 +152,9 @@ for ($i=0;$i < mysql_num_rows($result); $i++) {
     }
     echo "        <td><span style='color:$color' class='heartbeat'>$last_heartbeat</span></td>\n";
     if ($force_shutdown) {
-      echo "        <td><span style='color:red'>Shutdown requested</span><input type='hidden' name='clear_zombies:$ip:$pid'  /></td>\n";
+      echo "        <td><span style='color:red'>Shutdown requested</span><input type='hidden' name='clear_zombies&$ip&$pid'  /></td>\n";
     } else {
-      echo "        <td><input type='checkbox' name='force_shutdown:$ip:$pid' class='checkbox' /></td>\n";
+      echo "        <td><input type='checkbox' name='force_shutdown&$ip&$pid' class='checkbox' /></td>\n";
     }
     echo "     </tr>\n";
 }
