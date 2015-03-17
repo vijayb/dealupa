@@ -232,12 +232,18 @@
 	}
 
 	my @address = $tree->look_down(
-	    sub{defined($_[0]->attr('id')) &&
-		    ($_[0]->attr('id') =~ /MerchantAddress/)});
-	if (@address && length($address[0]->as_text()) > 7 &&
-	    $address[0]->as_text() !~ /http/) {
-	    my $address = $address[0]->as_text();
-	    $deal->addresses($address);
+	    sub{defined($_[0]->attr('class')) &&
+		    ($_[0]->attr('class') eq "merchantAddress")});
+	if (@address) {
+	    my @addresses = $address[0]->look_down(
+	    sub{$_[0]->tag() eq 'div' && defined($_[0]->attr('class')) &&
+		    defined($_[0]->attr('data-address')) &&
+		    ($_[0]->attr('class') eq "addressBox")});
+	    foreach my $address (@addresses) {
+		if (length($address->attr("data-address")) > 7) {
+		    $deal->addresses($address->attr("data-address"));
+		}
+	    }
 	}
 
 	my @website = $tree->look_down(
